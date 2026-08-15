@@ -4,7 +4,7 @@ import os
 from collections.abc import Iterator
 from pathlib import Path
 
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, inspect, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.models import Base
@@ -40,6 +40,18 @@ def _set_sqlite_pragmas(dbapi_connection, _record) -> None:  # pragma: no cover 
 
 def create_schema() -> None:
     Base.metadata.create_all(engine)
+    _ensure_appearance_pitch_slot()
+
+
+def _ensure_appearance_pitch_slot() -> None:
+    inspector = inspect(engine)
+    if "appearance" not in inspector.get_table_names():
+        return
+    columns = {column["name"] for column in inspector.get_columns("appearance")}
+    if "pitch_slot" in columns:
+        return
+    with engine.begin() as connection:
+        connection.execute(text("ALTER TABLE appearance ADD COLUMN pitch_slot VARCHAR(16)"))
 
 
 def get_session() -> Iterator[Session]:

@@ -4,43 +4,30 @@
 <p class="eyebrow">Matchday</p>
 <h2 class="section">Starting XI and substitutes</h2>
 
-<div class="pitch-wrap">
-  <div class="pitch">
-    <div class="pitch-half pitch-half--top"></div>
-    <div class="pitch-half pitch-half--bottom"></div>
-    <div class="pitch-centre-circle"></div>
-  </div>
-  <div class="pitch-overlay">
-    <div class="card">
-      {% if next_fixture %}
-      <h3>{{ next_fixture.opponent }}</h3>
-      <p>{{ next_fixture.kickoff_at.strftime("%a %-d %b, %H:%M") }} · {{ next_fixture.venue.value | capitalize }}</p>
-      <a class="tab is-current" href="/fixtures/{{ next_fixture.id }}#lineup">Build lineup</a>
-      {% else %}
-      <h3>Lineup not selected</h3>
-      <p>Choose the fixture, then select the starting XI and bench from the squad.</p>
-      <a class="tab" href="/fixtures">Go to fixtures</a>
-      {% endif %}
-    </div>
-  </div>
-</div>
-
 {% if fixtures %}
-<ul class="fixture-list">
-  {% for fixture in fixtures %}
-  <li>
-    <span class="venue-mark {{ fixture.venue.value }}">{{ "H" if fixture.venue.value == "home" else "A" }}</span>
-    <a href="/fixtures/{{ fixture.id }}#lineup">
-      {{ fixture.opponent }}
-      <span class="when">{{ fixture.kickoff_at.strftime("%a %-d %b") }} ·
+<form class="fixture-switch" method="get" action="/lineups">
+  <label class="field">Fixture
+    <select name="fixture_id">
+      {% for fixture in fixtures %}
+      <option value="{{ fixture.id }}" {{ "selected" if selected_fixture and fixture.id == selected_fixture.id }}>
+        {{ fixture.kickoff_at.strftime("%-d %b") }} · {{ fixture.opponent }}
         {% set picked = fixture.appearances | length %}
-        {{ picked ~ " selected" if picked else "no lineup yet" }}</span>
-    </a>
-  </li>
-  {% endfor %}
-</ul>
+        {{ "· " ~ picked ~ " named" if picked else "" }}
+      </option>
+      {% endfor %}
+    </select>
+  </label>
+  <button type="submit">Open</button>
+</form>
+{% endif %}
+
+{% if selected_fixture %}
+  {% with fixture=selected_fixture %}
+    {% include "_pitch_builder.html" %}
+  {% endwith %}
 {% else %}
-<p class="empty">Add a fixture first, then pick the starting XI and bench from the squad.</p>
+<p class="empty">Add a fixture first, then tap the positions to name the starting XI.</p>
+<a class="tab" href="/fixtures">Go to fixtures</a>
 {% endif %}
 
 {% endblock %}

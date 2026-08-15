@@ -1,0 +1,126 @@
+<div class="board">
+  <div class="board-rail board-rail--left">Lineup builder</div>
+  <div class="board-rail board-rail--right">Lineup builder</div>
+
+  <div class="board-head">
+    <p>Starting XI · 4-2-3-1</p>
+    <h3>{{ fixture.opponent }}</h3>
+    <p>{{ fixture.kickoff_at.strftime("%a %-d %b, %H:%M") }} · {{ fixture.venue.value | capitalize }} · {{ starters_on_pitch }}/11</p>
+  </div>
+
+  <div class="pitch-face">
+    <div class="mark mark-halfway"></div>
+    <div class="mark mark-circle"></div>
+    <div class="mark mark-spot"></div>
+    <div class="mark mark-box mark-box--top"></div>
+    <div class="mark mark-box mark-box--bottom"></div>
+    <div class="mark mark-six mark-six--top"></div>
+    <div class="mark mark-six mark-six--bottom"></div>
+
+    {% for slot in pitch_slots %}
+      {% set fill = slot_fill.get(slot.key) %}
+      <a class="pitch-slot" style="left: {{ slot.x }}%; top: {{ slot.y }}%"
+         href="{{ pick_base }}{{ '&' if '?' in pick_base else '?' }}slot={{ slot.key }}#picker"
+         aria-label="{% if fill %}{{ slot.label }}: {{ fill.player.name }}{% else %}{{ slot.label }}, empty{% endif %}">
+        <span class="slot-disc {{ 'is-filled' if fill }}">
+          {% if fill and fill.player.photo_filename %}
+            <img src="/static/player_photos/{{ fill.player.photo_filename }}" alt="">
+          {% elif fill %}
+            {{ fill.player.first_name[0] }}{{ fill.player.last_name[0] }}
+          {% else %}
+            +
+          {% endif %}
+        </span>
+        <span class="slot-name">{{ fill.player.last_name if fill else slot.label }}</span>
+        {% if fill %}<span class="slot-pos">{{ slot.label }}</span>{% endif %}
+      </a>
+    {% endfor %}
+  </div>
+</div>
+
+{% if pick_slot %}
+<section class="picker-sheet" id="picker">
+  <div class="picker-sheet-head">
+    <p class="eyebrow">Pick {{ pick_label }}</p>
+    <h2 class="section">Who plays {{ pick_label }}?</h2>
+    <a class="tab" href="{{ next_url }}">Close</a>
+  </div>
+
+  {% if slot_fill.get(pick_slot) %}
+  <form method="post" action="/fixtures/{{ fixture.id }}/lineup/place" class="clear-slot">
+    <input type="hidden" name="slot" value="{{ pick_slot }}">
+    <input type="hidden" name="player_id" value="">
+    <input type="hidden" name="next" value="{{ next_url }}">
+    <button type="submit" class="link">Clear this position</button>
+  </form>
+  {% endif %}
+
+  <div class="player-pick-list">
+    {% for player in all_players %}
+      {% set used = slot_fill.values() | selectattr("player_id", "equalto", player.id) | list %}
+      <form method="post" action="/fixtures/{{ fixture.id }}/lineup/place">
+        <input type="hidden" name="slot" value="{{ pick_slot }}">
+        <input type="hidden" name="player_id" value="{{ player.id }}">
+        <input type="hidden" name="next" value="{{ next_url }}">
+        <button type="submit" class="pick-player {{ 'is-here' if used and used[0].pitch_slot == pick_slot }}">
+          {% if player.photo_filename %}
+            <img src="/static/player_photos/{{ player.photo_filename }}" class="player-thumb" alt="">
+          {% else %}
+            <span class="player-thumb player-thumb--placeholder">{{ player.first_name[0] }}{{ player.last_name[0] }}</span>
+          {% endif %}
+          <span>
+            {{ player.name }}
+            {% if player.squad_number %}<span class="when">#{{ player.squad_number }}</span>{% endif %}
+            {% if used and used[0].pitch_slot != pick_slot %}
+              <span class="when">currently {{ used[0].pitch_slot | upper }}</span>
+            {% endif %}
+          </span>
+        </button>
+      </form>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if unplaced_starters %}
+<p class="empty">{{ unplaced_starters | map(attribute="player.name") | join(", ") }}
+  {{ "is" if unplaced_starters | length == 1 else "are" }} in the XI but not on a position yet. Tap a slot to place them.</p>
+{% endif %}
+
+<div class="bench-block">
+  <p class="eyebrow">Bench</p>
+  <h2 class="section">Substitutes</h2>
+  {% if bench %}
+  <ul class="bench-chips">
+    {% for appearance in bench %}
+    <li>
+      {{ appearance.player.name }}
+      <form method="post" action="/fixtures/{{ fixture.id }}/lineup/bench">
+        <input type="hidden" name="player_id" value="{{ appearance.player.id }}">
+        <input type="hidden" name="next" value="{{ next_url }}">
+        <button type="submit" class="link">Remove</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty">No substitutes named.</p>
+  {% endif %}
+
+  <details class="adder">
+    <summary>Add a substitute</summary>
+    {% if available_players %}
+    <div class="player-pick-list">
+      {% for player in available_players %}
+      <form method="post" action="/fixtures/{{ fixture.id }}/lineup/bench">
+        <input type="hidden" name="player_id" value="{{ player.id }}">
+        <input type="hidden" name="next" value="{{ next_url }}">
+        <button type="submit" class="pick-player">{{ player.name }}</button>
+      </form>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="empty">Everyone is already in the lineup.</p>
+    {% endif %}
+  </details>
+</div>

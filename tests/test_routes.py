@@ -6,6 +6,7 @@ from collections.abc import Iterator
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 
 
 @pytest.fixture()
@@ -68,11 +69,24 @@ def test_seeded_fixtures_appear(client: TestClient) -> None:
     assert "Houston and Killellan AFC" in body
 
 
+def _player_id(first: str, last: str) -> int:
+    from app.db import SessionLocal
+    from app.models import Player
+
+    with SessionLocal() as session:
+        player = session.scalar(
+            select(Player).where(Player.first_name == first, Player.last_name == last)
+        )
+        assert player is not None
+        return player.id
+
+
 def test_add_player_then_record_a_goal(client: TestClient) -> None:
     client.post(
         "/squad", data={"first_name": "Blair", "last_name": "Grieve"}, follow_redirects=True
     )
     assert "Blair Grieve" in client.get("/squad").text
+    blair_id = _player_id("Blair", "Grieve")
 
     fixture_id = 1
     client.post(
@@ -82,7 +96,7 @@ def test_add_player_then_record_a_goal(client: TestClient) -> None:
     )
     client.post(
         f"/fixtures/{fixture_id}/events",
-        data={"event_type": "goal", "player_id": 1, "minute": "23", "assist_player_id": ""},
+        data={"event_type": "goal", "player_id": blair_id, "minute": "23", "assist_player_id": ""},
         follow_redirects=True,
     )
 
@@ -90,6 +104,32 @@ def test_add_player_then_record_a_goal(client: TestClient) -> None:
     assert "Blair Grieve" in overview  # leading scorer
     squad = client.get("/squad").text
     assert "Blair Grieve" in squad
+
+
+def test_lineups_page_shows_pitch_slots(client: TestClient) -> None:
+    page = client.get("/lineups").text
+    assert "Starting XI · 4-2-3-1" in page
+    assert "Who plays GK?" not in page
+    picker = client.get("/lineups?fixture_id=1&slot=gk").text
+    assert "Who plays GK?" in picker
+
+
+def test_place_player_on_a_pitch_slot(client: TestClient) -> None:
+    client.post(
+        "/squad",
+        data={"first_name": "Ethan", "last_name": "White"},
+        follow_redirects=True,
+    )
+    ethan_id = _player_id("Ethan", "White")
+    response = client.post(
+        "/fixtures/1/lineup/place",
+        data={"slot": "st", "player_id": str(ethan_id), "next": "/lineups?fixture_id=1"},
+        follow_redirects=False,
+    )
+    assert response.status_code == 303
+    page = client.get("/lineups?fixture_id=1").text
+    assert "White" in page
+    assert 'aria-label="ST: Ethan White"' in page
 
 
 def test_lineup_rejects_more_than_eleven_starters(client: TestClient) -> None:

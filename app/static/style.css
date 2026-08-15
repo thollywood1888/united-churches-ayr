@@ -320,51 +320,198 @@ details.adder > form, details.adder > div { margin-top: 12px; }
   flex: none;
 }
 
-/* ---------------------------------------------------------------- pitch --- */
-.pitch-wrap {
-  position: relative;
-  margin-bottom: 26px;
-}
-.pitch {
-  background: #dce9f8;
-  border: 2px solid var(--line);
-  border-radius: var(--radius);
-  min-height: 380px;
+/* -------------------------------------------------------- lineup board --- */
+.fixture-switch {
   display: flex;
-  flex-direction: column;
+  align-items: end;
+  gap: 10px;
+  margin: 0 0 16px;
+}
+.fixture-switch .field { flex: 1; min-width: 0; }
+
+.board {
+  position: relative;
+  background: #14181d;
+  border-radius: 22px;
+  padding: 18px 16px 20px;
+  margin: 0 0 22px;
+  box-shadow: 0 22px 48px rgba(15, 27, 45, 0.28);
   overflow: hidden;
 }
-.pitch-half {
-  flex: 1;
-  border-bottom: 1px solid rgba(255,255,255,0.7);
-  position: relative;
-}
-.pitch-half--bottom { border-bottom: none; border-top: 1px solid rgba(255,255,255,0.7); }
-.pitch-centre-circle {
+.board-rail {
   position: absolute;
-  left: 50%;
   top: 50%;
-  transform: translate(-50%, -50%);
-  width: 80px;
-  height: 80px;
-  border: 1px solid rgba(255,255,255,0.7);
-  border-radius: 50%;
-  pointer-events: none;
+  color: rgba(61, 222, 200, 0.55);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
-.pitch-overlay {
+.board-rail--left { left: 8px; transform: translateY(-50%) rotate(-90deg); transform-origin: center; }
+.board-rail--right { right: 8px; transform: translateY(-50%) rotate(90deg); transform-origin: center; }
+.board-head { text-align: center; color: #9aa3ad; margin: 0 28px 12px; }
+.board-head p { margin: 0; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+.board-head h3 { margin: 4px 0 2px; color: #f4f7fa; font-size: 18px; }
+
+.pitch-face {
+  position: relative;
+  margin: 0 auto;
+  max-width: 520px;
+  aspect-ratio: 3 / 4.15;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      #1b2128 0 12.5%,
+      #151a20 12.5% 25%
+    );
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.mark { position: absolute; pointer-events: none; border-color: rgba(255, 255, 255, 0.45); }
+.mark-halfway {
+  left: 0; right: 0; top: 50%;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.45);
+}
+.mark-circle {
+  left: 50%; top: 50%;
+  width: 22%;
+  aspect-ratio: 1;
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+.mark-spot {
+  left: 50%; top: 50%;
+  width: 6px; height: 6px;
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+.mark-box {
+  left: 22%; width: 56%; height: 16%;
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+}
+.mark-box--top { top: 0; border-top: none; }
+.mark-box--bottom { bottom: 0; border-bottom: none; }
+.mark-six {
+  left: 34%; width: 32%; height: 7%;
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+}
+.mark-six--top { top: 0; border-top: none; }
+.mark-six--bottom { bottom: 0; border-bottom: none; }
+
+.pitch-slot {
   position: absolute;
-  inset: 0;
+  transform: translate(-50%, -50%);
+  width: 64px;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  z-index: 1;
+}
+.slot-disc {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto;
+  border-radius: 50%;
+  border: 2px solid #3ddec8;
+  background: #2a3139;
+  color: #3ddec8;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  font-weight: 500;
+  box-shadow: 0 0 0 3px rgba(61, 222, 200, 0.12);
+  overflow: hidden;
+}
+.slot-disc img { width: 100%; height: 100%; object-fit: cover; }
+.slot-disc.is-filled {
+  color: #f4f7fa;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: #323a43;
+}
+.slot-name {
+  display: block;
+  margin-top: 4px;
+  color: #d5dbe2;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.15;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+.slot-pos {
+  display: block;
+  color: #3ddec8;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.picker-sheet {
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 16px 8px;
+  margin: 0 0 22px;
+}
+.picker-sheet-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 10px;
+}
+.picker-sheet-head .section { flex: 1; margin: 0; }
+.clear-slot { margin: 0 0 10px; }
+
+.player-pick-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.pick-player {
+  width: 100%;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 10px;
+  text-align: left;
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--navy);
+  cursor: pointer;
 }
-.pitch-overlay .card {
-  text-align: center;
-  max-width: 340px;
-  padding: 24px 28px;
+button.pick-player:hover { background: var(--page); border-color: var(--navy); color: var(--navy); }
+.pick-player.is-here { border-color: var(--navy); background: var(--accent-soft); }
+
+.bench-block { margin: 8px 0 24px; }
+.bench-chips { list-style: none; padding: 0; margin: 0 0 12px; display: flex; flex-wrap: wrap; gap: 8px; }
+.bench-chips li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 14px;
 }
-.pitch-overlay h3 { margin: 0 0 8px; font-size: 18px; font-weight: 700; color: var(--navy); }
-.pitch-overlay p { margin: 0 0 16px; }
+
+@media (max-width: 640px) {
+  .board { padding: 14px 8px 16px; }
+  .board-rail { display: none; }
+  .pitch-slot { width: 54px; }
+  .slot-disc { width: 46px; height: 46px; font-size: 18px; }
+  .slot-disc.is-filled { font-size: 11px; }
+}
 
 /* ----------------------------------------------------------------- fees --- */
 .pill-paid { background: #dcf5e7; color: var(--win); border-radius: 999px; padding: 2px 12px; font-size: 13px; font-weight: 600; }

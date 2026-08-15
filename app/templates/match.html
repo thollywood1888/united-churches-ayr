@@ -97,30 +97,7 @@
 
 <p class="eyebrow" id="lineup">Lineup</p>
 <h2 class="section">Starting XI and substitutes</h2>
-<form class="stack" method="post" action="/fixtures/{{ fixture.id }}/lineup">
-  <p class="counter">Tick up to eleven starters, then anyone on the bench.</p>
-  <div class="picker">
-    {% for player in players %}
-      {% set appearance = appearances.get(player.id) %}
-      <label>
-        <input type="checkbox" name="start" value="{{ player.id }}"
-               {{ "checked" if appearance and appearance.role.value == "start" }}>
-        {{ player.name }}
-      </label>
-    {% endfor %}
-  </div>
-  <p class="counter">Substitutes</p>
-  <div class="picker">
-    {% for player in players %}
-      {% set appearance = appearances.get(player.id) %}
-      <label>
-        <input type="checkbox" name="sub" value="{{ player.id }}"
-               {{ "checked" if appearance and appearance.role.value == "sub" }}>
-        {{ player.name }}
-      </label>
-    {% endfor %}
-  </div>
-  <button type="submit">Save lineup</button>
-</form>
+<p class="empty">Tap a position to put a player there. Same board as the Lineups tab.</p>
+{% include "_pitch_builder.html" %}
 
 {% endblock %}

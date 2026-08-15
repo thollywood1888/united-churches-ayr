@@ -26,6 +26,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from app import stats
 from app.db import CLUB_NAME, CLUB_SHORT, create_schema, get_session
+from app.lineup import FORMATION_4231, SLOT_KEYS
 from app.models import (
     Appearance,
     AppearanceRole,
@@ -255,7 +256,12 @@ def add_fixture(
 
 
 @app.get("/fixtures/{fixture_id}")
-def match_centre(request: Request, session: SessionDep, fixture_id: int):
+def match_centre(
+    request: Request,
+    session: SessionDep,
+    fixture_id: int,
+    slot: str | None = None,
+):
     fixture = _fixture_or_404(session, fixture_id)
     appearances = {a.player_id: a for a in fixture.appearances}
     return _render(
@@ -268,6 +274,7 @@ def match_centre(request: Request, session: SessionDep, fixture_id: int):
         appearances=appearances,
         goal_types=[EventType.goal, EventType.penalty_scored, EventType.own_goal],
         card_types=[EventType.yellow_card, EventType.red_card],
+        **_pitch_context(fixture, _active_players(session), slot, f"/fixtures/{fixture_id}"),
     )
 
 
@@ -401,22 +408,175 @@ async def upload_player_photo(session: SessionDep, player_id: int, photo: Upload
 # ----------------------------------------------------------------- lineups --
 
 
+def _safe_next(raw: str | None, fallback: str) -> str:
+    if raw and raw.startswith("/") and not raw.startswith("//"):
+        return raw
+    return fallback
+
+
+def _pitch_context(
+    fixture: Fixture, players: list[Player], pick_slot: str | None, return_to: str
+) -> dict:
+    by_slot: dict[str, Appearance] = {}
+    unplaced: list[Appearance] = []
+    bench: list[Appearance] = []
+    for appearance in fixture.appearances:
+        if appearance.role is AppearanceRole.sub:
+            bench.append(appearance)
+        elif appearance.pitch_slot in SLOT_KEYS:
+            by_slot[appearance.pitch_slot] = appearance
+        elif appearance.role is AppearanceRole.start:
+            unplaced.append(appearance)
+    taken = {appearance.player_id for appearance in fixture.appearances}
+    pick = pick_slot if pick_slot in SLOT_KEYS else None
+    if return_to.startswith("/fixtures/"):
+        next_url = return_to
+        pick_base = return_to
+    else:
+        next_url = f"/lineups?fixture_id={fixture.id}"
+        pick_base = next_url
+    return {
+        "pitch_slots": FORMATION_4231,
+        "slot_fill": by_slot,
+        "unplaced_starters": unplaced,
+        "bench": bench,
+        "available_players": [player for player in players if player.id not in taken],
+        "all_players": players,
+        "pick_slot": pick,
+        "pick_label": next((s.label for s in FORMATION_4231 if s.key == pick), None),
+        "next_url": next_url,
+        "pick_base": pick_base,
+        "starters_on_pitch": len(by_slot),
+    }
+
+
+def _appearance_for_player(fixture: Fixture, player_id: int) -> Appearance | None:
+    return next((a for a in fixture.appearances if a.player_id == player_id), None)
+
+
+def _appearance_in_slot(fixture: Fixture, slot: str) -> Appearance | None:
+    return next((a for a in fixture.appearances if a.pitch_slot == slot), None)
+
+
 @app.get("/lineups")
-def lineups(request: Request, session: SessionDep):
+def lineups(
+    request: Request,
+    session: SessionDep,
+    fixture_id: int | None = None,
+    slot: str | None = None,
+):
     season = _season_or_404(session)
     all_fixtures = list(
         session.scalars(
             select(Fixture).where(Fixture.season_id == season.id).order_by(Fixture.kickoff_at)
         )
     )
+    selected = next((f for f in all_fixtures if f.id == fixture_id), None)
+    if selected is None:
+        selected = stats.next_fixture(session, season.id) or (all_fixtures[0] if all_fixtures else None)
+    players = _active_players(session)
+    pitch = _pitch_context(selected, players, slot, "/lineups") if selected else {
+        "pitch_slots": FORMATION_4231,
+        "slot_fill": {},
+        "unplaced_starters": [],
+        "bench": [],
+        "available_players": players,
+        "all_players": players,
+        "pick_slot": None,
+        "pick_label": None,
+        "next_url": "/lineups",
+        "pick_base": "/lineups",
+        "starters_on_pitch": 0,
+    }
     return _render(
         request,
         "lineups.html",
         session,
         tab="lineups",
         fixtures=all_fixtures,
+        selected_fixture=selected,
         next_fixture=stats.next_fixture(session, season.id),
+        **pitch,
     )
+
+
+@app.post("/fixtures/{fixture_id}/lineup/place")
+def place_on_pitch(
+    session: SessionDep,
+    fixture_id: int,
+    slot: Annotated[str, Form()],
+    player_id: Annotated[str, Form()] = "",
+    next: Annotated[str, Form()] = "",
+):
+    fixture = _fixture_or_404(session, fixture_id)
+    if slot not in SLOT_KEYS:
+        raise HTTPException(status_code=400, detail="Unknown pitch position")
+    dest = _safe_next(next, f"/lineups?fixture_id={fixture_id}")
+
+    occupying = _appearance_in_slot(fixture, slot)
+    if not player_id.strip():
+        if occupying is not None:
+            session.delete(occupying)
+            session.commit()
+        return RedirectResponse(dest, status_code=303)
+
+    chosen_id = int(player_id)
+    if session.get(Player, chosen_id) is None:
+        raise HTTPException(status_code=404, detail="Player not found")
+
+    if occupying is not None and occupying.player_id != chosen_id:
+        session.delete(occupying)
+        session.flush()
+
+    existing = _appearance_for_player(fixture, chosen_id)
+    if existing is None:
+        starters = sum(
+            1
+            for appearance in fixture.appearances
+            if appearance.role is AppearanceRole.start
+        )
+        if starters >= 11:
+            raise HTTPException(status_code=400, detail="A starting eleven is eleven players")
+        existing = Appearance(
+            fixture_id=fixture_id,
+            player_id=chosen_id,
+            role=AppearanceRole.start,
+        )
+        session.add(existing)
+    existing.role = AppearanceRole.start
+    existing.pitch_slot = slot
+    existing.minute_on = 0
+    session.commit()
+    return RedirectResponse(dest, status_code=303)
+
+
+@app.post("/fixtures/{fixture_id}/lineup/bench")
+def toggle_bench(
+    session: SessionDep,
+    fixture_id: int,
+    player_id: Annotated[int, Form()],
+    next: Annotated[str, Form()] = "",
+):
+    fixture = _fixture_or_404(session, fixture_id)
+    dest = _safe_next(next, f"/lineups?fixture_id={fixture_id}")
+    existing = _appearance_for_player(fixture, player_id)
+    if existing is None:
+        session.add(
+            Appearance(
+                fixture_id=fixture_id,
+                player_id=player_id,
+                role=AppearanceRole.sub,
+                minute_on=60,
+            )
+        )
+    elif existing.role is AppearanceRole.sub:
+        session.delete(existing)
+    else:
+        existing.role = AppearanceRole.sub
+        existing.pitch_slot = None
+        existing.minute_on = 60
+    session.commit()
+    return RedirectResponse(dest, status_code=303)
 
 
 @app.post("/fixtures/{fixture_id}/lineup")
@@ -429,13 +589,23 @@ async def save_lineup(request: Request, session: SessionDep, fixture_id: int):
     if len(starters) > 11:
         raise HTTPException(status_code=400, detail="A starting eleven is eleven players")
 
+    kept_slots = {
+        appearance.player_id: appearance.pitch_slot
+        for appearance in fixture.appearances
+        if appearance.player_id in starters and appearance.pitch_slot in SLOT_KEYS
+    }
     for appearance in list(fixture.appearances):
         session.delete(appearance)
     session.flush()
 
     for player_id in starters:
         session.add(
-            Appearance(fixture_id=fixture_id, player_id=player_id, role=AppearanceRole.start)
+            Appearance(
+                fixture_id=fixture_id,
+                player_id=player_id,
+                role=AppearanceRole.start,
+                pitch_slot=kept_slots.get(player_id),
+            )
         )
     for player_id in subs:
         session.add(
