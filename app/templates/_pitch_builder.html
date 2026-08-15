@@ -17,24 +17,30 @@
     <div class="mark mark-six mark-six--top"></div>
     <div class="mark mark-six mark-six--bottom"></div>
 
-    {% for slot in pitch_slots %}
-      {% set fill = slot_fill.get(slot.key) %}
-      <a class="pitch-slot" style="left: {{ slot.x }}%; top: {{ slot.y }}%"
-         href="{{ pick_base }}{{ '&' if '?' in pick_base else '?' }}slot={{ slot.key }}#picker"
-         aria-label="{% if fill %}{{ slot.label }}: {{ fill.player.name }}{% else %}{{ slot.label }}, empty{% endif %}">
-        <span class="slot-disc {{ 'is-filled' if fill }}">
-          {% if fill and fill.player.photo_filename %}
-            <img src="/static/player_photos/{{ fill.player.photo_filename }}" alt="">
-          {% elif fill %}
-            {{ fill.player.first_name[0] }}{{ fill.player.last_name[0] }}
-          {% else %}
-            +
-          {% endif %}
-        </span>
-        <span class="slot-name">{{ fill.player.last_name if fill else slot.label }}</span>
-        {% if fill %}<span class="slot-pos">{{ slot.label }}</span>{% endif %}
-      </a>
-    {% endfor %}
+    <div class="pitch-xi">
+      {% for row in pitch_rows %}
+      <div class="pitch-row">
+        {% for slot in row %}
+          {% set fill = slot_fill.get(slot.key) %}
+          <a class="pitch-slot"
+             href="{{ pick_base }}{{ '&' if '?' in pick_base else '?' }}slot={{ slot.key }}#picker"
+             aria-label="{% if fill %}{{ slot.label }}: {{ fill.player.name }}{% else %}{{ slot.label }}, empty{% endif %}">
+            <span class="slot-disc {{ 'is-filled' if fill else 'is-empty' }}">
+              {% if fill and fill.player.photo_filename %}
+                <img src="/static/player_photos/{{ fill.player.photo_filename }}" alt="">
+              {% elif fill %}
+                {{ fill.player.first_name[0] }}{{ fill.player.last_name[0] }}
+              {% else %}
+                +
+              {% endif %}
+            </span>
+            <span class="slot-name">{{ fill.player.last_name if fill else slot.label }}</span>
+            {% if fill %}<span class="slot-pos">{{ slot.label }}</span>{% endif %}
+          </a>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
   </div>
 </div>
 

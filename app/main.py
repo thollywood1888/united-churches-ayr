@@ -26,7 +26,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from app import stats
 from app.db import CLUB_NAME, CLUB_SHORT, create_schema, get_session
-from app.lineup import FORMATION_4231, SLOT_KEYS
+from app.lineup import FORMATION_4231, PITCH_ROWS, SLOT_KEYS
 from app.models import (
     Appearance,
     AppearanceRole,
@@ -437,6 +437,7 @@ def _pitch_context(
         pick_base = next_url
     return {
         "pitch_slots": FORMATION_4231,
+        "pitch_rows": PITCH_ROWS,
         "slot_fill": by_slot,
         "unplaced_starters": unplaced,
         "bench": bench,
@@ -477,6 +478,7 @@ def lineups(
     players = _active_players(session)
     pitch = _pitch_context(selected, players, slot, "/lineups") if selected else {
         "pitch_slots": FORMATION_4231,
+        "pitch_rows": PITCH_ROWS,
         "slot_fill": {},
         "unplaced_starters": [],
         "bench": [],

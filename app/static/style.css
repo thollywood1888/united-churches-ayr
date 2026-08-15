@@ -336,7 +336,6 @@ details.adder > form, details.adder > div { margin-top: 12px; }
   padding: 18px 16px 20px;
   margin: 0 0 22px;
   box-shadow: 0 22px 48px rgba(15, 27, 45, 0.28);
-  overflow: hidden;
 }
 .board-rail {
   position: absolute;
@@ -358,6 +357,7 @@ details.adder > form, details.adder > div { margin-top: 12px; }
   position: relative;
   margin: 0 auto;
   max-width: 520px;
+  min-height: 520px;
   aspect-ratio: 3 / 4.15;
   background:
     repeating-linear-gradient(
@@ -367,7 +367,6 @@ details.adder > form, details.adder > div { margin-top: 12px; }
     );
   border: 2px solid rgba(255, 255, 255, 0.55);
   border-radius: 8px;
-  overflow: hidden;
 }
 .mark { position: absolute; pointer-events: none; border-color: rgba(255, 255, 255, 0.45); }
 .mark-halfway {
@@ -402,14 +401,26 @@ details.adder > form, details.adder > div { margin-top: 12px; }
 .mark-six--top { top: 0; border-top: none; }
 .mark-six--bottom { bottom: 0; border-bottom: none; }
 
-.pitch-slot {
+.pitch-xi {
   position: absolute;
-  transform: translate(-50%, -50%);
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 3% 1% 2%;
+}
+.pitch-row {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+.pitch-slot {
   width: 64px;
   text-align: center;
   text-decoration: none;
   color: inherit;
-  z-index: 1;
+  flex: none;
 }
 .slot-disc {
   width: 56px;
@@ -425,6 +436,9 @@ details.adder > form, details.adder > div { margin-top: 12px; }
   font-weight: 500;
   box-shadow: 0 0 0 3px rgba(61, 222, 200, 0.12);
   overflow: hidden;
+}
+.slot-disc.is-empty {
+  background: rgba(61, 222, 200, 0.12);
 }
 .slot-disc img { width: 100%; height: 100%; object-fit: cover; }
 .slot-disc.is-filled {
