@@ -668,3 +668,18 @@ def pay_fee(session: SessionDep, player_id: int):
 @app.get("/healthz")
 def healthz() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/debug/fixtures")
+def debug_fixtures(session: SessionDep):
+    from sqlalchemy import text
+    rows = session.execute(text(
+        "SELECT id, opponent, status, goals_for, goals_against FROM fixture ORDER BY id"
+    )).fetchall()
+    events = session.execute(text(
+        "SELECT id, fixture_id, type, player_id FROM match_event ORDER BY id"
+    )).fetchall()
+    return {
+        "fixtures": [dict(r._mapping) for r in rows],
+        "events": [dict(r._mapping) for r in events],
+    }
