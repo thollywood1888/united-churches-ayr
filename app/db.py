@@ -1,11 +1,3 @@
-"""Engine and session management.
-
-SQLite is a deliberate choice for v1: one squad, one league, a few hundred rows a
-season, and a single writer. It removes an entire class of deployment problem.
-The ORM layer is Postgres-compatible, so moving later is a connection-string
-change plus a migration tool.
-"""
-
 from __future__ import annotations
 
 import os
@@ -21,9 +13,16 @@ CLUB_NAME = "United Churches of Ayr AFC"
 CLUB_SHORT = "UCA"
 
 DATA_DIR = Path(os.environ.get("UCA_DATA_DIR", Path(__file__).resolve().parent.parent / "data"))
-DATABASE_URL = os.environ.get("UCA_DATABASE_URL", f"sqlite:///{DATA_DIR / 'uca.db'}")
 
-DATA_DIR.mkdir(parents=True, exist_ok=True)
+def _resolve_db_url() -> str:
+    url = os.environ.get("UCA_DATABASE_URL") or os.environ.get("DATABASE_URL")
+    if url:
+        # Railway supplies postgres:// but SQLAlchemy 2 requires postgresql://
+        return url.replace("postgres://", "postgresql://", 1)
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    return f"sqlite:///{DATA_DIR / 'uca.db'}"
+
+DATABASE_URL = _resolve_db_url()
 
 engine = create_engine(DATABASE_URL, future=True)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False, future=True)
