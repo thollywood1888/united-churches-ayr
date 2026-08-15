@@ -55,7 +55,19 @@
   </div>
 </div>
 
-<div class="awards-section">
+{% macro award_row(player, value) %}
+<a class="g-row" href="/squad/{{ player.id }}">
+  {% if player.photo_filename %}
+    <img src="/static/player_photos/{{ player.photo_filename }}" class="player-thumb g-thumb" alt="">
+  {% else %}
+    <span class="player-thumb player-thumb--placeholder g-thumb">{{ player.first_name[0] }}{{ player.last_name[0] }}</span>
+  {% endif %}
+  <span class="g-name">{{ player.name }}</span>
+  <span class="g-val">{{ value }}</span>
+</a>
+{% endmacro %}
+
+<div class="awards-section" id="awards">
   <p class="eyebrow">Season awards</p>
   <div class="glass-grid">
 
@@ -63,10 +75,7 @@
       <div class="g-label">Top scorers</div>
       {% if top_scorers %}
         {% for line in top_scorers %}
-        <div class="g-row">
-          <span>{{ line.player.name }}</span>
-          <span class="g-val">{{ line.goals }} goal{{ "" if line.goals == 1 else "s" }}</span>
-        </div>
+          {{ award_row(line.player, line.goals ~ (" goal" if line.goals == 1 else " goals")) }}
         {% endfor %}
       {% else %}
         <p class="g-empty">No goals yet</p>
@@ -77,10 +86,7 @@
       <div class="g-label">Top assists</div>
       {% if top_assists %}
         {% for line in top_assists %}
-        <div class="g-row">
-          <span>{{ line.player.name }}</span>
-          <span class="g-val">{{ line.assists }}</span>
-        </div>
+          {{ award_row(line.player, line.assists) }}
         {% endfor %}
       {% else %}
         <p class="g-empty">No assists yet</p>
@@ -91,10 +97,7 @@
       <div class="g-label">Man of the match</div>
       {% if top_motm %}
         {% for line in top_motm %}
-        <div class="g-row">
-          <span>{{ line.player.name }}</span>
-          <span class="g-val">{{ line.motm }}×</span>
-        </div>
+          {{ award_row(line.player, line.motm ~ "×") }}
         {% endfor %}
       {% else %}
         <p class="g-empty">No awards yet</p>
@@ -105,10 +108,7 @@
       <div class="g-label">Managers MOTM</div>
       {% if top_managers_motm %}
         {% for line in top_managers_motm %}
-        <div class="g-row">
-          <span>{{ line.player.name }}</span>
-          <span class="g-val">{{ line.managers_motm }}×</span>
-        </div>
+          {{ award_row(line.player, line.managers_motm ~ "×") }}
         {% endfor %}
       {% else %}
         <p class="g-empty">No awards yet</p>

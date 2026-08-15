@@ -275,12 +275,18 @@ details.adder > form, details.adder > div { margin-top: 12px; }
 .glass-card .g-row {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
+  gap: 10px;
   padding: 6px 0;
   font-size: 14px;
   border-bottom: 1px solid var(--line);
+  color: inherit;
+  text-decoration: none;
 }
+a.g-row:hover { color: var(--navy); }
 .glass-card .g-row:last-child { border-bottom: none; }
+.g-thumb { width: 32px; height: 32px; flex: none; }
+.g-name { flex: 1; min-width: 0; }
 .glass-card .g-val {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
