@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+
+<p class="eyebrow">{{ season.label }} season</p>
+<h2 class="section">{{ season.division }}</h2>
+
+{% if rows %}
+<div class="scroll-x">
+<table>
+  <thead>
+    <tr>
+      <th class="pos">Pos</th><th>Club</th>
+      <th class="num">P</th><th class="num">W</th><th class="num">D</th><th class="num">L</th>
+      <th class="num">F</th><th class="num">A</th><th class="num">GD</th><th class="num">Pts</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for row in rows %}
+    <tr class="{{ 'is-us' if row.club == club_name }}">
+      <td class="pos">{{ row.position }}</td>
+      <td>{% set slug = badge_map.get(row.club) %}{% if slug %}<img src="/static/badges/{{ slug }}.png" class="badge-thumb" alt="" style="margin-right:7px;">{% endif %}{{ row.club }}</td>
+      <td class="num">{{ row.played }}</td>
+      <td class="num">{{ row.won }}</td>
+      <td class="num">{{ row.drawn }}</td>
+      <td class="num">{{ row.lost }}</td>
+      <td class="num">{{ row.goals_for }}</td>
+      <td class="num">{{ row.goals_against }}</td>
+      <td class="num">{{ "%+d" % row.goal_difference if row.goal_difference else 0 }}</td>
+      <td class="num">{{ row.points }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<p class="empty">Updated {{ snapshot.fetched_at.strftime("%a %-d %b, %H:%M") }} · source: {{ snapshot.source }}.
+These standings come from the league, not from results entered here.</p>
+{% else %}
+<p class="empty">No standings yet. Paste the league table below.</p>
+{% endif %}
+
+<details class="adder">
+  <summary>Update the table</summary>
+  <div>
+    <p class="empty">One club per line, ending with seven numbers:
+      <code>Club Name  P W D L F A Pts</code>. Order the lines as the league has them.</p>
+    <form class="stack" method="post" action="/table">
+      <textarea name="pasted" required
+        placeholder="Glasgow Elim AFC 1 1 0 0 6 1 3&#10;Fullarton Irvine AFC 1 1 0 0 2 0 3"></textarea>
+      <button type="submit">Save standings</button>
+    </form>
+  </div>
+</details>
+
+{% endblock %}

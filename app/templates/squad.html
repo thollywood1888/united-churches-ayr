@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="stat-row">
+  <div class="card"><div class="label">Current squad</div><div class="figure">{{ squad_size }}</div></div>
+  <div class="card"><div class="label">Team goals</div><div class="figure">{{ team_goals }}</div></div>
+  <div class="card"><div class="label">Goals assigned</div><div class="figure">{{ goals_assigned }}</div></div>
+  <div class="card"><div class="label">Unassigned</div><div class="figure">{{ team_goals - goals_assigned }}</div></div>
+</div>
+
+{% if team_goals > goals_assigned %}
+<p class="empty">{{ team_goals - goals_assigned }} goal(s) have no scorer recorded. Open the
+match centre for each result to attribute them.</p>
+{% endif %}
+
+<p class="eyebrow">Current squad</p>
+<h2 class="section">Appearances, goals, assists and cards</h2>
+
+{% if lines %}
+<div class="scroll-x">
+<table>
+  <thead>
+    <tr>
+      <th style="width:48px"></th>
+      <th>Player</th>
+      <th class="num">No.</th>
+      <th class="num">Apps</th>
+      <th class="num">Starts</th>
+      <th class="num">Mins</th>
+      <th class="num">Goals</th>
+      <th class="num">Assists</th>
+      <th class="num">Y</th>
+      <th class="num">R</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for line in lines %}
+    <tr>
+      <td style="padding:6px 4px">
+        <form method="post" action="/squad/{{ line.player.id }}/photo" enctype="multipart/form-data">
+          <label class="player-photo-label" title="Click to upload photo">
+            {% if line.player.photo_filename %}
+              <img src="/static/player_photos/{{ line.player.photo_filename }}" class="player-thumb" alt="{{ line.player.name }}">
+            {% else %}
+              <div class="player-thumb player-thumb--placeholder">{{ line.player.first_name[0] }}{{ line.player.last_name[0] }}</div>
+            {% endif %}
+            <input type="file" name="photo" accept="image/*" style="display:none" onchange="this.form.submit()">
+          </label>
+        </form>
+      </td>
+      <td>{{ line.player.name }}{% if line.player.status.value != "active" %}
+        <span class="when">{{ line.player.status.value }}</span>{% endif %}</td>
+      <td class="num">{{ line.player.squad_number or "—" }}</td>
+      <td class="num">{{ line.appearances }}</td>
+      <td class="num">{{ line.starts }}</td>
+      <td class="num">{{ line.minutes }}</td>
+      <td class="num">{{ line.goals }}</td>
+      <td class="num">{{ line.assists }}</td>
+      <td class="num">{{ line.yellow_cards }}</td>
+      <td class="num">{{ line.red_cards }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+{% set award_lines = lines | selectattr("motm", ">", 0) | list + (lines | selectattr("managers_motm", ">", 0) | list) | unique | list %}
+{% set all_award_lines = lines | selectattr("motm", ">", 0) | list %}
+{% set mgr_award_lines = lines | selectattr("managers_motm", ">", 0) | list %}
+{% if all_award_lines or mgr_award_lines %}
+<p class="eyebrow" style="margin-top:32px">Awards</p>
+<h2 class="section">Man of the match</h2>
+<div class="scroll-x">
+<table>
+  <thead>
+    <tr>
+      <th>Player</th>
+      <th class="num">MOTM</th>
+      <th class="num">Managers MOTM</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for line in lines %}
+    {% if line.motm or line.managers_motm %}
+    <tr>
+      <td>{{ line.player.name }}</td>
+      <td class="num">{{ line.motm if line.motm else "—" }}</td>
+      <td class="num">{{ line.managers_motm if line.managers_motm else "—" }}</td>
+    </tr>
+    {% endif %}
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+
+{% else %}
+<p class="empty">No players yet. Add the first one below, or import the squad with
+<code>python -m app.seed</code>.</p>
+{% endif %}
+
+<details class="adder">
+  <summary>Add a player</summary>
+  <form class="stack" method="post" action="/squad">
+    <div class="field-row">
+      <label class="field">First name<input name="first_name" required autocomplete="off"></label>
+      <label class="field">Last name<input name="last_name" required autocomplete="off"></label>
+      <label class="field">Squad number<input name="squad_number" inputmode="numeric" autocomplete="off"></label>
+      <label class="field">Position
+        <select name="position">
+          <option value="">—</option>
+          <option>Goalkeeper</option>
+          <option>Defender</option>
+          <option>Midfielder</option>
+          <option>Forward</option>
+        </select>
+      </label>
+    </div>
+    <button type="submit">Add player</button>
+  </form>
+</details>
+
+{% endblock %}

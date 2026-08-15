@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="panel-row">
+  <div class="panel">
+    <p class="eyebrow">Club finance</p>
+    <h2>Starter fine schedule</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Offence</th>
+          <th class="num">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in schedule %}
+        <tr>
+          <td>{{ item.description }}</td>
+          <td class="num">£{{ item.amount_pence // 100 }}{% if item.amount_pence % 100 %}.{{ "%02d" % (item.amount_pence % 100) }}{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <details class="adder">
+      <summary>+ Add fine</summary>
+      <form class="stack" method="post" action="/fines">
+        <label class="field">Player
+          <select name="player_id">
+            {% for player in players %}
+            <option value="{{ player.id }}">{{ player.name }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label class="field">Reason
+          <select name="reason">
+            {% for item in schedule %}
+            <option value="{{ item.description }}">{{ item.description }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label class="field">Amount (pence)
+          <input type="number" name="amount_pence" value="0" min="0">
+        </label>
+        <button type="submit">Issue fine</button>
+      </form>
+    </details>
+  </div>
+
+  <div class="panel">
+    <p class="eyebrow">Outstanding fines</p>
+    <h2>Fine list</h2>
+    {% if outstanding %}
+    <table>
+      <thead>
+        <tr>
+          <th>Player</th>
+          <th>Reason</th>
+          <th class="num">Amount</th>
+          <th>Issued</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for fine in outstanding %}
+        <tr>
+          <td>{{ fine.player.name }}</td>
+          <td>{{ fine.reason }}</td>
+          <td class="num">£{{ fine.amount_pence // 100 }}{% if fine.amount_pence % 100 %}.{{ "%02d" % (fine.amount_pence % 100) }}{% endif %}</td>
+          <td>{{ fine.issued_at.strftime("%-d %b") }}</td>
+          <td>
+            <form method="post" action="/fines/{{ fine.id }}/pay">
+              <button class="ghost" type="submit">Mark paid</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="empty">No player fines logged yet. Added fines will show the player, reason, amount, due date and payment status.</p>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

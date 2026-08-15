@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="panel-row">
+  <div class="panel">
+    <p>Upcoming</p>
+    {% if next_fixture %}
+      <h2>{{ next_fixture.opponent }}</h2>
+      <p>{{ next_fixture.kickoff_at.strftime("%a %-d %b, %H:%M") }} ·
+         {{ next_fixture.venue.value | capitalize }}</p>
+      <a class="tab" href="/fixtures/{{ next_fixture.id }}">Open match centre</a>
+    {% else %}
+      <h2>Next fixture</h2>
+      <p>Add an opponent, date, venue and kick-off below.</p>
+    {% endif %}
+  </div>
+  <div class="panel">
+    <p>Latest league record</p>
+    <h2>{{ record.played }} match{{ "" if record.played == 1 else "es" }} ·
+        {{ record.won }}W {{ record.drawn }}D {{ record.lost }}L</h2>
+    <p>{{ record.scored }} scored · {{ record.conceded }} conceded ·
+       {{ record.points }} point{{ "" if record.points == 1 else "s" }}.</p>
+  </div>
+</div>
+
+<p class="eyebrow">Results</p>
+{% if results %}
+<ul class="fixture-list">
+  {% for fixture in results %}
+  <li>
+    <span class="venue-mark {{ fixture.venue.value }}">{{ "H" if fixture.venue.value == "home" else "A" }}</span>
+    {% set slug = badge_map.get(fixture.opponent) %}{% if slug %}<img src="/static/badges/{{ slug }}.png" class="badge-thumb" alt="">{% endif %}
+    <a href="/fixtures/{{ fixture.id }}">
+      {{ fixture.opponent }}
+      <span class="when">{{ fixture.kickoff_at.strftime("%a %-d %b") }}</span>
+    </a>
+    <span class="result-mark {{ fixture.outcome }}">{{ fixture.scoreline }}</span>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="empty">No results yet. Open a fixture after the match to log the score and scorers.</p>
+{% endif %}
+
+<p class="eyebrow">Fixtures</p>
+{% if upcoming %}
+<ul class="fixture-list">
+  {% for fixture in upcoming %}
+  <li>
+    <span class="venue-mark {{ fixture.venue.value }}">{{ "H" if fixture.venue.value == "home" else "A" }}</span>
+    {% set slug = badge_map.get(fixture.opponent) %}{% if slug %}<img src="/static/badges/{{ slug }}.png" class="badge-thumb" alt="">{% endif %}
+    <a href="/fixtures/{{ fixture.id }}">
+      {{ fixture.opponent }}
+      <span class="when">{{ fixture.kickoff_at.strftime("%a %-d %b · %H:%M") }}{% if fixture.competition.value != "league" %} · {{ fixture.competition.value | capitalize }}{% endif %}</span>
+    </a>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="empty">No fixtures scheduled.</p>
+{% endif %}
+
+<details class="adder">
+  <summary>Add a fixture</summary>
+  <form class="stack" method="post" action="/fixtures">
+    <div class="field-row">
+      <label class="field">Opponent
+        <input name="opponent" required autocomplete="off">
+      </label>
+      <label class="field">Kick-off
+        <input type="datetime-local" name="kickoff" required>
+      </label>
+    </div>
+    <div class="field-row">
+      <label class="field">Venue
+        <select name="venue">
+          <option value="home">Home</option>
+          <option value="away">Away</option>
+          <option value="neutral">Neutral</option>
+        </select>
+      </label>
+      <label class="field">Competition
+        <select name="competition">
+          <option value="league">League</option>
+          <option value="cup">Cup</option>
+          <option value="friendly">Friendly</option>
+        </select>
+      </label>
+      <label class="field">Ground
+        <input name="ground" autocomplete="off">
+      </label>
+    </div>
+    <button type="submit">Add fixture</button>
+  </form>
+</details>
+
+{% endblock %}

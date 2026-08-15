@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="stat-row">
+  <div class="card">
+    <div class="label">League position</div>
+    <div class="figure">{{ our_row.position ~ ordinal(our_row.position) if our_row else "—" }}</div>
+  </div>
+  <div class="card">
+    <div class="label">Points</div>
+    <div class="figure">{{ record.points }}</div>
+  </div>
+  <div class="card">
+    <div class="label">Goals</div>
+    <div class="figure">{{ record.scored }}–{{ record.conceded }}</div>
+  </div>
+  <div class="card">
+    <div class="label">Record</div>
+    <div class="figure">{{ record.record_line }}</div>
+  </div>
+</div>
+
+<div class="panel-row">
+  <div class="panel">
+    <p>Next match</p>
+    {% if next_fixture %}
+      {% set slug = badge_map.get(next_fixture.opponent) %}
+      {% if slug %}<img src="/static/badges/{{ slug }}.png" style="width:48px;height:48px;object-fit:contain;display:block;margin-bottom:8px;" alt="">{% endif %}
+      <h2>{{ next_fixture.opponent }}</h2>
+      <p>{{ next_fixture.kickoff_at.strftime("%a %-d %b") }} ·
+         {{ next_fixture.kickoff_at.strftime("%H:%M") }} ·
+         {{ next_fixture.venue.value | capitalize }}</p>
+      <a class="tab" href="/fixtures/{{ next_fixture.id }}">Open match centre</a>
+    {% else %}
+      <h2>No fixture scheduled</h2>
+      <p>Add the next opponent, date, venue and kick-off.</p>
+      <a class="tab" href="/fixtures">Add fixture</a>
+    {% endif %}
+  </div>
+
+  <div class="panel">
+    <p>League start</p>
+    <h2>
+      {% if record.played %}
+        {{ record.points }} point{{ "" if record.points == 1 else "s" }} from {{ record.played }}
+      {% else %}
+        Season not started
+      {% endif %}
+    </h2>
+    <div class="kv"><span>Played</span><span class="pill">{{ record.played }}</span></div>
+    <div class="kv"><span>Won</span><span class="pill">{{ record.won }}</span></div>
+    <div class="kv"><span>Drawn</span><span class="pill">{{ record.drawn }}</span></div>
+    <div class="kv"><span>Scored</span><span class="pill">{{ record.scored }}</span></div>
+    <div class="kv"><span>Conceded</span><span class="pill">{{ record.conceded }}</span></div>
+  </div>
+</div>
+
+<div class="awards-section">
+  <p class="eyebrow">Season awards</p>
+  <div class="glass-grid">
+
+    <div class="glass-card">
+      <div class="g-label">Top scorers</div>
+      {% if top_scorers %}
+        {% for line in top_scorers %}
+        <div class="g-row">
+          <span>{{ line.player.name }}</span>
+          <span class="g-val">{{ line.goals }} goal{{ "" if line.goals == 1 else "s" }}</span>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p class="g-empty">No goals yet</p>
+      {% endif %}
+    </div>
+
+    <div class="glass-card">
+      <div class="g-label">Top assists</div>
+      {% if top_assists %}
+        {% for line in top_assists %}
+        <div class="g-row">
+          <span>{{ line.player.name }}</span>
+          <span class="g-val">{{ line.assists }}</span>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p class="g-empty">No assists yet</p>
+      {% endif %}
+    </div>
+
+    <div class="glass-card">
+      <div class="g-label">Man of the match</div>
+      {% if top_motm %}
+        {% for line in top_motm %}
+        <div class="g-row">
+          <span>{{ line.player.name }}</span>
+          <span class="g-val">{{ line.motm }}×</span>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p class="g-empty">No awards yet</p>
+      {% endif %}
+    </div>
+
+    <div class="glass-card">
+      <div class="g-label">Managers MOTM</div>
+      {% if top_managers_motm %}
+        {% for line in top_managers_motm %}
+        <div class="g-row">
+          <span>{{ line.player.name }}</span>
+          <span class="g-val">{{ line.managers_motm }}×</span>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p class="g-empty">No awards yet</p>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+<p class="eyebrow">League snapshot</p>
+<h2 class="section">{{ season.division }}</h2>
+{% if table %}
+<table>
+  <thead>
+    <tr><th class="pos">Pos</th><th>Club</th><th class="num">P</th><th class="num">GD</th><th class="num">Pts</th></tr>
+  </thead>
+  <tbody>
+  {% for row in table %}
+    <tr class="{{ 'is-us' if row.club == club_name }}">
+      <td class="pos">{{ row.position }}</td>
+      <td>{% set slug = badge_map.get(row.club) %}{% if slug %}<img src="/static/badges/{{ slug }}.png" class="badge-thumb" alt="" style="margin-right:7px;">{% endif %}{{ row.club }}</td>
+      <td class="num">{{ row.played }}</td>
+      <td class="num">{{ "%+d" % row.goal_difference if row.goal_difference else 0 }}</td>
+      <td class="num">{{ row.points }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p class="empty"><a href="/table">Full table</a></p>
+{% else %}
+<p class="empty">No standings yet. Paste the league table on the League table tab.</p>
+{% endif %}
+
+{% endblock %}

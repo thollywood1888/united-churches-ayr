@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1b2d">
+<title>{% block title %}{{ club_name }}{% endblock %}</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="masthead">
+  <div style="max-width:var(--shell);margin-inline:auto;display:flex;align-items:center;gap:14px;width:100%">
+    <img src="/static/badges/uca.png" class="crest-img" alt="United Churches of Ayr AFC">
+    <div class="identity">
+      <h1>{{ club_name }}</h1>
+      <p class="sub">{{ season.division }} · {{ season.label }}</p>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="Sections">
+  <a href="/" class="tab {{ 'is-current' if tab == 'overview' }}">Overview</a>
+  <a href="/fixtures" class="tab {{ 'is-current' if tab == 'fixtures' }}">Fixtures &amp; results</a>
+  <a href="/squad" class="tab {{ 'is-current' if tab == 'squad' }}">Squad &amp; stats</a>
+  <a href="/lineups" class="tab {{ 'is-current' if tab == 'lineups' }}">Lineups</a>
+  <a href="/fines" class="tab {{ 'is-current' if tab == 'fines' }}">Fines</a>
+  <a href="/fees" class="tab {{ 'is-current' if tab == 'fees' }}">Monthly fees</a>
+  <a href="/table" class="tab {{ 'is-current' if tab == 'table' }}">League table</a>
+</nav>
+
+<main>
+{% block content %}{% endblock %}
+</main>
+
+<footer class="foot">Be strong and courageous · {{ season.label }}</footer>
+</body>
+</html>

@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}{{ fixture.opponent }} · {{ club_name }}{% endblock %}
+{% block content %}
+
+<p class="eyebrow">{{ fixture.venue.value | capitalize }} ·
+  {{ fixture.competition.value | capitalize }}</p>
+<h2 class="section">{{ fixture.opponent }}</h2>
+<p class="empty">{{ fixture.kickoff_at.strftime("%A %-d %B %Y, %H:%M") }}
+  {%- if fixture.ground %} · {{ fixture.ground }}{% endif %}</p>
+
+<div class="panel" style="margin-bottom: 22px;">
+  <p>{{ "Result" if fixture.is_played else "Log result" }}</p>
+  <h2>{{ fixture.scoreline if fixture.is_played else "Not played yet" }}</h2>
+  <form class="stack" method="post" action="/fixtures/{{ fixture.id }}/result">
+    <div class="field-row">
+      <label class="field">{{ club_name }}
+        <input type="number" name="goals_for" min="0" required
+               value="{{ fixture.goals_for if fixture.goals_for is not none else '' }}">
+      </label>
+      <label class="field">{{ fixture.opponent }}
+        <input type="number" name="goals_against" min="0" required
+               value="{{ fixture.goals_against if fixture.goals_against is not none else '' }}">
+      </label>
+    </div>
+    <button type="submit">Save result</button>
+  </form>
+</div>
+
+<p class="eyebrow">Goals and cards</p>
+{% set match_events = fixture.events | rejectattr("type.value", "in", ["motm", "managers_motm"]) | list %}
+{% if match_events %}
+<ul class="fixture-list">
+  {% for event in match_events %}
+  <li>
+    <span>{{ event.minute ~ "'" if event.minute else "—" }}</span>
+    <span style="flex:1">
+      {{ event.player.name if event.player else "Own goal" }}
+      <span class="when">{{ event.type.value | replace("_", " ") | capitalize }}
+        {%- if event.assist_player %} · assist {{ event.assist_player.name }}{% endif %}</span>
+    </span>
+    <form method="post" action="/fixtures/{{ fixture.id }}/events/{{ event.id }}/delete">
+      <button class="link" type="submit">Remove</button>
+    </form>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="empty">Nothing recorded yet.</p>
+{% endif %}
+
+<form class="stack" method="post" action="/fixtures/{{ fixture.id }}/events">
+  <div class="field-row">
+    <label class="field">Player
+      <select name="player_id" required>
+        {% for player in players %}<option value="{{ player.id }}">{{ player.name }}</option>{% endfor %}
+      </select>
+    </label>
+    <label class="field">Type
+      <select name="event_type">
+        {% for type in goal_types + card_types %}
+          <option value="{{ type.value }}">{{ type.value | replace("_", " ") | capitalize }}</option>
+        {% endfor %}
+        <option value="motm">Man of the match</option>
+        <option value="managers_motm">Managers MOTM</option>
+      </select>
+    </label>
+    <label class="field">Minute
+      <input name="minute" inputmode="numeric" autocomplete="off">
+    </label>
+    <label class="field">Assist
+      <select name="assist_player_id">
+        <option value="">—</option>
+        {% for player in players %}<option value="{{ player.id }}">{{ player.name }}</option>{% endfor %}
+      </select>
+    </label>
+  </div>
+  <button type="submit">Add to match</button>
+</form>
+
+{% set award_events = fixture.events | selectattr("type.value", "in", ["motm", "managers_motm"]) | list %}
+{% if award_events %}
+<p class="eyebrow">Awards</p>
+<ul class="fixture-list">
+  {% for event in award_events %}
+  <li>
+    <span style="flex:1">
+      {{ event.player.name if event.player else "—" }}
+      <span class="when">{{ "Man of the match" if event.type.value == "motm" else "Managers MOTM" }}</span>
+    </span>
+    <form method="post" action="/fixtures/{{ fixture.id }}/events/{{ event.id }}/delete">
+      <button class="link" type="submit">Remove</button>
+    </form>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+
+<p class="eyebrow" id="lineup">Lineup</p>
+<h2 class="section">Starting XI and substitutes</h2>
+<form class="stack" method="post" action="/fixtures/{{ fixture.id }}/lineup">
+  <p class="counter">Tick up to eleven starters, then anyone on the bench.</p>
+  <div class="picker">
+    {% for player in players %}
+      {% set appearance = appearances.get(player.id) %}
+      <label>
+        <input type="checkbox" name="start" value="{{ player.id }}"
+               {{ "checked" if appearance and appearance.role.value == "start" }}>
+        {{ player.name }}
+      </label>
+    {% endfor %}
+  </div>
+  <p class="counter">Substitutes</p>
+  <div class="picker">
+    {% for player in players %}
+      {% set appearance = appearances.get(player.id) %}
+      <label>
+        <input type="checkbox" name="sub" value="{{ player.id }}"
+               {{ "checked" if appearance and appearance.role.value == "sub" }}>
+        {{ player.name }}
+      </label>
+    {% endfor %}
+  </div>
+  <button type="submit">Save lineup</button>
+</form>
+
+{% endblock %}

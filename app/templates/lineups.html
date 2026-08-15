@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+
+<p class="eyebrow">Matchday</p>
+<h2 class="section">Starting XI and substitutes</h2>
+
+<div class="pitch-wrap">
+  <div class="pitch">
+    <div class="pitch-half pitch-half--top"></div>
+    <div class="pitch-half pitch-half--bottom"></div>
+    <div class="pitch-centre-circle"></div>
+  </div>
+  <div class="pitch-overlay">
+    <div class="card">
+      {% if next_fixture %}
+      <h3>{{ next_fixture.opponent }}</h3>
+      <p>{{ next_fixture.kickoff_at.strftime("%a %-d %b, %H:%M") }} · {{ next_fixture.venue.value | capitalize }}</p>
+      <a class="tab is-current" href="/fixtures/{{ next_fixture.id }}#lineup">Build lineup</a>
+      {% else %}
+      <h3>Lineup not selected</h3>
+      <p>Choose the fixture, then select the starting XI and bench from the squad.</p>
+      <a class="tab" href="/fixtures">Go to fixtures</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% if fixtures %}
+<ul class="fixture-list">
+  {% for fixture in fixtures %}
+  <li>
+    <span class="venue-mark {{ fixture.venue.value }}">{{ "H" if fixture.venue.value == "home" else "A" }}</span>
+    <a href="/fixtures/{{ fixture.id }}#lineup">
+      {{ fixture.opponent }}
+      <span class="when">{{ fixture.kickoff_at.strftime("%a %-d %b") }} ·
+        {% set picked = fixture.appearances | length %}
+        {{ picked ~ " selected" if picked else "no lineup yet" }}</span>
+    </a>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="empty">Add a fixture first, then pick the starting XI and bench from the squad.</p>
+{% endif %}
+
+{% endblock %}
