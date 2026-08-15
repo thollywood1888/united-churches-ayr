@@ -149,14 +149,28 @@ def login_page(request: Request):
     return templates.TemplateResponse(request, "login.html", {"error": None})
 
 
+def _authenticate(username: str, password: str) -> str | None:
+    """Return the canonical username if the credentials match.
+
+    Usernames are matched case-insensitively and trimmed so a phone that
+    sends ``gaffer`` still unlocks the ``Gaffer`` account.
+    """
+    offered = username.strip().lower()
+    for name, secret in USERS.items():
+        if name.lower() == offered and secret == password:
+            return name
+    return None
+
+
 @app.post("/login")
 def login(
     request: Request,
     username: Annotated[str, Form()],
     password: Annotated[str, Form()],
 ):
-    if USERS.get(username) == password:
-        request.session["user"] = username
+    matched = _authenticate(username, password)
+    if matched is not None:
+        request.session["user"] = matched
         return RedirectResponse("/", status_code=303)
     return templates.TemplateResponse(
         request, "login.html", {"error": "Incorrect username or password"}, status_code=401

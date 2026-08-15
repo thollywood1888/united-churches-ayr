@@ -21,7 +21,39 @@ def client(tmp_path, monkeypatch) -> Iterator[TestClient]:
     seed.seed(csv_path=tmp_path / "missing.csv")
 
     with TestClient(main.app) as test_client:
+        test_client.post("/login", data={"username": "Gaffer", "password": "jeans1"})
         yield test_client
+
+
+def test_login_accepts_gaffer_any_case(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("UCA_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("UCA_DATABASE_URL", f"sqlite:///{tmp_path / 'test.db'}")
+    for module in ("app.db", "app.models", "app.stats", "app.seed", "app.main"):
+        sys.modules.pop(module, None)
+    seed = importlib.import_module("app.seed")
+    main = importlib.import_module("app.main")
+    seed.seed(csv_path=tmp_path / "missing.csv")
+    with TestClient(main.app) as anon:
+        denied = anon.get("/", follow_redirects=False)
+        assert denied.status_code == 302
+        assert denied.headers["location"] == "/login"
+
+        for username in ("gaffer", "Gaffer", "GAFFER", " gaffer "):
+            response = anon.post(
+                "/login",
+                data={"username": username, "password": "jeans1"},
+                follow_redirects=False,
+            )
+            assert response.status_code == 303, username
+            assert response.headers["location"] == "/"
+
+        bad = anon.post(
+            "/login",
+            data={"username": "gaffer", "password": "wrong"},
+            follow_redirects=False,
+        )
+        assert bad.status_code == 401
+        assert "Incorrect username or password" in bad.text
 
 
 def test_every_tab_renders(client: TestClient) -> None:
