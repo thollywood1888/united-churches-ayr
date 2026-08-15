@@ -76,6 +76,8 @@ templates.env.globals["ordinal"] = ordinal_suffix
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     create_schema()
+    from app.seed import seed
+    seed(csv_path=BASE_DIR.parent / "data" / "players.csv")
     yield
 
 
