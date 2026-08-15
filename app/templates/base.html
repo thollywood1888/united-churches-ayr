@@ -15,6 +15,9 @@
       <h1>{{ club_name }}</h1>
       <p class="sub">{{ season.division }} · {{ season.label }}</p>
     </div>
+    <form method="post" action="/logout" style="margin-left:auto;flex:none">
+      <button type="submit" style="background:transparent;border:1px solid rgba(255,255,255,0.3);color:rgba(255,255,255,0.7);font-size:13px;padding:6px 14px;border-radius:6px;cursor:pointer">Log out</button>
+    </form>
   </div>
 </header>
 

@@ -7,6 +7,7 @@ signal: every page is one request and works with JavaScript switched off.
 
 from __future__ import annotations
 
+import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import date as date_type
@@ -20,6 +21,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 
 from app import stats
 from app.db import CLUB_NAME, CLUB_SHORT, create_schema, get_session
@@ -45,6 +48,9 @@ from app.models import (
 
 BASE_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+
+USERS = {"Gaffer": "jeans1", "admin": "pass1"}
+SECRET_KEY = os.environ.get("SECRET_KEY", "uca-afc-2026-change-in-prod")
 
 BADGE_MAP: dict[str, str] = {
     "Anniesland West Glasgow New Church AFC": "anniesland",
@@ -81,7 +87,21 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     yield
 
 
+class _AuthMiddleware(BaseHTTPMiddleware):
+    _PUBLIC = {"/login", "/healthz"}
+
+    async def dispatch(self, request: Request, call_next):
+        path = request.url.path
+        if path in self._PUBLIC or path.startswith("/static"):
+            return await call_next(request)
+        if not request.session.get("user"):
+            return RedirectResponse("/login", status_code=302)
+        return await call_next(request)
+
+
 app = FastAPI(title=f"{CLUB_SHORT} Club App", lifespan=lifespan)
+app.add_middleware(_AuthMiddleware)
+app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
 SessionDep = Annotated[Session, Depends(get_session)]
@@ -119,6 +139,34 @@ def _fixture_or_404(session: Session, fixture_id: int) -> Fixture:
     if fixture is None:
         raise HTTPException(status_code=404, detail="Fixture not found")
     return fixture
+
+
+# ------------------------------------------------------------------- auth --
+
+
+@app.get("/login")
+def login_page(request: Request):
+    return templates.TemplateResponse(request, "login.html", {"error": None})
+
+
+@app.post("/login")
+def login(
+    request: Request,
+    username: Annotated[str, Form()],
+    password: Annotated[str, Form()],
+):
+    if USERS.get(username) == password:
+        request.session["user"] = username
+        return RedirectResponse("/", status_code=303)
+    return templates.TemplateResponse(
+        request, "login.html", {"error": "Incorrect username or password"}, status_code=401
+    )
+
+
+@app.post("/logout")
+def logout(request: Request):
+    request.session.clear()
+    return RedirectResponse("/login", status_code=303)
 
 
 # ---------------------------------------------------------------- overview --
