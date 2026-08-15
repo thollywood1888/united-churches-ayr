@@ -81,6 +81,60 @@ def _player_id(first: str, last: str) -> int:
         return player.id
 
 
+def test_squad_can_add_edit_and_remove_a_player(client: TestClient) -> None:
+    page = client.get("/squad").text
+    assert "Add a player" in page
+    assert 'action="/squad"' in page
+
+    client.post(
+        "/squad",
+        data={
+            "first_name": "Calum",
+            "last_name": "Test",
+            "squad_number": "7",
+            "position": "Forward",
+        },
+        follow_redirects=True,
+    )
+    assert "Calum Test" in client.get("/squad").text
+    player_id = _player_id("Calum", "Test")
+
+    edit = client.get(f"/squad/{player_id}")
+    assert edit.status_code == 200
+    assert "Calum" in edit.text
+
+    client.post(
+        f"/squad/{player_id}",
+        data={
+            "first_name": "Calum",
+            "last_name": "Test",
+            "squad_number": "9",
+            "position": "Midfielder",
+            "status": "active",
+        },
+        follow_redirects=True,
+    )
+    assert "9" in client.get(f"/squad/{player_id}").text
+
+    client.post(f"/squad/{player_id}/remove", follow_redirects=True)
+    squad = client.get("/squad").text
+    assert "Calum Test" not in squad or "Left the club" in squad
+    assert "Calum Test" not in squad.split("Left the club")[0]
+
+
+def test_remove_keeps_a_player_who_has_played(client: TestClient) -> None:
+    client.post("/squad", data={"first_name": "History", "last_name": "Boy"}, follow_redirects=True)
+    player_id = _player_id("History", "Boy")
+    client.post("/fixtures/1/lineup/place", data={"slot": "st", "player_id": str(player_id)})
+    client.post(f"/squad/{player_id}/remove", follow_redirects=True)
+    page = client.get("/squad").text
+    assert "History Boy" in page
+    assert "Left the club" in page
+    client.post(f"/squad/{player_id}/restore", follow_redirects=True)
+    restored = client.get("/squad").text
+    assert "History Boy" in restored.split("Left the club")[0]
+
+
 def test_add_player_then_record_a_goal(client: TestClient) -> None:
     client.post(
         "/squad", data={"first_name": "Blair", "last_name": "Grieve"}, follow_redirects=True

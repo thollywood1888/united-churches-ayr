@@ -155,6 +155,15 @@ tr.is-us { background: var(--accent-soft); }
 tr.is-us td { font-weight: 700; color: var(--navy); }
 td.pos { color: var(--ink-soft); width: 34px; font-variant-numeric: tabular-nums; }
 .scroll-x { overflow-x: auto; }
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+.row-actions .tab { padding: 4px 12px; font-size: 13px; }
+td a { color: var(--navy); font-weight: 600; text-decoration: none; }
+td a:hover { text-decoration: underline; }
 
 /* --------------------------------------------------------------- lists --- */
 

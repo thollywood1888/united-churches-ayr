@@ -330,20 +330,59 @@ def delete_event(session: SessionDep, fixture_id: int, event_id: int):
 # ------------------------------------------------------------ squad & stats --
 
 
+def _player_has_history(session: Session, player_id: int) -> bool:
+    if session.scalar(select(Appearance.id).where(Appearance.player_id == player_id).limit(1)):
+        return True
+    if session.scalar(
+        select(MatchEvent.id)
+        .where((MatchEvent.player_id == player_id) | (MatchEvent.assist_player_id == player_id))
+        .limit(1)
+    ):
+        return True
+    if session.scalar(select(PlayerFine.id).where(PlayerFine.player_id == player_id).limit(1)):
+        return True
+    if session.scalar(select(FeePayment.id).where(FeePayment.player_id == player_id).limit(1)):
+        return True
+    return False
+
+
 @app.get("/squad")
 def squad(request: Request, session: SessionDep):
     season = _season_or_404(session)
     lines = stats.player_lines(session, season.id)
     record = stats.team_record(session, season.id)
+    left = list(
+        session.scalars(
+            select(Player)
+            .where(Player.status == PlayerStatus.left)
+            .order_by(Player.last_name, Player.first_name)
+        )
+    )
     return _render(
         request,
         "squad.html",
         session,
         tab="squad",
         lines=lines,
+        left_players=left,
         squad_size=len(lines),
         team_goals=record.scored,
         goals_assigned=stats.goals_assigned(session, season.id),
+    )
+
+
+@app.get("/squad/{player_id}")
+def edit_player_page(request: Request, session: SessionDep, player_id: int):
+    player = session.get(Player, player_id)
+    if player is None:
+        raise HTTPException(status_code=404, detail="Player not found")
+    return _render(
+        request,
+        "player.html",
+        session,
+        tab="squad",
+        player=player,
+        has_history=_player_has_history(session, player.id),
     )
 
 
@@ -358,19 +397,83 @@ def add_player(
     first, last = first_name.strip(), last_name.strip()
     if not first or not last:
         raise HTTPException(status_code=400, detail="A player needs a first and last name")
+    number = int(squad_number) if squad_number.strip().isdigit() else None
+    role = position.strip() or None
     existing = session.scalar(
         select(Player).where(Player.first_name == first, Player.last_name == last)
     )
     if existing is None:
         session.add(
-            Player(
-                first_name=first,
-                last_name=last,
-                squad_number=int(squad_number) if squad_number.strip().isdigit() else None,
-                position=position.strip() or None,
-            )
+            Player(first_name=first, last_name=last, squad_number=number, position=role)
         )
-        session.commit()
+    else:
+        existing.status = PlayerStatus.active
+        if number is not None:
+            existing.squad_number = number
+        if role is not None:
+            existing.position = role
+    session.commit()
+    return RedirectResponse("/squad", status_code=303)
+
+
+@app.post("/squad/{player_id}")
+def update_player(
+    session: SessionDep,
+    player_id: int,
+    first_name: Annotated[str, Form()],
+    last_name: Annotated[str, Form()],
+    squad_number: Annotated[str, Form()] = "",
+    position: Annotated[str, Form()] = "",
+    status: Annotated[str, Form()] = "active",
+):
+    player = session.get(Player, player_id)
+    if player is None:
+        raise HTTPException(status_code=404, detail="Player not found")
+    first, last = first_name.strip(), last_name.strip()
+    if not first or not last:
+        raise HTTPException(status_code=400, detail="A player needs a first and last name")
+    clash = session.scalar(
+        select(Player).where(
+            Player.first_name == first,
+            Player.last_name == last,
+            Player.id != player_id,
+        )
+    )
+    if clash is not None:
+        raise HTTPException(status_code=400, detail="That name is already on the books")
+    player.first_name = first
+    player.last_name = last
+    player.squad_number = int(squad_number) if squad_number.strip().isdigit() else None
+    player.position = position.strip() or None
+    player.status = PlayerStatus(status)
+    session.commit()
+    return RedirectResponse("/squad", status_code=303)
+
+
+@app.post("/squad/{player_id}/remove")
+def remove_player(session: SessionDep, player_id: int):
+    player = session.get(Player, player_id)
+    if player is None:
+        raise HTTPException(status_code=404, detail="Player not found")
+    if _player_has_history(session, player_id):
+        player.status = PlayerStatus.left
+    else:
+        if player.photo_filename:
+            photo = _PHOTOS_DIR / player.photo_filename
+            if photo.is_file():
+                photo.unlink()
+        session.delete(player)
+    session.commit()
+    return RedirectResponse("/squad", status_code=303)
+
+
+@app.post("/squad/{player_id}/restore")
+def restore_player(session: SessionDep, player_id: int):
+    player = session.get(Player, player_id)
+    if player is None:
+        raise HTTPException(status_code=404, detail="Player not found")
+    player.status = PlayerStatus.active
+    session.commit()
     return RedirectResponse("/squad", status_code=303)
 
 

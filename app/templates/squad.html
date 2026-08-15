@@ -13,6 +13,28 @@
 match centre for each result to attribute them.</p>
 {% endif %}
 
+<div class="panel" style="margin-bottom:22px">
+  <p>Squad</p>
+  <h2>Add a player</h2>
+  <form class="stack" method="post" action="/squad">
+    <div class="field-row">
+      <label class="field">First name<input name="first_name" required autocomplete="off"></label>
+      <label class="field">Last name<input name="last_name" required autocomplete="off"></label>
+      <label class="field">Squad number<input name="squad_number" inputmode="numeric" autocomplete="off"></label>
+      <label class="field">Position
+        <select name="position">
+          <option value="">—</option>
+          <option>Goalkeeper</option>
+          <option>Defender</option>
+          <option>Midfielder</option>
+          <option>Forward</option>
+        </select>
+      </label>
+    </div>
+    <button type="submit">Add player</button>
+  </form>
+</div>
+
 <p class="eyebrow">Current squad</p>
 <h2 class="section">Appearances, goals, assists and cards</h2>
 
@@ -31,6 +53,7 @@ match centre for each result to attribute them.</p>
       <th class="num">Assists</th>
       <th class="num">Y</th>
       <th class="num">R</th>
+      <th></th>
     </tr>
   </thead>
   <tbody>
@@ -48,8 +71,12 @@ match centre for each result to attribute them.</p>
           </label>
         </form>
       </td>
-      <td>{{ line.player.name }}{% if line.player.status.value != "active" %}
-        <span class="when">{{ line.player.status.value }}</span>{% endif %}</td>
+      <td>
+        <a href="/squad/{{ line.player.id }}">{{ line.player.name }}</a>
+        {% if line.player.position %}<span class="when">{{ line.player.position }}</span>{% endif %}
+        {% if line.player.status.value != "active" %}
+        <span class="when">{{ line.player.status.value }}</span>{% endif %}
+      </td>
       <td class="num">{{ line.player.squad_number or "—" }}</td>
       <td class="num">{{ line.appearances }}</td>
       <td class="num">{{ line.starts }}</td>
@@ -58,6 +85,12 @@ match centre for each result to attribute them.</p>
       <td class="num">{{ line.assists }}</td>
       <td class="num">{{ line.yellow_cards }}</td>
       <td class="num">{{ line.red_cards }}</td>
+      <td class="row-actions">
+        <a class="tab" href="/squad/{{ line.player.id }}">Edit</a>
+        <form method="post" action="/squad/{{ line.player.id }}/remove">
+          <button class="link" type="submit">Remove</button>
+        </form>
+      </td>
     </tr>
   {% endfor %}
   </tbody>
@@ -95,29 +128,26 @@ match centre for each result to attribute them.</p>
 {% endif %}
 
 {% else %}
-<p class="empty">No players yet. Add the first one below, or import the squad with
-<code>python -m app.seed</code>.</p>
+<p class="empty">No players in the current squad. Add one above.</p>
 {% endif %}
 
-<details class="adder">
-  <summary>Add a player</summary>
-  <form class="stack" method="post" action="/squad">
-    <div class="field-row">
-      <label class="field">First name<input name="first_name" required autocomplete="off"></label>
-      <label class="field">Last name<input name="last_name" required autocomplete="off"></label>
-      <label class="field">Squad number<input name="squad_number" inputmode="numeric" autocomplete="off"></label>
-      <label class="field">Position
-        <select name="position">
-          <option value="">—</option>
-          <option>Goalkeeper</option>
-          <option>Defender</option>
-          <option>Midfielder</option>
-          <option>Forward</option>
-        </select>
-      </label>
-    </div>
-    <button type="submit">Add player</button>
-  </form>
-</details>
+{% if left_players %}
+<p class="eyebrow" style="margin-top:32px">Left the club</p>
+<h2 class="section">Removed from the current squad</h2>
+<p class="empty">Stats from games they played stay on the record. Restore them if they come back.</p>
+<ul class="fixture-list">
+  {% for player in left_players %}
+  <li>
+    <span style="flex:1">
+      <a href="/squad/{{ player.id }}">{{ player.name }}</a>
+      {% if player.position %}<span class="when">{{ player.position }}</span>{% endif %}
+    </span>
+    <form method="post" action="/squad/{{ player.id }}/restore">
+      <button type="submit" class="ghost">Restore</button>
+    </form>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
 
 {% endblock %}

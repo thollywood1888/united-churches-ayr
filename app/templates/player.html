@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}{{ player.name }} · {{ club_name }}{% endblock %}
+{% block content %}
+
+<p class="eyebrow">Squad</p>
+<h2 class="section">{{ player.name }}</h2>
+<p class="empty"><a href="/squad">Back to squad</a></p>
+
+<div class="panel" style="margin-bottom:22px">
+  <p>Edit player</p>
+  <form class="stack" method="post" action="/squad/{{ player.id }}">
+    <div class="field-row">
+      <label class="field">First name
+        <input name="first_name" required value="{{ player.first_name }}" autocomplete="off">
+      </label>
+      <label class="field">Last name
+        <input name="last_name" required value="{{ player.last_name }}" autocomplete="off">
+      </label>
+      <label class="field">Squad number
+        <input name="squad_number" inputmode="numeric" autocomplete="off"
+               value="{{ player.squad_number if player.squad_number is not none else '' }}">
+      </label>
+      <label class="field">Position
+        <select name="position">
+          <option value="">—</option>
+          {% for role in ["Goalkeeper", "Defender", "Midfielder", "Forward"] %}
+          <option value="{{ role }}" {{ "selected" if player.position == role }}>{{ role }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="field">Status
+        <select name="status">
+          <option value="active" {{ "selected" if player.status.value == "active" }}>Active</option>
+          <option value="injured" {{ "selected" if player.status.value == "injured" }}>Injured</option>
+          <option value="left" {{ "selected" if player.status.value == "left" }}>Left</option>
+        </select>
+      </label>
+    </div>
+    <button type="submit">Save player</button>
+  </form>
+</div>
+
+<div class="panel">
+  <p>Photo</p>
+  <form class="stack" method="post" action="/squad/{{ player.id }}/photo" enctype="multipart/form-data">
+    {% if player.photo_filename %}
+    <img src="/static/player_photos/{{ player.photo_filename }}" alt="{{ player.name }}"
+         style="width:96px;height:96px;object-fit:cover;border-radius:50%;border:2px solid var(--line)">
+    {% endif %}
+    <label class="field">Upload a new photo
+      <input type="file" name="photo" accept="image/*" required>
+    </label>
+    <button type="submit" class="ghost">Save photo</button>
+  </form>
+</div>
+
+<div class="panel" style="margin-top:22px">
+  <p>Remove from squad</p>
+  {% if has_history %}
+  <p>This player has games, events or payments on the book. Remove keeps the history and hides them from the current squad.</p>
+  {% else %}
+  <p>No games recorded — this will delete them from the app.</p>
+  {% endif %}
+  <form method="post" action="/squad/{{ player.id }}/remove">
+    <button type="submit" class="link">Remove {{ player.first_name }}</button>
+  </form>
+</div>
+
+{% endblock %}
