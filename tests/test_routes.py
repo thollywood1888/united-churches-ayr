@@ -110,6 +110,8 @@ def test_lineups_page_shows_pitch_slots(client: TestClient) -> None:
     page = client.get("/lineups").text
     assert "Starting XI · 4-2-3-1" in page
     assert "Who plays GK?" not in page
+    assert page.count("pos-chip") >= 11
+    assert 'aria-label="GK, empty"' in page
     picker = client.get("/lineups?fixture_id=1&slot=gk").text
     assert "Who plays GK?" in picker
 

@@ -1,7 +1,15 @@
-<div class="board">
-  <div class="board-rail board-rail--left">Lineup builder</div>
-  <div class="board-rail board-rail--right">Lineup builder</div>
+<div class="pos-strip">
+  {% for slot in pitch_slots %}
+    {% set fill = slot_fill.get(slot.key) %}
+    <a class="pos-chip {{ 'is-filled' if fill }}"
+       href="{{ pick_base }}{{ '&' if '?' in pick_base else '?' }}slot={{ slot.key }}#picker">
+      <strong>{{ slot.label }}</strong>
+      <span>{{ fill.player.last_name if fill else "Add" }}</span>
+    </a>
+  {% endfor %}
+</div>
 
+<div class="board">
   <div class="board-head">
     <p>Starting XI · 4-2-3-1</p>
     <h3>{{ fixture.opponent }}</h3>
