@@ -118,14 +118,19 @@
   var pitch = document.querySelector('.pitch-free');
   if (!pitch) return;
   var fixtureId = pitch.dataset.fixtureId;
-  var dragEl = null, startX, startY, startLeft, startTop, wasDragged = false;
+  var dragEl = null, startX, startY, startLeft, startTop, moved = false;
   var THRESHOLD = 6;
 
   document.querySelectorAll('.pitch-slot-free[data-filled="true"]').forEach(function (el) {
+    el.setAttribute('draggable', 'false');
+    el.addEventListener('dragstart', function (e) { e.preventDefault(); });
+
     el.addEventListener('pointerdown', function (e) {
-      if (e.button !== 0 && e.pointerType === 'mouse') return;
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      e.preventDefault();
+      el.setPointerCapture(e.pointerId);
       dragEl = el;
-      wasDragged = false;
+      moved = false;
       startX = e.clientX;
       startY = e.clientY;
       startLeft = parseFloat(el.style.left);
@@ -136,13 +141,9 @@
       if (dragEl !== el) return;
       var dx = e.clientX - startX;
       var dy = e.clientY - startY;
-      if (!wasDragged && Math.sqrt(dx * dx + dy * dy) < THRESHOLD) return;
-      if (!wasDragged) {
-        wasDragged = true;
-        el.setPointerCapture(e.pointerId);
-        el.classList.add('is-dragging');
-      }
-      e.preventDefault();
+      if (!moved && Math.sqrt(dx * dx + dy * dy) < THRESHOLD) return;
+      moved = true;
+      el.classList.add('is-dragging');
       var rect = pitch.getBoundingClientRect();
       el.style.left = Math.max(3, Math.min(97, startLeft + dx / rect.width * 100)) + '%';
       el.style.top = Math.max(3, Math.min(97, startTop + dy / rect.height * 100)) + '%';
@@ -150,8 +151,8 @@
 
     el.addEventListener('pointerup', function (e) {
       if (dragEl !== el) return;
-      if (wasDragged) {
-        el.classList.remove('is-dragging');
+      el.classList.remove('is-dragging');
+      if (moved) {
         var x = parseFloat(el.style.left);
         var y = parseFloat(el.style.top);
         fetch('/fixtures/' + fixtureId + '/lineup/move', {
@@ -164,7 +165,7 @@
     });
 
     el.addEventListener('click', function (e) {
-      if (wasDragged) { e.preventDefault(); wasDragged = false; }
+      if (moved) { e.preventDefault(); moved = false; }
     });
   });
 })();

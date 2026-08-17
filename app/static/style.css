@@ -580,6 +580,7 @@ button.pick-player:hover { background: var(--page); border-color: var(--navy); c
 
 .pitch-free {
   position: relative;
+  z-index: 2;
   min-height: 520px;
 }
 .pitch-slot-free {
