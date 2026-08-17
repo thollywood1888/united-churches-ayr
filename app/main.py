@@ -27,6 +27,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from app import stats
 from app.db import CLUB_NAME, CLUB_SHORT, create_schema, get_session
+from app.league_table import LEAGUE_TABLE_SOURCE, LEAGUE_TABLE_URL, fetch_league_table
 from app.lineup import FORMATION_4231, FORMATIONS, POSITION_GROUPS, make_rows, player_group
 from app.models import (
     Appearance,
@@ -979,6 +980,8 @@ def table(request: Request, session: SessionDep):
         tab="table",
         rows=list(snapshot.rows) if snapshot else [],
         snapshot=snapshot,
+        league_table_url=LEAGUE_TABLE_URL,
+        fetch_error=request.query_params.get("fetch") == "failed",
     )
 
 
@@ -995,6 +998,23 @@ def paste_table(session: SessionDep, pasted: Annotated[str, Form()]):
     if not rows:
         raise HTTPException(status_code=400, detail="No readable rows in that paste")
     snapshot = LeagueTableSnapshot(season_id=season.id, source="manual paste")
+    snapshot.rows = [
+        LeagueTableRow(position=position, **row) for position, row in enumerate(rows, start=1)
+    ]
+    session.add(snapshot)
+    session.commit()
+    return RedirectResponse("/table", status_code=303)
+
+
+@app.post("/table/fetch")
+def fetch_table(session: SessionDep):
+    """Pull a fresh snapshot from the official Churches League table."""
+    season = _season_or_404(session)
+    try:
+        rows = fetch_league_table()
+    except (OSError, ValueError):
+        return RedirectResponse("/table?fetch=failed", status_code=303)
+    snapshot = LeagueTableSnapshot(season_id=season.id, source=LEAGUE_TABLE_SOURCE)
     snapshot.rows = [
         LeagueTableRow(position=position, **row) for position, row in enumerate(rows, start=1)
     ]

@@ -7,6 +7,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from app import stats
+from pathlib import Path
+
+from app.league_table import parse_league_html
 from app.main import parse_table
 from app.models import (
     Appearance,
@@ -168,6 +171,22 @@ def test_parse_table_handles_common_paste_shapes(line: str, expected_club: str) 
     rows = parse_table(line)
     assert len(rows) == 1
     assert rows[0]["club"] == expected_club
+
+
+def test_parse_league_html_reads_the_premier_division() -> None:
+    html = Path(__file__).parent.joinpath("fixtures", "secl_premier_table.html").read_text()
+    rows = parse_league_html(html)
+    assert [row["club"] for row in rows[:5]] == [
+        "Glasgow Free Churches AFC",
+        "Glasgow Elim AFC",
+        "Fullarton Irvine AFC",
+        "Croftfoot Parish AFC",
+        "United Churches of Ayr AFC",
+    ]
+    assert rows[4]["played"] == 1
+    assert rows[4]["drawn"] == 1
+    assert rows[4]["points"] == 1
+    assert len(rows) == 13
 
 
 def test_parse_table_skips_headers_and_blank_lines() -> None:

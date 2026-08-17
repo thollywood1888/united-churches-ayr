@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib
 import sys
 from collections.abc import Iterator
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -403,6 +404,38 @@ def test_lineup_rejects_more_than_eleven_starters(client: TestClient) -> None:
         follow_redirects=False,
     )
     assert response.status_code == 400
+
+
+def test_fetch_from_league_site_writes_a_snapshot(client: TestClient, monkeypatch) -> None:
+    html = (
+        Path(__file__).parent.joinpath("fixtures", "secl_premier_table.html").read_text()
+    )
+    monkeypatch.setattr("app.league_table.fetch_league_html", lambda url=None: html)
+    response = client.post("/table/fetch", follow_redirects=True)
+    assert response.status_code == 200
+    page = response.text
+    assert "Glasgow Free Churches AFC" in page
+    assert "churchesleague.com/league-tables-2026-2027" in page
+    rows = page.split("<tbody>", 1)[1].split("</tbody>", 1)[0]
+    assert rows.index("United Churches of Ayr AFC") < rows.index("West Glasgow New Church AFC")
+
+
+def test_failed_league_fetch_keeps_the_last_snapshot(client: TestClient, monkeypatch) -> None:
+    client.post(
+        "/table",
+        data={"pasted": "Glasgow Elim AFC 1 1 0 0 6 1 3"},
+        follow_redirects=True,
+    )
+    monkeypatch.setattr(
+        "app.league_table.fetch_league_html",
+        lambda url=None: (_ for _ in ()).throw(OSError("down")),
+    )
+    response = client.post("/table/fetch", follow_redirects=False)
+    assert response.status_code == 303
+    assert "fetch=failed" in response.headers["location"]
+    page = client.get("/table?fetch=failed").text
+    assert "Glasgow Elim AFC" in page
+    assert "Could not read the Churches League table" in page
 
 
 def test_pasted_standings_replace_the_snapshot(client: TestClient) -> None:

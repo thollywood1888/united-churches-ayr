@@ -33,16 +33,27 @@
 </table>
 </div>
 <p class="empty">Updated {{ snapshot.fetched_at.strftime("%a %-d %b, %H:%M") }} · source: {{ snapshot.source }}.
-These standings come from the league, not from results entered here.</p>
+These standings come from the league, not from results entered here.
+{% if league_table_url %}
+<a href="{{ league_table_url }}">Official table</a>.
+{% endif %}
+</p>
 {% else %}
-<p class="empty">No standings yet. Paste the league table below.</p>
+<p class="empty">No standings yet. Fetch from the league site or paste the table below.</p>
+{% endif %}
+
+{% if fetch_error %}
+<p class="empty" role="alert">Could not read the Churches League table. The last snapshot is unchanged. Paste still works.</p>
 {% endif %}
 
 {% if is_gaffer %}
+<form class="stack" method="post" action="/table/fetch" style="margin: 16px 0">
+  <button type="submit">Fetch from Churches League</button>
+</form>
 <details class="adder">
-  <summary>Update the table</summary>
+  <summary>Paste the table</summary>
   <div>
-    <p class="empty">One club per line, ending with seven numbers:
+    <p class="empty">Fallback if the league site is down. One club per line, ending with seven numbers:
       <code>Club Name  P W D L F A Pts</code>. Order the lines as the league has them.</p>
     <form class="stack" method="post" action="/table">
       <textarea name="pasted" required
