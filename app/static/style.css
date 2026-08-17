@@ -893,6 +893,26 @@ main.lineup-main {
   font-weight: 700;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
 }
+.md-token-disc { overflow: hidden; position: relative; }
+.md-token-disc img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.md-token-num {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  min-width: 16px;
+  padding: 0 4px;
+  border-radius: 4px 0 0 0;
+  background: rgba(16, 32, 51, 0.82);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.4;
+}
 .md-token.is-empty .md-token-disc {
   border-style: dashed;
   background: rgba(16, 32, 51, 0.28);
@@ -952,7 +972,7 @@ main.lineup-main {
 .md-sheet { display: grid; gap: 8px; }
 .md-sheet-row {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr);
+  grid-template-columns: 36px 44px minmax(0, 1fr);
   gap: 8px;
   align-items: center;
   margin: 0;
@@ -963,6 +983,79 @@ main.lineup-main {
   letter-spacing: 0.04em;
 }
 .md-sheet-row select { width: 100%; min-width: 0; }
+
+.md-face {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  flex: none;
+  background: #eceff4;
+}
+.md-face-sm { width: 36px; height: 36px; }
+.md-face-fallback,
+.md-face-empty {
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  background: #eceff4;
+}
+.md-face-empty { color: var(--color-text-muted); font-size: 16px; font-weight: 500; }
+
+.md-faces-panel { margin: 16px 0 0; }
+.md-face-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 8px;
+}
+.md-face-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px;
+  border-radius: 12px;
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-weight: 500;
+  justify-self: stretch;
+}
+button.md-face-card:hover {
+  border-color: var(--color-text-primary);
+  background: var(--page);
+}
+.md-face-card .md-face,
+.md-face-card .md-face-fallback {
+  width: 56px;
+  height: 56px;
+  font-size: 16px;
+}
+.md-face-name {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.md-face-no {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+.md-face-card.is-used {
+  opacity: 0.55;
+}
+.md-face-card.is-bench {
+  border-color: var(--color-accent);
+}
 
 .md-panel {
   background: var(--color-surface);

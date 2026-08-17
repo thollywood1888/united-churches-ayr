@@ -342,6 +342,36 @@ def test_each_position_dropdown_lists_the_whole_squad(client: TestClient) -> Non
     assert f'value="{player_id}" selected' in filled
 
 
+def test_adding_a_player_shows_their_face_thumbnail(client: TestClient) -> None:
+    client.post(
+        "/squad",
+        data={"first_name": "Ethan", "last_name": "White"},
+        follow_redirects=True,
+    )
+    player_id = _player_id("Ethan", "White")
+    from app.db import SessionLocal
+    from app.models import Player
+
+    with SessionLocal() as session:
+        player = session.get(Player, player_id)
+        assert player is not None
+        player.photo_filename = "player_34.jpg"
+        session.commit()
+
+    page = client.get("/lineups?fixture_id=1").text
+    assert "md-face-card" in page
+    assert "/static/player_photos/player_34.jpg" in page
+
+    client.post(
+        "/fixtures/1/lineup/place",
+        data={"slot": "st", "player_id": str(player_id), "next": "/lineups?fixture_id=1"},
+    )
+    filled = client.get("/lineups?fixture_id=1").text
+    assert 'src="/static/player_photos/player_34.jpg"' in filled
+    assert "has-photo" in filled
+    assert 'aria-label="ST: Ethan White"' in filled
+
+
 def test_place_player_on_a_pitch_slot(client: TestClient) -> None:
     client.post(
         "/squad",

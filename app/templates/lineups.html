@@ -14,6 +14,14 @@
   {% endfor %}
 {%- endmacro %}
 
+{% macro player_face(player, class_name="md-face") -%}
+  {% if player.photo_filename %}
+  <img src="/static/player_photos/{{ player.photo_filename }}" alt="{{ player.name }}" class="{{ class_name }}">
+  {% else %}
+  <span class="{{ class_name }} md-face-fallback" aria-hidden="true">{{ player.initials }}</span>
+  {% endif %}
+{%- endmacro %}
+
 <div class="md-lineup">
   <div class="md-top">
     <div>
@@ -140,8 +148,13 @@
                {% if fill %}data-player-id="{{ fill.player.id }}"{% endif %}
                style="left: {{ px }}%; top: {{ py }}%;"
                aria-label="{% if fill %}{{ slot.label }}: {{ fill.player.name }}{% else %}{{ slot.label }}, empty{% endif %}">
-              <span class="md-token-disc">
-                {% if fill and fill.player.squad_number %}
+              <span class="md-token-disc {{ 'has-photo' if fill and fill.player.photo_filename }}">
+                {% if fill and fill.player.photo_filename %}
+                  <img src="/static/player_photos/{{ fill.player.photo_filename }}" alt="{{ fill.player.name }}">
+                  {% if fill.player.squad_number %}
+                  <span class="md-token-num">{{ fill.player.squad_number }}</span>
+                  {% endif %}
+                {% elif fill and fill.player.squad_number %}
                   {{ fill.player.squad_number }}
                 {% elif fill %}
                   {{ fill.player.initials }}
@@ -167,11 +180,16 @@
     <aside class="md-side" id="squad">
       <section class="md-panel">
         <h3 class="md-panel-title">Starting XI</h3>
-        <p class="md-help">Every position is a full squad list. Pick a name to put them there.</p>
+        <p class="md-help">Pick a name, or tap a face below. Their photo lands on the pitch.</p>
         <div class="md-sheet">
           {% for slot in pitch_slots %}
             {% set fill = slot_fill.get(slot.key) %}
             <form method="post" action="/fixtures/{{ fixture.id }}/lineup/place" class="md-sheet-row" id="sheet-{{ slot.key }}">
+              {% if fill %}
+                {{ player_face(fill.player, "md-face md-face-sm") }}
+              {% else %}
+                <span class="md-face md-face-empty" aria-hidden="true">+</span>
+              {% endif %}
               <label class="md-sheet-pos" for="sheet-select-{{ slot.key }}">{{ slot.label }}</label>
               <select id="sheet-select-{{ slot.key }}" name="player_id" onchange="this.form.submit()">
                 {{ squad_options(fill.player.id if fill else none, "Add player") }}
@@ -193,7 +211,7 @@
         <ul class="md-subs">
           {% for appearance in bench %}
           <li class="md-sub">
-            <span class="md-avatar">{{ appearance.player.initials }}</span>
+            {{ player_face(appearance.player, "md-face md-face-sm") }}
             <span class="md-player-copy">
               <strong>{{ appearance.player.name }}</strong>
               <span>{{ appearance.player.position or "SUB" }}</span>
@@ -208,6 +226,7 @@
         </ul>
         {% endif %}
         <form method="post" action="/fixtures/{{ fixture.id }}/lineup/bench" class="md-sheet-row">
+          <span class="md-face md-face-empty" aria-hidden="true">+</span>
           <label class="md-sheet-pos" for="add-sub">Add</label>
           <select id="add-sub" name="player_id" onchange="this.form.submit()">
             {{ squad_options(none, "Add substitute") }}
@@ -218,6 +237,51 @@
       </section>
     </aside>
   </div>
+
+  <section class="md-panel md-faces-panel">
+    <h3 class="md-panel-title">Squad</h3>
+    <p class="md-help">
+      {% if first_empty_slot %}
+      Tap a face to put them on the next empty spot ({{ first_empty_slot | upper }}).
+      {% else %}
+      The XI is full. Tap a face to add them to the bench.
+      {% endif %}
+    </p>
+    <div class="md-face-grid">
+      {% for player in all_players %}
+        {% set on_pitch = slot_fill.values() | selectattr("player_id", "equalto", player.id) | list %}
+        {% set on_bench = bench | selectattr("player_id", "equalto", player.id) | list %}
+        {% if first_empty_slot and not on_pitch %}
+        <form method="post" action="/fixtures/{{ fixture.id }}/lineup/place">
+          <input type="hidden" name="slot" value="{{ first_empty_slot }}">
+          <input type="hidden" name="player_id" value="{{ player.id }}">
+          <input type="hidden" name="next" value="{{ next_url }}">
+          <button type="submit" class="md-face-card {{ 'is-bench' if on_bench }}">
+            {{ player_face(player) }}
+            <span class="md-face-name">{{ player.last_name }}</span>
+            {% if player.squad_number %}<span class="md-face-no">#{{ player.squad_number }}</span>{% endif %}
+          </button>
+        </form>
+        {% elif not first_empty_slot and not on_pitch and not on_bench %}
+        <form method="post" action="/fixtures/{{ fixture.id }}/lineup/bench">
+          <input type="hidden" name="player_id" value="{{ player.id }}">
+          <input type="hidden" name="next" value="{{ next_url }}">
+          <button type="submit" class="md-face-card">
+            {{ player_face(player) }}
+            <span class="md-face-name">{{ player.last_name }}</span>
+            {% if player.squad_number %}<span class="md-face-no">#{{ player.squad_number }}</span>{% endif %}
+          </button>
+        </form>
+        {% else %}
+        <div class="md-face-card is-used">
+          {{ player_face(player) }}
+          <span class="md-face-name">{{ player.last_name }}</span>
+          <span class="md-face-no">{{ on_pitch[0].pitch_slot | upper if on_pitch else "SUB" }}</span>
+        </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </section>
 
   {% if unplaced_starters %}
   <p class="empty">{{ unplaced_starters | map(attribute="player.name") | join(", ") }}
