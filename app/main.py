@@ -484,14 +484,11 @@ def remove_player(session: SessionDep, player_id: int):
     player = session.get(Player, player_id)
     if player is None:
         raise HTTPException(status_code=404, detail="Player not found")
-    if _player_has_history(session, player_id):
-        player.status = PlayerStatus.left
-    else:
-        if player.photo_filename:
-            photo = _PHOTOS_DIR / player.photo_filename
-            if photo.is_file():
-                photo.unlink()
-        session.delete(player)
+    player.status = PlayerStatus.left
+    if not _player_has_history(session, player_id) and player.photo_filename:
+        photo = _PHOTOS_DIR / player.photo_filename
+        if photo.is_file():
+            photo.unlink()
     session.commit()
     return RedirectResponse("/squad", status_code=303)
 
