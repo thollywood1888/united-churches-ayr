@@ -1491,6 +1491,14 @@ button.md-player:hover { background: var(--page); }
   .ov-leaders-grid { grid-template-columns: repeat(2, 1fr); }
   .ov-page-title { font-size: 22px; }
 }
+@media (max-width: 480px) {
+  main { padding: 0 14px; }
+  .masthead { padding: 12px 14px; }
+  .tabs { padding: 14px; }
+  .ov-stats-strip { grid-template-columns: repeat(2, 1fr); }
+  .ov-leaders-grid { grid-template-columns: 1fr; }
+  .sq-page-title { font-size: 22px; }
+}
 
 /* --------------------------------------------------------- match centre -- */
 
@@ -1624,6 +1632,9 @@ button.md-player:hover { background: var(--page); }
   .mc-score { font-size: 40px; }
   .mc-add-row { grid-template-columns: 1fr 1fr; }
 }
+@media (max-width: 480px) {
+  .mc-add-row { grid-template-columns: 1fr; }
+}
 
 /* ── Squad & stats page ─────────────────────────────────────── */
 .sq-page-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
@@ -1668,6 +1679,9 @@ button.md-player:hover { background: var(--page); }
 .sq-player-name:hover { text-decoration: underline; }
 
 @media (max-width: 700px) {
-  .sq-leaders { grid-template-columns: 1fr; }
+  .sq-leaders { grid-template-columns: repeat(2, 1fr); }
   .sq-search-wrap { flex-direction: column; align-items: stretch; }
+}
+@media (max-width: 480px) {
+  .sq-leaders { grid-template-columns: 1fr; }
 }
