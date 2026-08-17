@@ -51,7 +51,7 @@ from app.models import (
 BASE_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
-USERS = {"Gaffer": "jeans1", "admin": "pass1"}
+USERS = {"Gaffer": "jeans1", "squad": "treble1"}
 SECRET_KEY = os.environ.get("SECRET_KEY", "uca-afc-2026-change-in-prod")
 
 BADGE_MAP: dict[str, str] = {
