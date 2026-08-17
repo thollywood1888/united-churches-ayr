@@ -37,5 +37,22 @@
 </main>
 
 <footer class="foot">Be strong and courageous · {{ season.label }}</footer>
+
+{% if not is_gaffer %}
+<script>
+(function () {
+  var INTERVAL = 60000;
+  var timer = null;
+  function scheduleRefresh() {
+    clearTimeout(timer);
+    timer = setTimeout(function () { location.reload(); }, INTERVAL);
+  }
+  scheduleRefresh();
+  ['click','keydown','touchstart','scroll'].forEach(function (e) {
+    document.addEventListener(e, scheduleRefresh, { passive: true });
+  });
+})();
+</script>
+{% endif %}
 </body>
 </html>
