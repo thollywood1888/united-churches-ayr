@@ -1051,6 +1051,11 @@ def pay_fee(session: SessionDep, player_id: int):
     return RedirectResponse("/fees", status_code=303)
 
 
+@app.get("/links")
+def links(request: Request, session: SessionDep):
+    return _render(request, "links.html", session, tab="links")
+
+
 @app.get("/healthz")
 def healthz() -> dict[str, str]:
     return {"status": "ok"}
