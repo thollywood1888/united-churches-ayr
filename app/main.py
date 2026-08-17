@@ -381,6 +381,9 @@ def squad(request: Request, session: SessionDep):
             .order_by(Player.last_name, Player.first_name)
         )
     )
+    scorers = stats.top_scorers(session, season.id, limit=1)
+    assisters = stats.top_assists(session, season.id, limit=1)
+    motm_leaders = stats.top_motm(session, season.id, limit=1)
     return _render(
         request,
         "squad.html",
@@ -391,6 +394,9 @@ def squad(request: Request, session: SessionDep):
         squad_size=len(lines),
         team_goals=record.scored,
         goals_assigned=stats.goals_assigned(session, season.id),
+        top_scorer=scorers[0] if scorers else None,
+        top_assister=assisters[0] if assisters else None,
+        top_motm_player=motm_leaders[0] if motm_leaders else None,
     )
 
 

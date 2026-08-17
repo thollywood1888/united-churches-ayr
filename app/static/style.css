@@ -1624,3 +1624,50 @@ button.md-player:hover { background: var(--page); }
   .mc-score { font-size: 40px; }
   .mc-add-row { grid-template-columns: 1fr 1fr; }
 }
+
+/* ── Squad & stats page ─────────────────────────────────────── */
+.sq-page-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+.sq-page-title { font-size: 28px; font-weight: 800; color: var(--navy); margin: 4px 0 0; }
+.sq-season-badge { background: var(--navy); color: #fff; font-size: 13px; font-weight: 700; padding: 6px 14px; border-radius: 20px; white-space: nowrap; margin-top: 4px; }
+
+.sq-leaders { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+.sq-leader-card {
+  background: #fff; border: 1px solid var(--line); border-radius: 14px;
+  padding: 24px 20px 18px; position: relative; overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+}
+.sq-leader-card::before {
+  content: ''; position: absolute; top: 0; right: 0;
+  width: 0; height: 0;
+  border-style: solid; border-width: 0 52px 52px 0;
+  border-color: transparent var(--gold) transparent transparent;
+}
+.sq-leader-corner { position: absolute; top: 5px; right: 5px; font-size: 15px; z-index: 1; }
+.sq-leader-photo { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; margin-bottom: 12px; flex: none; border: 3px solid var(--line); }
+.sq-leader-photo--ph {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: var(--navy); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 700; margin-bottom: 12px; flex: none;
+}
+.sq-leader-stat { font-size: 40px; font-weight: 900; color: var(--gold); line-height: 1; margin-bottom: 4px; }
+.sq-leader-name { font-size: 15px; font-weight: 700; color: var(--navy); margin-bottom: 2px; }
+.sq-leader-label { font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
+
+.sq-stat-icon { font-size: 22px; margin-bottom: 4px; }
+
+.sq-controls { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.sq-add-player { flex: none; }
+.sq-search-wrap { display: flex; gap: 10px; flex: 1; min-width: 200px; align-items: center; }
+.sq-search { flex: 1; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; font-family: inherit; outline: none; }
+.sq-search:focus { border-color: var(--navy); }
+.sq-pos-filter { padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; font-family: inherit; background: #fff; outline: none; }
+
+.sq-player-cell { display: flex; align-items: center; gap: 10px; }
+.sq-player-name { font-weight: 600; color: var(--navy); text-decoration: none; }
+.sq-player-name:hover { text-decoration: underline; }
+
+@media (max-width: 700px) {
+  .sq-leaders { grid-template-columns: 1fr; }
+  .sq-search-wrap { flex-direction: column; align-items: stretch; }
+}
