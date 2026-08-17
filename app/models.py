@@ -116,6 +116,12 @@ class Player(Base):
     def name(self) -> str:
         return f"{self.first_name} {self.last_name}".strip()
 
+    @property
+    def initials(self) -> str:
+        first = (self.first_name or "").strip()[:1]
+        last = (self.last_name or "").strip()[:1]
+        return f"{first}{last}".upper()
+
 
 class Fixture(Base):
     __tablename__ = "fixture"
@@ -136,6 +142,7 @@ class Fixture(Base):
     goals_against: Mapped[int | None] = mapped_column(default=None)
     notes: Mapped[str | None] = mapped_column(String(500), default=None)
     formation: Mapped[str] = mapped_column(String(10), default="4-2-3-1")
+    captain_player_id: Mapped[int | None] = mapped_column(ForeignKey("player.id"), default=None)
 
     season: Mapped[Season] = relationship(back_populates="fixtures")
     appearances: Mapped[list[Appearance]] = relationship(
@@ -268,6 +275,27 @@ class LeagueTableRow(Base):
     @property
     def goal_difference(self) -> int:
         return self.goals_for - self.goals_against
+
+
+class PlayerStatAdjustment(Base):
+    """Manual stat additions per player per season (pre-app history, corrections)."""
+
+    __tablename__ = "player_stat_adjustment"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    player_id: Mapped[int] = mapped_column(ForeignKey("player.id"))
+    season_id: Mapped[int] = mapped_column(ForeignKey("season.id"))
+    apps: Mapped[int] = mapped_column(default=0)
+    starts: Mapped[int] = mapped_column(default=0)
+    mins: Mapped[int] = mapped_column(default=0)
+    goals: Mapped[int] = mapped_column(default=0)
+    assists: Mapped[int] = mapped_column(default=0)
+    yellow_cards: Mapped[int] = mapped_column(default=0)
+    red_cards: Mapped[int] = mapped_column(default=0)
+
+    player: Mapped["Player"] = relationship()
+
+    __table_args__ = (UniqueConstraint("player_id", "season_id", name="uq_stat_adj"),)
 
 
 class FineScheduleItem(Base):

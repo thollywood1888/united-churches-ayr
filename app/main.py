@@ -14,6 +14,7 @@ from datetime import date as date_type
 from datetime import datetime
 from pathlib import Path
 from typing import Annotated
+from urllib.parse import urlencode
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, Response, UploadFile
 from fastapi.responses import RedirectResponse
@@ -26,7 +27,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from app import stats
 from app.db import CLUB_NAME, CLUB_SHORT, create_schema, get_session
-from app.lineup import FORMATION_4231, FORMATIONS, make_rows
+from app.lineup import FORMATION_4231, FORMATIONS, POSITION_GROUPS, make_rows, player_group
 from app.models import (
     Appearance,
     AppearanceRole,
@@ -517,6 +518,34 @@ def _safe_next(raw: str | None, fallback: str) -> str:
     return fallback
 
 
+def _lineups_url(
+    fixture_id: int,
+    *,
+    slot: str | None = None,
+    group: str | None = None,
+    q: str | None = None,
+    saved: bool = False,
+) -> str:
+    params: dict[str, str] = {"fixture_id": str(fixture_id)}
+    if slot:
+        params["slot"] = slot
+    if group and group != "ALL":
+        params["group"] = group
+    if q:
+        params["q"] = q
+    if saved:
+        params["saved"] = "1"
+    return "/lineups?" + urlencode(params)
+
+
+def _sync_captain(fixture: Fixture) -> None:
+    if fixture.captain_player_id is None:
+        return
+    captain = _appearance_for_player(fixture, fixture.captain_player_id)
+    if captain is None or captain.role is not AppearanceRole.start:
+        fixture.captain_player_id = None
+
+
 def _pitch_context(
     fixture: Fixture, players: list[Player], pick_slot: str | None, return_to: str
 ) -> dict:
@@ -543,6 +572,26 @@ def _pitch_context(
     else:
         next_url = f"/lineups?fixture_id={fixture.id}"
         pick_base = next_url
+    on_pitch_ids = {appearance.player_id for appearance in by_slot.values()}
+    bench_ids = {appearance.player_id for appearance in bench}
+    first_empty = next((slot.key for slot in formation_slots if slot.key not in by_slot), None)
+    sidebar: list[dict[str, object]] = []
+    for player in players:
+        if player.id in on_pitch_ids:
+            continue
+        if player.status is PlayerStatus.injured:
+            status = "unavailable"
+        elif player.id in bench_ids:
+            status = "bench"
+        else:
+            status = "available"
+        sidebar.append(
+            {
+                "player": player,
+                "group": player_group(player.position),
+                "status": status,
+            }
+        )
     return {
         "pitch_slots": formation_slots,
         "pitch_rows": formation_rows,
@@ -558,6 +607,12 @@ def _pitch_context(
         "next_url": next_url,
         "pick_base": pick_base,
         "starters_on_pitch": len(by_slot),
+        "spots_remaining": 11 - len(by_slot),
+        "sidebar_players": sidebar,
+        "first_empty_slot": first_empty,
+        "position_groups": POSITION_GROUPS,
+        "captain_id": fixture.captain_player_id,
+        "xi_players": [by_slot[slot.key].player for slot in formation_slots if slot.key in by_slot],
     }
 
 
@@ -575,6 +630,9 @@ def lineups(
     session: SessionDep,
     fixture_id: int | None = None,
     slot: str | None = None,
+    group: str | None = None,
+    q: str | None = None,
+    saved: str | None = None,
 ):
     season = _season_or_404(session)
     all_fixtures = list(
@@ -601,7 +659,35 @@ def lineups(
         "next_url": "/lineups",
         "pick_base": "/lineups",
         "starters_on_pitch": 0,
+        "spots_remaining": 11,
+        "sidebar_players": [],
+        "first_empty_slot": None,
+        "position_groups": POSITION_GROUPS,
+        "captain_id": None,
+        "xi_players": [],
     }
+    if selected:
+        dest = _lineups_url(selected.id, group=group, q=q)
+        pitch["next_url"] = dest
+        pitch["pick_base"] = dest
+        group_key = (group or "ALL").upper()
+        query = (q or "").strip().lower()
+        sidebar = list(pitch["sidebar_players"])
+        if group_key in POSITION_GROUPS and group_key != "ALL":
+            sidebar = [row for row in sidebar if row["group"] == group_key]
+        if query:
+            sidebar = [
+                row
+                for row in sidebar
+                if query in row["player"].name.lower()
+                or (row["player"].squad_number is not None and query in str(row["player"].squad_number))
+            ]
+        pitch["sidebar_players"] = sidebar
+        pitch["active_group"] = group_key if group_key in POSITION_GROUPS else "ALL"
+        pitch["search_q"] = q or ""
+    else:
+        pitch["active_group"] = "ALL"
+        pitch["search_q"] = ""
     return _render(
         request,
         "lineups.html",
@@ -610,6 +696,7 @@ def lineups(
         fixtures=all_fixtures,
         selected_fixture=selected,
         next_fixture=stats.next_fixture(session, season.id),
+        saved=saved == "1",
         **pitch,
     )
 
@@ -666,6 +753,7 @@ def place_on_pitch(
     if slot_defaults:
         existing.pos_x = slot_defaults[0].default_x
         existing.pos_y = slot_defaults[0].default_y
+    _sync_captain(fixture)
     session.commit()
     return RedirectResponse(dest, status_code=303)
 
@@ -695,6 +783,7 @@ def toggle_bench(
         existing.role = AppearanceRole.sub
         existing.pitch_slot = None
         existing.minute_on = 60
+    _sync_captain(fixture)
     session.commit()
     return RedirectResponse(dest, status_code=303)
 
@@ -757,6 +846,7 @@ def set_formation(
     for appearance in list(fixture.appearances):
         if appearance.role is AppearanceRole.start and appearance.pitch_slot not in valid_keys:
             session.delete(appearance)
+    _sync_captain(fixture)
     session.commit()
     dest = _safe_next(next, f"/lineups?fixture_id={fixture_id}")
     return RedirectResponse(dest, status_code=303)
@@ -775,6 +865,29 @@ def clear_lineup(
     for appearance in list(fixture.appearances):
         session.delete(appearance)
     fixture.formation = "4-2-3-1"
+    fixture.captain_player_id = None
+    session.commit()
+    return RedirectResponse(dest, status_code=303)
+
+
+@app.post("/fixtures/{fixture_id}/captain")
+def set_captain(
+    session: SessionDep,
+    fixture_id: int,
+    player_id: Annotated[str, Form()] = "",
+    next: Annotated[str, Form()] = "",
+):
+    fixture = _fixture_or_404(session, fixture_id)
+    dest = _safe_next(next, f"/lineups?fixture_id={fixture_id}")
+    if not player_id.strip():
+        fixture.captain_player_id = None
+        session.commit()
+        return RedirectResponse(dest, status_code=303)
+    chosen_id = int(player_id)
+    appearance = _appearance_for_player(fixture, chosen_id)
+    if appearance is None or appearance.role is not AppearanceRole.start:
+        raise HTTPException(status_code=400, detail="Captain must be in the starting XI")
+    fixture.captain_player_id = chosen_id
     session.commit()
     return RedirectResponse(dest, status_code=303)
 

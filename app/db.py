@@ -43,6 +43,7 @@ def create_schema() -> None:
     _ensure_appearance_pitch_slot()
     _ensure_fixture_formation()
     _ensure_appearance_pos()
+    _ensure_fixture_captain()
 
 
 def _ensure_appearance_pitch_slot() -> None:
@@ -79,6 +80,17 @@ def _ensure_fixture_formation() -> None:
         connection.execute(
             text("ALTER TABLE fixture ADD COLUMN formation VARCHAR(10) DEFAULT '4-2-3-1'")
         )
+
+
+def _ensure_fixture_captain() -> None:
+    inspector = inspect(engine)
+    if "fixture" not in inspector.get_table_names():
+        return
+    columns = {column["name"] for column in inspector.get_columns("fixture")}
+    if "captain_player_id" in columns:
+        return
+    with engine.begin() as connection:
+        connection.execute(text("ALTER TABLE fixture ADD COLUMN captain_player_id INTEGER"))
 
 
 def get_session() -> Iterator[Session]:

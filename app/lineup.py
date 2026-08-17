@@ -21,35 +21,56 @@ def make_rows(formation: tuple[PitchSlot, ...]) -> tuple[tuple[PitchSlot, ...], 
     )
 
 
-# 4-2-3-1, attack at row 0, keeper at bottom
+# 4-2-3-1, attack at row 0, keeper at bottom — spaced like a matchday graphic
 FORMATION_4231: tuple[PitchSlot, ...] = (
-    PitchSlot("lw", "LW", 0, 15, 8),
-    PitchSlot("st", "ST", 0, 50, 8),
-    PitchSlot("rw", "RW", 0, 85, 8),
-    PitchSlot("cam", "CAM", 1, 50, 25),
-    PitchSlot("lcm", "CM", 2, 30, 42),
-    PitchSlot("rcm", "CM", 2, 70, 42),
-    PitchSlot("lb", "LB", 3, 8, 62),
-    PitchSlot("lcb", "CB", 3, 33, 62),
-    PitchSlot("rcb", "CB", 3, 67, 62),
-    PitchSlot("rb", "RB", 3, 92, 62),
-    PitchSlot("gk", "GK", 4, 50, 83),
+    PitchSlot("st", "ST", 0, 50, 10),
+    PitchSlot("lw", "LW", 1, 18, 28),
+    PitchSlot("cam", "CAM", 1, 50, 28),
+    PitchSlot("rw", "RW", 1, 82, 28),
+    PitchSlot("lcm", "CM", 2, 35, 48),
+    PitchSlot("rcm", "CM", 2, 65, 48),
+    PitchSlot("lb", "LB", 3, 12, 68),
+    PitchSlot("lcb", "CB", 3, 36, 68),
+    PitchSlot("rcb", "CB", 3, 64, 68),
+    PitchSlot("rb", "RB", 3, 88, 68),
+    PitchSlot("gk", "GK", 4, 50, 88),
 )
 
 # 3-5-2, attack at row 0, keeper at bottom
 FORMATION_352: tuple[PitchSlot, ...] = (
-    PitchSlot("ls", "LS", 0, 30, 8),
-    PitchSlot("rs", "RS", 0, 70, 8),
-    PitchSlot("am", "AM", 1, 50, 26),
-    PitchSlot("ldm", "DM", 2, 30, 43),
-    PitchSlot("rdm", "DM", 2, 70, 43),
-    PitchSlot("lwb", "LWB", 3, 8, 58),
-    PitchSlot("rwb", "RWB", 3, 92, 58),
-    PitchSlot("cb1", "CB", 4, 22, 73),
-    PitchSlot("cb2", "CB", 4, 50, 73),
-    PitchSlot("cb3", "CB", 4, 78, 73),
-    PitchSlot("gk", "GK", 5, 50, 87),
+    PitchSlot("ls", "LS", 0, 32, 10),
+    PitchSlot("rs", "RS", 0, 68, 10),
+    PitchSlot("am", "AM", 1, 50, 28),
+    PitchSlot("ldm", "DM", 2, 34, 46),
+    PitchSlot("rdm", "DM", 2, 66, 46),
+    PitchSlot("lwb", "LWB", 3, 10, 62),
+    PitchSlot("rwb", "RWB", 3, 90, 62),
+    PitchSlot("cb1", "CB", 4, 26, 76),
+    PitchSlot("cb2", "CB", 4, 50, 76),
+    PitchSlot("cb3", "CB", 4, 74, 76),
+    PitchSlot("gk", "GK", 5, 50, 90),
 )
+
+POSITION_GROUPS = ("ALL", "GK", "DEF", "MID", "FWD")
+
+_GROUP_ALIASES = {
+    "goalkeeper": "GK",
+    "gk": "GK",
+    "defender": "DEF",
+    "defence": "DEF",
+    "defense": "DEF",
+    "midfielder": "MID",
+    "midfield": "MID",
+    "forward": "FWD",
+    "striker": "FWD",
+    "attacker": "FWD",
+}
+
+
+def player_group(position: str | None) -> str:
+    if not position:
+        return "ALL"
+    return _GROUP_ALIASES.get(position.strip().lower(), "ALL")
 
 FORMATIONS: dict[str, tuple[PitchSlot, ...]] = {
     "4-2-3-1": FORMATION_4231,
