@@ -99,7 +99,7 @@ class _AuthMiddleware(BaseHTTPMiddleware):
         user = request.session.get("user")
         if not user:
             return RedirectResponse("/login", status_code=302)
-        if request.method == "POST" and user != "Gaffer":
+        if request.method == "POST" and user != "Gaffer" and path != "/logout":
             referer = request.headers.get("referer", "/")
             return RedirectResponse(referer, status_code=303)
         return await call_next(request)
