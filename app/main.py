@@ -652,7 +652,7 @@ def place_on_pitch(
             if appearance.role is AppearanceRole.start
         )
         if starters >= 11:
-            raise HTTPException(status_code=400, detail="A starting eleven is eleven players")
+            return RedirectResponse(dest, status_code=303)
         existing = Appearance(
             fixture_id=fixture_id,
             player_id=chosen_id,
