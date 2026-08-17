@@ -869,20 +869,20 @@ main.lineup-main {
 .md-token {
   position: absolute;
   transform: translate(-50%, -50%);
-  width: 72px;
+  width: 92px;
   text-align: center;
   text-decoration: none;
   color: inherit;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
 }
-.md-token[data-filled="true"] { cursor: grab; }
 .md-token.is-dragging { cursor: grabbing; z-index: 50; }
+.md-token[data-filled="true"] .md-token-disc { cursor: grab; }
 .md-token-disc {
   width: 52px;
   height: 52px;
   margin: 0 auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
   border-radius: 50%;
   border: 2px solid var(--color-gold-ring);
   background: var(--color-token);
@@ -926,6 +926,43 @@ main.lineup-main {
   background: rgba(16, 32, 51, 0.72);
   font-weight: 500;
 }
+.md-token-pick {
+  margin-top: 4px;
+}
+.md-token-pick select {
+  width: 92px;
+  max-width: 92px;
+  padding: 2px 4px;
+  border: 0;
+  border-radius: 4px;
+  background: var(--color-token);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+}
+.md-token.is-empty .md-token-pick select {
+  background: rgba(16, 32, 51, 0.72);
+}
+.md-help {
+  margin: -4px 0 12px;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  line-height: 1.4;
+}
+.md-sheet { display: grid; gap: 8px; }
+.md-sheet-row {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  margin: 0;
+}
+.md-sheet-pos {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.md-sheet-row select { width: 100%; min-width: 0; }
 
 .md-panel {
   background: var(--color-surface);

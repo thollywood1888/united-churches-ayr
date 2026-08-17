@@ -163,13 +163,11 @@ def test_add_player_then_record_a_goal(client: TestClient) -> None:
 def test_lineups_page_shows_pitch_slots(client: TestClient) -> None:
     page = client.get("/lineups").text
     assert "Matchday lineup" in page
-    assert "Available players" in page
-    assert "Who plays GK?" not in page
+    assert "Starting XI" in page
     assert page.count("md-token") >= 11
     assert 'aria-label="GK, empty"' in page
     assert 'option value="4-2-3-1" selected' in page
-    picker = client.get("/lineups?fixture_id=1&slot=gk").text
-    assert "Who plays GK?" in picker
+    assert page.count('name="player_id"') >= 11
 
 
 def test_each_game_week_lineup_starts_empty(client: TestClient) -> None:
@@ -321,7 +319,7 @@ def test_captain_must_be_in_the_starting_xi(client: TestClient) -> None:
     assert "is-captain" in page
 
 
-def test_sidebar_places_a_player_on_the_first_empty_slot(client: TestClient) -> None:
+def test_each_position_dropdown_lists_the_whole_squad(client: TestClient) -> None:
     client.post(
         "/squad",
         data={"first_name": "Kyle", "last_name": "Campbell", "position": "Forward"},
@@ -329,8 +327,10 @@ def test_sidebar_places_a_player_on_the_first_empty_slot(client: TestClient) -> 
     )
     player_id = _player_id("Kyle", "Campbell")
     page = client.get("/lineups?fixture_id=1").text
-    assert "Kyle Campbell" in page
-    assert "Available" in page
+    assert page.count(f'value="{player_id}"') >= 11
+    assert page.count("Kyle Campbell") >= 11
+    assert "Add player" in page
+
     client.post(
         "/fixtures/1/lineup/place",
         data={"slot": "st", "player_id": str(player_id), "next": "/lineups?fixture_id=1"},
@@ -338,6 +338,8 @@ def test_sidebar_places_a_player_on_the_first_empty_slot(client: TestClient) -> 
     filled = client.get("/lineups?fixture_id=1").text
     assert 'aria-label="ST: Kyle Campbell"' in filled
     assert "1 of 11 selected" in filled
+    assert f'id="sheet-select-st"' in filled
+    assert f'value="{player_id}" selected' in filled
 
 
 def test_place_player_on_a_pitch_slot(client: TestClient) -> None:

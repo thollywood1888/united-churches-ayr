@@ -764,17 +764,20 @@ def place_on_pitch(
 def toggle_bench(
     session: SessionDep,
     fixture_id: int,
-    player_id: Annotated[int, Form()],
+    player_id: Annotated[str, Form()] = "",
     next: Annotated[str, Form()] = "",
 ):
     fixture = _fixture_or_404(session, fixture_id)
     dest = _safe_next(next, f"/lineups?fixture_id={fixture_id}")
-    existing = _appearance_for_player(fixture, player_id)
+    if not player_id.strip():
+        return RedirectResponse(dest, status_code=303)
+    chosen_id = int(player_id)
+    existing = _appearance_for_player(fixture, chosen_id)
     if existing is None:
         session.add(
             Appearance(
                 fixture_id=fixture_id,
-                player_id=player_id,
+                player_id=chosen_id,
                 role=AppearanceRole.sub,
                 minute_on=60,
             )

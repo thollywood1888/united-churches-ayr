@@ -5,6 +5,15 @@
 {% set fixture = selected_fixture %}
 {% set badge = badge_map.get(fixture.opponent) if fixture else none %}
 
+{% macro squad_options(selected_id=None, empty_label="Add player") -%}
+  <option value="">{{ empty_label }}</option>
+  {% for player in all_players %}
+  <option value="{{ player.id }}" {{ "selected" if selected_id == player.id }}>
+    {%- if player.squad_number %}#{{ player.squad_number }} {% endif %}{{ player.name }}
+  </option>
+  {% endfor %}
+{%- endmacro %}
+
 <div class="md-lineup">
   <div class="md-top">
     <div>
@@ -125,8 +134,7 @@
               {% set px = slot.default_x %}
               {% set py = slot.default_y %}
             {% endif %}
-            <a class="md-token pitch-slot-free {{ 'is-filled' if fill else 'is-empty' }} {{ 'is-pick' if pick_slot == slot.key }} {{ 'is-captain' if fill and captain_id == fill.player.id }}"
-               href="{{ pick_base }}{{ '&' if '?' in pick_base else '?' }}slot={{ slot.key }}#squad"
+            <div class="md-token pitch-slot-free {{ 'is-filled' if fill else 'is-empty' }} {{ 'is-captain' if fill and captain_id == fill.player.id }}"
                data-slot="{{ slot.key }}"
                data-filled="{{ 'true' if fill else 'false' }}"
                {% if fill %}data-player-id="{{ fill.player.id }}"{% endif %}
@@ -141,8 +149,16 @@
                   +
                 {% endif %}
               </span>
-              <span class="md-token-name">{{ fill.player.last_name if fill else "Add player" }}</span>
-            </a>
+              <form method="post" action="/fixtures/{{ fixture.id }}/lineup/place" class="md-token-pick">
+                <input type="hidden" name="slot" value="{{ slot.key }}">
+                <input type="hidden" name="next" value="{{ next_url }}">
+                <label class="visually-hidden" for="pitch-{{ slot.key }}">{{ slot.label }}</label>
+                <select id="pitch-{{ slot.key }}" name="player_id" onchange="this.form.submit()">
+                  {{ squad_options(fill.player.id if fill else none, "Add player" if not fill else "Clear") }}
+                </select>
+                <noscript><button type="submit">Set</button></noscript>
+              </form>
+            </div>
           {% endfor %}
         </div>
       </div>
@@ -150,78 +166,20 @@
 
     <aside class="md-side" id="squad">
       <section class="md-panel">
-        <h3 class="md-panel-title">{% if pick_slot %}Who plays {{ pick_label }}?{% else %}Available players{% endif %}</h3>
-        {% if pick_slot %}
-        <div class="md-pick-bar">
-          <a class="tab" href="{{ next_url }}">Close</a>
-          {% if slot_fill.get(pick_slot) %}
-          <form method="post" action="/fixtures/{{ fixture.id }}/lineup/place">
-            <input type="hidden" name="slot" value="{{ pick_slot }}">
-            <input type="hidden" name="player_id" value="">
-            <input type="hidden" name="next" value="{{ next_url }}">
-            <button type="submit" class="link">Clear this position</button>
-          </form>
-          {% endif %}
-        </div>
-        {% endif %}
-
-        <form class="md-search" method="get" action="/lineups">
-          <input type="hidden" name="fixture_id" value="{{ fixture.id }}">
-          {% if pick_slot %}<input type="hidden" name="slot" value="{{ pick_slot }}">{% endif %}
-          {% if active_group and active_group != "ALL" %}<input type="hidden" name="group" value="{{ active_group }}">{% endif %}
-          <label class="visually-hidden" for="player-search">Search players</label>
-          <span class="md-search-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M10 4a6 6 0 014.74 9.66l4.3 4.3-1.42 1.42-4.3-4.3A6 6 0 1110 4zm0 2a4 4 0 100 8 4 4 0 000-8z"/></svg>
-          </span>
-          <input id="player-search" name="q" value="{{ search_q }}" placeholder="Search players" autocomplete="off">
-          <noscript><button type="submit">Search</button></noscript>
-        </form>
-
-        <div class="md-filters" role="group" aria-label="Filter by position">
-          {% for g in position_groups %}
-          <a class="md-chip {{ 'is-on' if active_group == g }}"
-             href="/lineups?fixture_id={{ fixture.id }}{% if g != 'ALL' %}&amp;group={{ g }}{% endif %}{% if search_q %}&amp;q={{ search_q }}{% endif %}{% if pick_slot %}&amp;slot={{ pick_slot }}{% endif %}#squad">
-            {{ g }}
-          </a>
-          {% endfor %}
-        </div>
-
-        <div class="md-players">
-          {% for row in sidebar_players %}
-            {% set player = row.player %}
-            {% set target_slot = pick_slot or first_empty_slot %}
-            {% if row.status == "unavailable" or not target_slot %}
-            <div class="md-player is-{{ row.status }} {% if not target_slot %}is-blocked{% endif %}" data-name="{{ player.name }}" data-group="{{ row.group }}">
-              <span class="md-avatar">{{ player.initials }}</span>
-              <span class="md-player-copy">
-                <strong>{{ player.name }}</strong>
-                <span>{{ player.position or "Squad" }}</span>
-              </span>
-              <span class="md-status is-{{ row.status }}">
-                {% if row.status == "unavailable" %}Unavailable
-                {% elif row.status == "bench" %}On bench
-                {% else %}Available{% endif %}
-              </span>
-            </div>
-            {% else %}
-            <form method="post" action="/fixtures/{{ fixture.id }}/lineup/place" class="md-player-form">
-              <input type="hidden" name="slot" value="{{ target_slot }}">
-              <input type="hidden" name="player_id" value="{{ player.id }}">
+        <h3 class="md-panel-title">Starting XI</h3>
+        <p class="md-help">Every position is a full squad list. Pick a name to put them there.</p>
+        <div class="md-sheet">
+          {% for slot in pitch_slots %}
+            {% set fill = slot_fill.get(slot.key) %}
+            <form method="post" action="/fixtures/{{ fixture.id }}/lineup/place" class="md-sheet-row" id="sheet-{{ slot.key }}">
+              <label class="md-sheet-pos" for="sheet-select-{{ slot.key }}">{{ slot.label }}</label>
+              <select id="sheet-select-{{ slot.key }}" name="player_id" onchange="this.form.submit()">
+                {{ squad_options(fill.player.id if fill else none, "Add player") }}
+              </select>
+              <input type="hidden" name="slot" value="{{ slot.key }}">
               <input type="hidden" name="next" value="{{ next_url }}">
-              <button type="submit" class="md-player is-{{ row.status }}" data-name="{{ player.name }}" data-group="{{ row.group }}">
-                <span class="md-avatar">{{ player.initials }}</span>
-                <span class="md-player-copy">
-                  <strong>{{ player.name }}</strong>
-                  <span>{{ player.position or "Squad" }}</span>
-                </span>
-                <span class="md-status is-{{ row.status }}">
-                  {% if row.status == "bench" %}On bench{% else %}Available{% endif %}
-                </span>
-              </button>
+              <noscript><button type="submit">Set</button></noscript>
             </form>
-            {% endif %}
-          {% else %}
-          <p class="empty">No players match that filter.</p>
           {% endfor %}
         </div>
       </section>
@@ -249,28 +207,14 @@
           {% endfor %}
         </ul>
         {% endif %}
-        <details class="md-add-sub">
-          <summary>+ Add substitute slot</summary>
-          {% if available_players %}
-          <div class="md-players">
-            {% for player in available_players %}
-            <form method="post" action="/fixtures/{{ fixture.id }}/lineup/bench">
-              <input type="hidden" name="player_id" value="{{ player.id }}">
-              <input type="hidden" name="next" value="{{ next_url }}">
-              <button type="submit" class="md-player">
-                <span class="md-avatar">{{ player.initials }}</span>
-                <span class="md-player-copy">
-                  <strong>{{ player.name }}</strong>
-                  <span>{{ player.position or "—" }}</span>
-                </span>
-              </button>
-            </form>
-            {% endfor %}
-          </div>
-          {% else %}
-          <p class="empty">Everyone is already in the lineup.</p>
-          {% endif %}
-        </details>
+        <form method="post" action="/fixtures/{{ fixture.id }}/lineup/bench" class="md-sheet-row">
+          <label class="md-sheet-pos" for="add-sub">Add</label>
+          <select id="add-sub" name="player_id" onchange="this.form.submit()">
+            {{ squad_options(none, "Add substitute") }}
+          </select>
+          <input type="hidden" name="next" value="{{ next_url }}">
+          <noscript><button type="submit">Add</button></noscript>
+        </form>
       </section>
     </aside>
   </div>
@@ -301,32 +245,20 @@
 
 <script>
 (function () {
-  var search = document.getElementById("player-search");
-  if (search) {
-    search.addEventListener("input", function () {
-      var q = search.value.trim().toLowerCase();
-      document.querySelectorAll(".md-player").forEach(function (el) {
-        var name = (el.getAttribute("data-name") || "").toLowerCase();
-        el.closest("form") ? el.closest("form").hidden = q && name.indexOf(q) === -1
-                           : el.hidden = q && name.indexOf(q) === -1;
-      });
-    });
-  }
-
   var pitch = document.querySelector(".md-pitch-canvas");
   if (!pitch) return;
   var fixtureId = pitch.dataset.fixtureId;
   var dragEl = null, startX, startY, startLeft, startTop, moved = false;
   var THRESHOLD = 6;
 
-  document.querySelectorAll('.md-token[data-filled="true"]').forEach(function (el) {
-    el.setAttribute("draggable", "false");
-    el.addEventListener("dragstart", function (e) { e.preventDefault(); });
+  document.querySelectorAll('.md-token[data-filled="true"] .md-token-disc').forEach(function (disc) {
+    var el = disc.closest(".md-token");
+    disc.addEventListener("dragstart", function (e) { e.preventDefault(); });
 
-    el.addEventListener("pointerdown", function (e) {
+    disc.addEventListener("pointerdown", function (e) {
       if (e.pointerType === "mouse" && e.button !== 0) return;
       e.preventDefault();
-      el.setPointerCapture(e.pointerId);
+      disc.setPointerCapture(e.pointerId);
       dragEl = el;
       moved = false;
       startX = e.clientX;
@@ -335,7 +267,7 @@
       startTop = parseFloat(el.style.top);
     });
 
-    el.addEventListener("pointermove", function (e) {
+    disc.addEventListener("pointermove", function (e) {
       if (dragEl !== el) return;
       var dx = e.clientX - startX;
       var dy = e.clientY - startY;
@@ -347,7 +279,7 @@
       el.style.top = Math.max(6, Math.min(94, startTop + dy / rect.height * 100)) + "%";
     });
 
-    el.addEventListener("pointerup", function () {
+    disc.addEventListener("pointerup", function () {
       if (dragEl !== el) return;
       el.classList.remove("is-dragging");
       if (moved) {
@@ -360,10 +292,6 @@
         });
       }
       dragEl = null;
-    });
-
-    el.addEventListener("click", function (e) {
-      if (moved) { e.preventDefault(); moved = false; }
     });
   });
 })();
