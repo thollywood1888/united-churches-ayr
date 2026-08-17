@@ -695,6 +695,31 @@ def toggle_bench(
     return RedirectResponse(dest, status_code=303)
 
 
+@app.post("/fixtures/{fixture_id}/lineup/swap")
+def swap_slots(
+    session: SessionDep,
+    fixture_id: int,
+    slot_a: Annotated[str, Form()],
+    slot_b: Annotated[str, Form()],
+    next: Annotated[str, Form()] = "",
+):
+    fixture = _fixture_or_404(session, fixture_id)
+    formation_slots = FORMATIONS.get(fixture.formation or "4-2-3-1", FORMATION_4231)
+    valid_keys = {s.key for s in formation_slots}
+    if slot_a not in valid_keys or slot_b not in valid_keys:
+        raise HTTPException(status_code=400, detail="Unknown pitch position")
+    app_a = _appearance_in_slot(fixture, slot_a)
+    app_b = _appearance_in_slot(fixture, slot_b)
+    if app_a is not None and app_b is not None:
+        app_a.pitch_slot, app_b.pitch_slot = slot_b, slot_a
+    elif app_a is not None:
+        app_a.pitch_slot = slot_b
+    elif app_b is not None:
+        app_b.pitch_slot = slot_a
+    session.commit()
+    return RedirectResponse(_safe_next(next, f"/lineups?fixture_id={fixture_id}"), status_code=303)
+
+
 @app.post("/fixtures/{fixture_id}/formation")
 def set_formation(
     session: SessionDep,

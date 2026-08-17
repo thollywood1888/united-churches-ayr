@@ -42,6 +42,8 @@
           {% set fill = slot_fill.get(slot.key) %}
           <a class="pitch-slot"
              href="{{ pick_base }}{{ '&' if '?' in pick_base else '?' }}slot={{ slot.key }}#picker"
+             data-slot="{{ slot.key }}"
+             data-filled="{{ 'true' if fill else 'false' }}"
              aria-label="{% if fill %}{{ slot.label }}: {{ fill.player.name }}{% else %}{{ slot.label }}, empty{% endif %}">
             <span class="slot-disc {{ 'is-filled' if fill else 'is-empty' }}">
               {% if fill and fill.player.photo_filename %}
@@ -105,6 +107,52 @@
   </div>
 </section>
 {% endif %}
+
+<form id="swap-form" method="post" action="/fixtures/{{ fixture.id }}/lineup/swap" style="display:none">
+  <input type="hidden" name="slot_a" value="">
+  <input type="hidden" name="slot_b" value="">
+  <input type="hidden" name="next" value="{{ next_url }}">
+</form>
+
+<script>
+(function () {
+  var src = null;
+  var slots = document.querySelectorAll('.pitch-slot[data-slot]');
+  slots.forEach(function (el) {
+    if (el.dataset.filled === 'true') {
+      el.draggable = true;
+      el.addEventListener('dragstart', function (e) {
+        src = el.dataset.slot;
+        el.classList.add('is-dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      el.addEventListener('dragend', function () {
+        el.classList.remove('is-dragging');
+        src = null;
+      });
+    }
+    el.addEventListener('dragover', function (e) {
+      if (src && src !== el.dataset.slot) {
+        e.preventDefault();
+        el.classList.add('drag-over');
+      }
+    });
+    el.addEventListener('dragleave', function () {
+      el.classList.remove('drag-over');
+    });
+    el.addEventListener('drop', function (e) {
+      e.preventDefault();
+      el.classList.remove('drag-over');
+      if (src && src !== el.dataset.slot) {
+        var form = document.getElementById('swap-form');
+        form.querySelector('[name=slot_a]').value = src;
+        form.querySelector('[name=slot_b]').value = el.dataset.slot;
+        form.submit();
+      }
+    });
+  });
+})();
+</script>
 
 {% if unplaced_starters %}
 <p class="empty">{{ unplaced_starters | map(attribute="player.name") | join(", ") }}
