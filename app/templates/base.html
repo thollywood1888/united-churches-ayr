@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0f1b2d">
 <title>{% block title %}{{ club_name }}{% endblock %}</title>
-<link rel="stylesheet" href="/static/style.css?v=award-thumbs">
+<link rel="stylesheet" href="/static/style.css?v=md-lineup">
 </head>
 <body>
 <header class="masthead">
@@ -32,7 +32,7 @@
   <a href="/links" class="tab {{ 'is-current' if tab == 'links' }}">Links</a>
 </nav>
 
-<main>
+<main class="{% block main_class %}{% endblock %}">
 {% block content %}{% endblock %}
 </main>
 

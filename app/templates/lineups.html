@@ -1,34 +1,371 @@
 {% extends "base.html" %}
+{% block title %}Lineups · {{ club_name }}{% endblock %}
+{% block main_class %}lineup-main{% endblock %}
 {% block content %}
+{% set fixture = selected_fixture %}
+{% set badge = badge_map.get(fixture.opponent) if fixture else none %}
 
-<p class="eyebrow">Matchday</p>
-<h2 class="section">Starting XI and substitutes</h2>
-<p class="empty">Each game week starts empty. Open a fixture, then tap a position to add a player.</p>
+<div class="md-lineup">
+  <div class="md-top">
+    <div>
+      <h2 class="md-title">Matchday lineup</h2>
+      <p class="md-lead">Build your starting XI for the upcoming fixture.</p>
+    </div>
+    {% if fixture %}
+    <a class="md-btn md-btn-ghost" href="{{ next_url }}{{ '&' if '?' in next_url else '?' }}saved=1">
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M6 4h11l3 3v13H6V4zm2 2v12h10V8.8L15.2 6H8zm2 3h6v2H10V9zm0 4h6v2H10v-2z"/></svg>
+      Save draft
+    </a>
+    {% endif %}
+  </div>
 
-{% if fixtures %}
-<form class="fixture-switch" method="get" action="/lineups">
-  <label class="field">Fixture
-    <select name="fixture_id">
-      {% for fixture in fixtures %}
-      <option value="{{ fixture.id }}" {{ "selected" if selected_fixture and fixture.id == selected_fixture.id }}>
-        {{ fixture.kickoff_at.strftime("%-d %b") }} · {{ fixture.opponent }}
-        {% set picked = fixture.appearances | length %}
+  {% if saved %}
+  <p class="md-flash" role="status">Lineup saved</p>
+  {% endif %}
+
+  {% if fixtures %}
+  <form class="md-week" method="get" action="/lineups">
+    <label class="md-label" for="fixture_id">Game week</label>
+    <select id="fixture_id" name="fixture_id" onchange="this.form.submit()">
+      {% for item in fixtures %}
+      <option value="{{ item.id }}" {{ "selected" if fixture and item.id == fixture.id }}>
+        {{ item.kickoff_at.strftime("%-d %b") }} · {{ item.opponent }}
+        {% set picked = item.appearances | length %}
         {{ "· " ~ picked ~ " named" if picked else "" }}
       </option>
       {% endfor %}
     </select>
-  </label>
-  <button type="submit">Open</button>
-</form>
-{% endif %}
+    <noscript><button type="submit">Open</button></noscript>
+  </form>
+  {% endif %}
 
-{% if selected_fixture %}
-  {% with fixture=selected_fixture %}
-    {% include "_pitch_builder.html" %}
-  {% endwith %}
-{% else %}
-<p class="empty">Add a fixture first, then tap the positions to name the starting XI.</p>
-<a class="tab" href="/fixtures">Go to fixtures</a>
-{% endif %}
+  {% if not fixture %}
+  <p class="empty">Add a fixture first, then tap a position to add a player.</p>
+  <a class="tab" href="/fixtures">Go to fixtures</a>
+  {% else %}
 
+  <section class="md-match">
+    <div class="md-match-club">
+      {% if badge %}
+      <img src="/static/badges/{{ badge }}.png" alt="" class="md-crest">
+      {% else %}
+      <span class="md-crest md-crest-empty" aria-hidden="true"></span>
+      {% endif %}
+      <div>
+        <h3 class="md-match-name">{{ fixture.opponent }}</h3>
+        <p class="md-match-meta">{{ fixture.kickoff_at.strftime("%A %-d %b") }} · {{ fixture.kickoff_at.strftime("%H:%M") }} · {{ fixture.venue.value | capitalize }}</p>
+      </div>
+    </div>
+    <div class="md-progress">
+      <span class="md-progress-check" aria-hidden="true">✓</span>
+      <div>
+        <p class="md-progress-count">{{ starters_on_pitch }} of 11 selected</p>
+        <p class="md-progress-left">{{ spots_remaining }} spot{{ "" if spots_remaining == 1 else "s" }} remaining</p>
+      </div>
+    </div>
+    <img src="/static/badges/uca.png" alt="{{ club_name }}" class="md-crest md-crest-us">
+  </section>
+
+  <div class="md-controls">
+    <form method="post" action="/fixtures/{{ fixture.id }}/formation" class="md-control">
+      <label class="md-label" for="formation">Formation</label>
+      <select id="formation" name="formation" onchange="this.form.submit()">
+        {% for f in formations %}
+        <option value="{{ f }}" {{ "selected" if f == formation_key }}>{{ f }}</option>
+        {% endfor %}
+      </select>
+      <input type="hidden" name="next" value="{{ next_url }}">
+      <noscript><button type="submit">Set</button></noscript>
+    </form>
+    <form method="post" action="/fixtures/{{ fixture.id }}/captain" class="md-control">
+      <label class="md-label" for="captain">Captain</label>
+      <select id="captain" name="player_id" onchange="this.form.submit()">
+        <option value="">Select captain</option>
+        {% for player in xi_players %}
+        <option value="{{ player.id }}" {{ "selected" if captain_id == player.id }}>{{ player.name }}</option>
+        {% endfor %}
+      </select>
+      <input type="hidden" name="next" value="{{ next_url }}">
+      <noscript><button type="submit">Set</button></noscript>
+    </form>
+    {% if not fixture.is_played and (starters_on_pitch or bench or unplaced_starters) %}
+    <form method="post" action="/fixtures/{{ fixture.id }}/lineup/clear" class="md-control md-control-clear">
+      <input type="hidden" name="next" value="{{ next_url }}">
+      <button type="submit" class="link">Clear this lineup</button>
+    </form>
+    {% endif %}
+  </div>
+
+  <div class="md-layout">
+    <div class="md-pitch-wrap">
+      <div class="md-pitch">
+        <div class="md-mark md-halfway"></div>
+        <div class="md-mark md-circle"></div>
+        <div class="md-mark md-spot"></div>
+        <div class="md-mark md-box md-box-top"></div>
+        <div class="md-mark md-box md-box-bottom"></div>
+        <div class="md-mark md-six md-six-top"></div>
+        <div class="md-mark md-six md-six-bottom"></div>
+        <div class="md-mark md-pen md-pen-top"></div>
+        <div class="md-mark md-pen md-pen-bottom"></div>
+        <div class="md-mark md-goal md-goal-top"></div>
+        <div class="md-mark md-goal md-goal-bottom"></div>
+        <div class="md-mark md-corner md-corner-tl"></div>
+        <div class="md-mark md-corner md-corner-tr"></div>
+        <div class="md-mark md-corner md-corner-bl"></div>
+        <div class="md-mark md-corner md-corner-br"></div>
+
+        <div class="md-pitch-canvas pitch-free" data-fixture-id="{{ fixture.id }}">
+          {% for slot in pitch_slots %}
+            {% set fill = slot_fill.get(slot.key) %}
+            {% if fill %}
+              {% set px = fill.pos_x if fill.pos_x is not none else slot.default_x %}
+              {% set py = fill.pos_y if fill.pos_y is not none else slot.default_y %}
+            {% else %}
+              {% set px = slot.default_x %}
+              {% set py = slot.default_y %}
+            {% endif %}
+            <a class="md-token pitch-slot-free {{ 'is-filled' if fill else 'is-empty' }} {{ 'is-pick' if pick_slot == slot.key }} {{ 'is-captain' if fill and captain_id == fill.player.id }}"
+               href="{{ pick_base }}{{ '&' if '?' in pick_base else '?' }}slot={{ slot.key }}#squad"
+               data-slot="{{ slot.key }}"
+               data-filled="{{ 'true' if fill else 'false' }}"
+               {% if fill %}data-player-id="{{ fill.player.id }}"{% endif %}
+               style="left: {{ px }}%; top: {{ py }}%;"
+               aria-label="{% if fill %}{{ slot.label }}: {{ fill.player.name }}{% else %}{{ slot.label }}, empty{% endif %}">
+              <span class="md-token-disc">
+                {% if fill and fill.player.squad_number %}
+                  {{ fill.player.squad_number }}
+                {% elif fill %}
+                  {{ fill.player.initials }}
+                {% else %}
+                  +
+                {% endif %}
+              </span>
+              <span class="md-token-name">{{ fill.player.last_name if fill else "Add player" }}</span>
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <aside class="md-side" id="squad">
+      <section class="md-panel">
+        <h3 class="md-panel-title">{% if pick_slot %}Who plays {{ pick_label }}?{% else %}Available players{% endif %}</h3>
+        {% if pick_slot %}
+        <div class="md-pick-bar">
+          <a class="tab" href="{{ next_url }}">Close</a>
+          {% if slot_fill.get(pick_slot) %}
+          <form method="post" action="/fixtures/{{ fixture.id }}/lineup/place">
+            <input type="hidden" name="slot" value="{{ pick_slot }}">
+            <input type="hidden" name="player_id" value="">
+            <input type="hidden" name="next" value="{{ next_url }}">
+            <button type="submit" class="link">Clear this position</button>
+          </form>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        <form class="md-search" method="get" action="/lineups">
+          <input type="hidden" name="fixture_id" value="{{ fixture.id }}">
+          {% if pick_slot %}<input type="hidden" name="slot" value="{{ pick_slot }}">{% endif %}
+          {% if active_group and active_group != "ALL" %}<input type="hidden" name="group" value="{{ active_group }}">{% endif %}
+          <label class="visually-hidden" for="player-search">Search players</label>
+          <span class="md-search-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M10 4a6 6 0 014.74 9.66l4.3 4.3-1.42 1.42-4.3-4.3A6 6 0 1110 4zm0 2a4 4 0 100 8 4 4 0 000-8z"/></svg>
+          </span>
+          <input id="player-search" name="q" value="{{ search_q }}" placeholder="Search players" autocomplete="off">
+          <noscript><button type="submit">Search</button></noscript>
+        </form>
+
+        <div class="md-filters" role="group" aria-label="Filter by position">
+          {% for g in position_groups %}
+          <a class="md-chip {{ 'is-on' if active_group == g }}"
+             href="/lineups?fixture_id={{ fixture.id }}{% if g != 'ALL' %}&amp;group={{ g }}{% endif %}{% if search_q %}&amp;q={{ search_q }}{% endif %}{% if pick_slot %}&amp;slot={{ pick_slot }}{% endif %}#squad">
+            {{ g }}
+          </a>
+          {% endfor %}
+        </div>
+
+        <div class="md-players">
+          {% for row in sidebar_players %}
+            {% set player = row.player %}
+            {% set target_slot = pick_slot or first_empty_slot %}
+            {% if row.status == "unavailable" or not target_slot %}
+            <div class="md-player is-{{ row.status }} {% if not target_slot %}is-blocked{% endif %}" data-name="{{ player.name }}" data-group="{{ row.group }}">
+              <span class="md-avatar">{{ player.initials }}</span>
+              <span class="md-player-copy">
+                <strong>{{ player.name }}</strong>
+                <span>{{ player.position or "Squad" }}</span>
+              </span>
+              <span class="md-status is-{{ row.status }}">
+                {% if row.status == "unavailable" %}Unavailable
+                {% elif row.status == "bench" %}On bench
+                {% else %}Available{% endif %}
+              </span>
+            </div>
+            {% else %}
+            <form method="post" action="/fixtures/{{ fixture.id }}/lineup/place" class="md-player-form">
+              <input type="hidden" name="slot" value="{{ target_slot }}">
+              <input type="hidden" name="player_id" value="{{ player.id }}">
+              <input type="hidden" name="next" value="{{ next_url }}">
+              <button type="submit" class="md-player is-{{ row.status }}" data-name="{{ player.name }}" data-group="{{ row.group }}">
+                <span class="md-avatar">{{ player.initials }}</span>
+                <span class="md-player-copy">
+                  <strong>{{ player.name }}</strong>
+                  <span>{{ player.position or "Squad" }}</span>
+                </span>
+                <span class="md-status is-{{ row.status }}">
+                  {% if row.status == "bench" %}On bench{% else %}Available{% endif %}
+                </span>
+              </button>
+            </form>
+            {% endif %}
+          {% else %}
+          <p class="empty">No players match that filter.</p>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="md-panel">
+        <div class="md-subs-head">
+          <h3 class="md-panel-title">Substitutes</h3>
+          <span class="md-subs-count">{{ bench | length }} / 7 selected</span>
+        </div>
+        {% if bench %}
+        <ul class="md-subs">
+          {% for appearance in bench %}
+          <li class="md-sub">
+            <span class="md-avatar">{{ appearance.player.initials }}</span>
+            <span class="md-player-copy">
+              <strong>{{ appearance.player.name }}</strong>
+              <span>{{ appearance.player.position or "SUB" }}</span>
+            </span>
+            <form method="post" action="/fixtures/{{ fixture.id }}/lineup/bench">
+              <input type="hidden" name="player_id" value="{{ appearance.player.id }}">
+              <input type="hidden" name="next" value="{{ next_url }}">
+              <button type="submit" class="md-sub-x" aria-label="Remove {{ appearance.player.name }}">×</button>
+            </form>
+          </li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+        <details class="md-add-sub">
+          <summary>+ Add substitute slot</summary>
+          {% if available_players %}
+          <div class="md-players">
+            {% for player in available_players %}
+            <form method="post" action="/fixtures/{{ fixture.id }}/lineup/bench">
+              <input type="hidden" name="player_id" value="{{ player.id }}">
+              <input type="hidden" name="next" value="{{ next_url }}">
+              <button type="submit" class="md-player">
+                <span class="md-avatar">{{ player.initials }}</span>
+                <span class="md-player-copy">
+                  <strong>{{ player.name }}</strong>
+                  <span>{{ player.position or "—" }}</span>
+                </span>
+              </button>
+            </form>
+            {% endfor %}
+          </div>
+          {% else %}
+          <p class="empty">Everyone is already in the lineup.</p>
+          {% endif %}
+        </details>
+      </section>
+    </aside>
+  </div>
+
+  {% if unplaced_starters %}
+  <p class="empty">{{ unplaced_starters | map(attribute="player.name") | join(", ") }}
+    {{ "is" if unplaced_starters | length == 1 else "are" }} in the XI but not on a position yet. Tap a slot to place them.</p>
+  {% endif %}
+
+  <div class="md-footer">
+    <div class="md-progress">
+      <span class="md-progress-check" aria-hidden="true">✓</span>
+      <div>
+        <p class="md-progress-count">{{ starters_on_pitch }} of 11 selected</p>
+        <p class="md-progress-left">{{ spots_remaining }} spot{{ "" if spots_remaining == 1 else "s" }} remaining</p>
+      </div>
+    </div>
+    <div class="md-footer-actions">
+      <a class="md-btn md-btn-ghost" href="{{ next_url }}{{ '&' if '?' in next_url else '?' }}saved=1">Save draft</a>
+      <a class="md-btn md-btn-gold" href="{{ next_url }}{{ '&' if '?' in next_url else '?' }}saved=1">
+        Publish lineup
+        <span aria-hidden="true">›</span>
+      </a>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+(function () {
+  var search = document.getElementById("player-search");
+  if (search) {
+    search.addEventListener("input", function () {
+      var q = search.value.trim().toLowerCase();
+      document.querySelectorAll(".md-player").forEach(function (el) {
+        var name = (el.getAttribute("data-name") || "").toLowerCase();
+        el.closest("form") ? el.closest("form").hidden = q && name.indexOf(q) === -1
+                           : el.hidden = q && name.indexOf(q) === -1;
+      });
+    });
+  }
+
+  var pitch = document.querySelector(".md-pitch-canvas");
+  if (!pitch) return;
+  var fixtureId = pitch.dataset.fixtureId;
+  var dragEl = null, startX, startY, startLeft, startTop, moved = false;
+  var THRESHOLD = 6;
+
+  document.querySelectorAll('.md-token[data-filled="true"]').forEach(function (el) {
+    el.setAttribute("draggable", "false");
+    el.addEventListener("dragstart", function (e) { e.preventDefault(); });
+
+    el.addEventListener("pointerdown", function (e) {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      e.preventDefault();
+      el.setPointerCapture(e.pointerId);
+      dragEl = el;
+      moved = false;
+      startX = e.clientX;
+      startY = e.clientY;
+      startLeft = parseFloat(el.style.left);
+      startTop = parseFloat(el.style.top);
+    });
+
+    el.addEventListener("pointermove", function (e) {
+      if (dragEl !== el) return;
+      var dx = e.clientX - startX;
+      var dy = e.clientY - startY;
+      if (!moved && Math.sqrt(dx * dx + dy * dy) < THRESHOLD) return;
+      moved = true;
+      el.classList.add("is-dragging");
+      var rect = pitch.getBoundingClientRect();
+      el.style.left = Math.max(6, Math.min(94, startLeft + dx / rect.width * 100)) + "%";
+      el.style.top = Math.max(6, Math.min(94, startTop + dy / rect.height * 100)) + "%";
+    });
+
+    el.addEventListener("pointerup", function () {
+      if (dragEl !== el) return;
+      el.classList.remove("is-dragging");
+      if (moved) {
+        var x = parseFloat(el.style.left);
+        var y = parseFloat(el.style.top);
+        fetch("/fixtures/" + fixtureId + "/lineup/move", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: "player_id=" + el.dataset.playerId + "&pos_x=" + x.toFixed(1) + "&pos_y=" + y.toFixed(1)
+        });
+      }
+      dragEl = null;
+    });
+
+    el.addEventListener("click", function (e) {
+      if (moved) { e.preventDefault(); moved = false; }
+    });
+  });
+})();
+</script>
 {% endblock %}

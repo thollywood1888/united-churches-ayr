@@ -676,12 +676,14 @@ def lineups(
         if group_key in POSITION_GROUPS and group_key != "ALL":
             sidebar = [row for row in sidebar if row["group"] == group_key]
         if query:
-            sidebar = [
-                row
-                for row in sidebar
-                if query in row["player"].name.lower()
-                or (row["player"].squad_number is not None and query in str(row["player"].squad_number))
-            ]
+            def _matches(row: dict) -> bool:
+                player = row["player"]
+                if query in player.name.lower():
+                    return True
+                number = player.squad_number
+                return number is not None and query in str(number)
+
+            sidebar = [row for row in sidebar if _matches(row)]
         pitch["sidebar_players"] = sidebar
         pitch["active_group"] = group_key if group_key in POSITION_GROUPS else "ALL"
         pitch["search_q"] = q or ""
