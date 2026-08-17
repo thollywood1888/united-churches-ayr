@@ -111,13 +111,30 @@ def _event_counts(session: Session, season_id: int) -> dict[tuple[int, str], int
 
 
 def _assist_counts(session: Session, season_id: int) -> dict[int, int]:
-    rows = session.execute(
+    # Assists recorded as assist_player_id on a goal event
+    linked = session.execute(
         select(MatchEvent.assist_player_id, func.count())
         .join(Fixture, Fixture.id == MatchEvent.fixture_id)
         .where(Fixture.season_id == season_id, MatchEvent.assist_player_id.is_not(None))
         .group_by(MatchEvent.assist_player_id)
     ).all()
-    return dict(rows)
+    # Assists recorded as a standalone EventType.assist event
+    standalone = session.execute(
+        select(MatchEvent.player_id, func.count())
+        .join(Fixture, Fixture.id == MatchEvent.fixture_id)
+        .where(
+            Fixture.season_id == season_id,
+            MatchEvent.type == EventType.assist,
+            MatchEvent.player_id.is_not(None),
+        )
+        .group_by(MatchEvent.player_id)
+    ).all()
+    totals: dict[int, int] = {}
+    for pid, count in linked:
+        totals[pid] = totals.get(pid, 0) + count
+    for pid, count in standalone:
+        totals[pid] = totals.get(pid, 0) + count
+    return totals
 
 
 def player_lines(session: Session, season_id: int, include_left: bool = False) -> list[PlayerLine]:
