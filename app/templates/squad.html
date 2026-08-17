@@ -239,27 +239,6 @@
 </div>
 {% endif %}
 
-{# Left players #}
-{% if left_players %}
-<p class="eyebrow" style="margin-top:32px">Left the club</p>
-<h2 class="section">Removed from the current squad</h2>
-<p class="empty">Stats from games they played stay on the record. Restore them if they come back.</p>
-<ul class="fixture-list">
-  {% for player in left_players %}
-  <li>
-    <span style="flex:1">
-      <a href="/squad/{{ player.id }}">{{ player.name }}</a>
-      {% if player.position %}<span class="when">{{ player.position }}</span>{% endif %}
-    </span>
-    {% if is_gaffer %}
-    <form method="post" action="/squad/{{ player.id }}/restore">
-      <button type="submit" class="ghost">Restore</button>
-    </form>
-    {% endif %}
-  </li>
-  {% endfor %}
-</ul>
-{% endif %}
 
 <script>
 (function () {
