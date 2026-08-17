@@ -135,6 +135,7 @@ class Fixture(Base):
     goals_for: Mapped[int | None] = mapped_column(default=None)
     goals_against: Mapped[int | None] = mapped_column(default=None)
     notes: Mapped[str | None] = mapped_column(String(500), default=None)
+    formation: Mapped[str] = mapped_column(String(10), default="4-2-3-1")
 
     season: Mapped[Season] = relationship(back_populates="fixtures")
     appearances: Mapped[list[Appearance]] = relationship(

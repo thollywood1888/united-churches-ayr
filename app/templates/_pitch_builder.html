@@ -1,3 +1,13 @@
+<div class="formation-switch">
+  {% for f in formations %}
+  <form method="post" action="/fixtures/{{ fixture.id }}/formation">
+    <input type="hidden" name="formation" value="{{ f }}">
+    <input type="hidden" name="next" value="{{ next_url }}">
+    <button type="submit" class="formation-btn {{ 'is-active' if f == formation_key }}">{{ f }}</button>
+  </form>
+  {% endfor %}
+</div>
+
 <div class="pos-strip">
   {% for slot in pitch_slots %}
     {% set fill = slot_fill.get(slot.key) %}
@@ -11,7 +21,7 @@
 
 <div class="board">
   <div class="board-head">
-    <p>Starting XI · 4-2-3-1</p>
+    <p>Starting XI · {{ formation_key }}</p>
     <h3>{{ fixture.opponent }}</h3>
     <p>{{ fixture.kickoff_at.strftime("%a %-d %b, %H:%M") }} · {{ fixture.venue.value | capitalize }} · {{ starters_on_pitch }}/11</p>
   </div>

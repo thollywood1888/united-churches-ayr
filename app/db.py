@@ -41,6 +41,7 @@ def _set_sqlite_pragmas(dbapi_connection, _record) -> None:  # pragma: no cover 
 def create_schema() -> None:
     Base.metadata.create_all(engine)
     _ensure_appearance_pitch_slot()
+    _ensure_fixture_formation()
 
 
 def _ensure_appearance_pitch_slot() -> None:
@@ -52,6 +53,19 @@ def _ensure_appearance_pitch_slot() -> None:
         return
     with engine.begin() as connection:
         connection.execute(text("ALTER TABLE appearance ADD COLUMN pitch_slot VARCHAR(16)"))
+
+
+def _ensure_fixture_formation() -> None:
+    inspector = inspect(engine)
+    if "fixture" not in inspector.get_table_names():
+        return
+    columns = {column["name"] for column in inspector.get_columns("fixture")}
+    if "formation" in columns:
+        return
+    with engine.begin() as connection:
+        connection.execute(
+            text("ALTER TABLE fixture ADD COLUMN formation VARCHAR(10) DEFAULT '4-2-3-1'")
+        )
 
 
 def get_session() -> Iterator[Session]:

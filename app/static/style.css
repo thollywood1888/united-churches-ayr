@@ -344,6 +344,26 @@ a.g-row:hover { color: var(--navy); }
 }
 .fixture-switch .field { flex: 1; min-width: 0; }
 
+.formation-switch {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+.formation-btn {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1.5px solid var(--navy);
+  background: var(--card);
+  color: var(--navy);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.formation-btn.is-active {
+  background: var(--navy);
+  color: #fff;
+}
+
 .pos-strip {
   display: flex;
   flex-wrap: wrap;

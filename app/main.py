@@ -26,7 +26,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from app import stats
 from app.db import CLUB_NAME, CLUB_SHORT, create_schema, get_session
-from app.lineup import FORMATION_4231, PITCH_ROWS, SLOT_KEYS
+from app.lineup import FORMATION_4231, FORMATIONS, make_rows
 from app.models import (
     Appearance,
     AppearanceRole,
@@ -520,18 +520,23 @@ def _safe_next(raw: str | None, fallback: str) -> str:
 def _pitch_context(
     fixture: Fixture, players: list[Player], pick_slot: str | None, return_to: str
 ) -> dict:
+    formation_key = fixture.formation if fixture.formation in FORMATIONS else "4-2-3-1"
+    formation_slots = FORMATIONS[formation_key]
+    formation_rows = make_rows(formation_slots)
+    slot_keys = {slot.key for slot in formation_slots}
+
     by_slot: dict[str, Appearance] = {}
     unplaced: list[Appearance] = []
     bench: list[Appearance] = []
     for appearance in fixture.appearances:
         if appearance.role is AppearanceRole.sub:
             bench.append(appearance)
-        elif appearance.pitch_slot in SLOT_KEYS:
+        elif appearance.pitch_slot in slot_keys:
             by_slot[appearance.pitch_slot] = appearance
         elif appearance.role is AppearanceRole.start:
             unplaced.append(appearance)
     taken = {appearance.player_id for appearance in fixture.appearances}
-    pick = pick_slot if pick_slot in SLOT_KEYS else None
+    pick = pick_slot if pick_slot in slot_keys else None
     if return_to.startswith("/fixtures/"):
         next_url = return_to
         pick_base = return_to
@@ -539,15 +544,17 @@ def _pitch_context(
         next_url = f"/lineups?fixture_id={fixture.id}"
         pick_base = next_url
     return {
-        "pitch_slots": FORMATION_4231,
-        "pitch_rows": PITCH_ROWS,
+        "pitch_slots": formation_slots,
+        "pitch_rows": formation_rows,
+        "formation_key": formation_key,
+        "formations": list(FORMATIONS.keys()),
         "slot_fill": by_slot,
         "unplaced_starters": unplaced,
         "bench": bench,
         "available_players": [player for player in players if player.id not in taken],
         "all_players": players,
         "pick_slot": pick,
-        "pick_label": next((s.label for s in FORMATION_4231 if s.key == pick), None),
+        "pick_label": next((s.label for s in formation_slots if s.key == pick), None),
         "next_url": next_url,
         "pick_base": pick_base,
         "starters_on_pitch": len(by_slot),
@@ -581,7 +588,9 @@ def lineups(
     players = _active_players(session)
     pitch = _pitch_context(selected, players, slot, "/lineups") if selected else {
         "pitch_slots": FORMATION_4231,
-        "pitch_rows": PITCH_ROWS,
+        "pitch_rows": make_rows(FORMATION_4231),
+        "formation_key": "4-2-3-1",
+        "formations": list(FORMATIONS.keys()),
         "slot_fill": {},
         "unplaced_starters": [],
         "bench": [],
@@ -614,7 +623,9 @@ def place_on_pitch(
     next: Annotated[str, Form()] = "",
 ):
     fixture = _fixture_or_404(session, fixture_id)
-    if slot not in SLOT_KEYS:
+    formation_slots = FORMATIONS.get(fixture.formation or "4-2-3-1", FORMATION_4231)
+    valid_slot_keys = {s.key for s in formation_slots}
+    if slot not in valid_slot_keys:
         raise HTTPException(status_code=400, detail="Unknown pitch position")
     dest = _safe_next(next, f"/lineups?fixture_id={fixture_id}")
 
@@ -684,6 +695,22 @@ def toggle_bench(
     return RedirectResponse(dest, status_code=303)
 
 
+@app.post("/fixtures/{fixture_id}/formation")
+def set_formation(
+    session: SessionDep,
+    fixture_id: int,
+    formation: Annotated[str, Form()],
+    next: Annotated[str, Form()] = "",
+):
+    fixture = _fixture_or_404(session, fixture_id)
+    if formation not in FORMATIONS:
+        raise HTTPException(status_code=400, detail="Unknown formation")
+    fixture.formation = formation
+    session.commit()
+    dest = _safe_next(next, f"/lineups?fixture_id={fixture_id}")
+    return RedirectResponse(dest, status_code=303)
+
+
 @app.post("/fixtures/{fixture_id}/lineup")
 async def save_lineup(request: Request, session: SessionDep, fixture_id: int):
     fixture = _fixture_or_404(session, fixture_id)
@@ -694,10 +721,12 @@ async def save_lineup(request: Request, session: SessionDep, fixture_id: int):
     if len(starters) > 11:
         raise HTTPException(status_code=400, detail="A starting eleven is eleven players")
 
+    formation_slots = FORMATIONS.get(fixture.formation or "4-2-3-1", FORMATION_4231)
+    valid_slot_keys = {s.key for s in formation_slots}
     kept_slots = {
         appearance.player_id: appearance.pitch_slot
         for appearance in fixture.appearances
-        if appearance.player_id in starters and appearance.pitch_slot in SLOT_KEYS
+        if appearance.player_id in starters and appearance.pitch_slot in valid_slot_keys
     }
     for appearance in list(fixture.appearances):
         session.delete(appearance)
