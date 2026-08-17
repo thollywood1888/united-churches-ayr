@@ -1,103 +1,231 @@
 {% extends "base.html" %}
-{% block title %}{{ fixture.opponent }} · {{ club_name }}{% endblock %}
+{% block title %}Match centre · {{ fixture.opponent }} · {{ club_name }}{% endblock %}
 {% block content %}
 
-<p class="eyebrow">{{ fixture.venue.value | capitalize }} ·
-  {{ fixture.competition.value | capitalize }}</p>
-<h2 class="section">{{ fixture.opponent }}</h2>
-<p class="empty">{{ fixture.kickoff_at.strftime("%A %-d %B %Y, %H:%M") }}
-  {%- if fixture.ground %} · {{ fixture.ground }}{% endif %}</p>
-
-<div class="panel" style="margin-bottom: 22px;">
-  <p>{{ "Result" if fixture.is_played else "Log result" }}</p>
-  <h2>{{ fixture.scoreline if fixture.is_played else "Not played yet" }}</h2>
-  <form class="stack" method="post" action="/fixtures/{{ fixture.id }}/result">
-    <div class="field-row">
-      <label class="field">{{ club_name }}
-        <input type="number" name="goals_for" min="0" required
-               value="{{ fixture.goals_for if fixture.goals_for is not none else '' }}">
-      </label>
-      <label class="field">{{ fixture.opponent }}
-        <input type="number" name="goals_against" min="0" required
-               value="{{ fixture.goals_against if fixture.goals_against is not none else '' }}">
-      </label>
+{# Page header #}
+<div class="mc-page-head">
+  <div>
+    <div class="mc-breadcrumb">
+      <a href="/fixtures">Fixtures &amp; results</a>
+      <span>/</span>
+      <span>Match centre</span>
     </div>
-    <button type="submit">Save result</button>
-  </form>
+    <h1 class="mc-page-title">Match centre</h1>
+  </div>
+  <a class="tab" href="/fixtures">← Back to fixtures</a>
 </div>
 
-<p class="eyebrow">Goals and cards</p>
-{% set match_events = fixture.events | rejectattr("type.value", "in", ["motm", "managers_motm"]) | list %}
-{% if match_events %}
-<ul class="fixture-list">
-  {% for event in match_events %}
-  <li>
-    <span>{{ event.minute ~ "'" if event.minute else "—" }}</span>
-    <span style="flex:1">
-      {{ event.player.name if event.player else "Own goal" }}
-      <span class="when">{{ event.type.value | replace("_", " ") | capitalize }}
-        {%- if event.assist_player %} · assist {{ event.assist_player.name }}{% endif %}</span>
-    </span>
-    <form method="post" action="/fixtures/{{ fixture.id }}/events/{{ event.id }}/delete">
-      <button class="link" type="submit">Remove</button>
-    </form>
-  </li>
-  {% endfor %}
-</ul>
-{% else %}
-<p class="empty">Nothing recorded yet.</p>
-{% endif %}
+{# Score hero #}
+{% set opp_slug = badge_map.get(fixture.opponent) %}
+<div class="mc-hero">
+  <span class="mc-hero-pill">{{ fixture.competition.value | capitalize }} · {{ fixture.venue.value | capitalize }}</span>
 
-<form class="stack" method="post" action="/fixtures/{{ fixture.id }}/events">
-  <div class="field-row">
-    <label class="field">Player
-      <select name="player_id" required>
-        {% for player in players %}<option value="{{ player.id }}">{{ player.name }}</option>{% endfor %}
-      </select>
-    </label>
-    <label class="field">Type
-      <select name="event_type">
-        {% for type in goal_types + card_types %}
-          <option value="{{ type.value }}">{{ type.value | replace("_", " ") | capitalize }}</option>
-        {% endfor %}
-        <option value="motm">Man of the match</option>
-        <option value="managers_motm">Managers MOTM</option>
-      </select>
-    </label>
-    <label class="field">Minute
-      <input name="minute" inputmode="numeric" autocomplete="off">
-    </label>
-    <label class="field">Assist
-      <select name="assist_player_id">
-        <option value="">—</option>
-        {% for player in players %}<option value="{{ player.id }}">{{ player.name }}</option>{% endfor %}
-      </select>
-    </label>
+  <div class="mc-hero-team">
+    <img src="/static/badges/uca.png" class="mc-hero-badge" alt="">
+    <span class="mc-hero-team-name">{{ club_name }}</span>
   </div>
-  <button type="submit">Add to match</button>
-</form>
 
-{% set award_events = fixture.events | selectattr("type.value", "in", ["motm", "managers_motm"]) | list %}
-{% if award_events %}
-<p class="eyebrow">Awards</p>
-<ul class="fixture-list">
-  {% for event in award_events %}
-  <li>
-    <span style="flex:1">
-      {{ event.player.name if event.player else "—" }}
-      <span class="when">{{ "Man of the match" if event.type.value == "motm" else "Managers MOTM" }}</span>
-    </span>
-    <form method="post" action="/fixtures/{{ fixture.id }}/events/{{ event.id }}/delete">
-      <button class="link" type="submit">Remove</button>
-    </form>
-  </li>
-  {% endfor %}
-</ul>
-{% endif %}
+  <div class="mc-score-block">
+    {% if fixture.is_played %}
+    <div class="mc-score-row">
+      <form method="post" action="/fixtures/{{ fixture.id }}/result">
+        <input type="hidden" name="goals_for" value="{{ fixture.goals_for - 1 if fixture.goals_for > 0 else 0 }}">
+        <input type="hidden" name="goals_against" value="{{ fixture.goals_against }}">
+        <button class="mc-score-btn" type="submit" {% if fixture.goals_for == 0 %}disabled{% endif %}>−</button>
+      </form>
+      <form method="post" action="/fixtures/{{ fixture.id }}/result">
+        <input type="hidden" name="goals_for" value="{{ fixture.goals_for + 1 }}">
+        <input type="hidden" name="goals_against" value="{{ fixture.goals_against }}">
+        <button class="mc-score-btn" type="submit">+</button>
+      </form>
+      <div class="mc-score">{{ fixture.goals_for }}–{{ fixture.goals_against }}</div>
+      <form method="post" action="/fixtures/{{ fixture.id }}/result">
+        <input type="hidden" name="goals_for" value="{{ fixture.goals_for }}">
+        <input type="hidden" name="goals_against" value="{{ fixture.goals_against - 1 if fixture.goals_against > 0 else 0 }}">
+        <button class="mc-score-btn" type="submit" {% if fixture.goals_against == 0 %}disabled{% endif %}>−</button>
+      </form>
+      <form method="post" action="/fixtures/{{ fixture.id }}/result">
+        <input type="hidden" name="goals_for" value="{{ fixture.goals_for }}">
+        <input type="hidden" name="goals_against" value="{{ fixture.goals_against + 1 }}">
+        <button class="mc-score-btn" type="submit">+</button>
+      </form>
+    </div>
+    <span class="mc-full-time">FULL TIME</span>
+    {% else %}
+    <div class="mc-score mc-score--empty">—</div>
+    {% endif %}
+    <span class="mc-date">{{ fixture.kickoff_at.strftime("%A %-d %B %Y · %H:%M") }}</span>
+    <details class="mc-edit-score">
+      <summary>✏️ {{ "Edit score" if fixture.is_played else "Log result" }}</summary>
+      <form method="post" action="/fixtures/{{ fixture.id }}/result" class="mc-score-form">
+        <label>{{ club_name }}<input type="number" name="goals_for" min="0" value="{{ fixture.goals_for if fixture.goals_for is not none else '' }}" required></label>
+        <label>{{ fixture.opponent }}<input type="number" name="goals_against" min="0" value="{{ fixture.goals_against if fixture.goals_against is not none else '' }}" required></label>
+        <button type="submit">Save</button>
+      </form>
+    </details>
+  </div>
 
-<p class="eyebrow" id="lineup">Lineup</p>
-<h2 class="section">Starting XI and substitutes</h2>
-<p class="empty">Tap a position to put a player there. Same board as the Lineups tab.</p>
-{% include "_pitch_builder.html" %}
+  <div class="mc-hero-team mc-hero-team--right">
+    <span class="mc-hero-team-name">{{ fixture.opponent }}</span>
+    {% if opp_slug %}<img src="/static/badges/{{ opp_slug }}.png" class="mc-hero-badge" alt="">{% else %}<div class="mc-hero-badge mc-hero-badge--ph"></div>{% endif %}
+  </div>
+</div>
+
+{# Body: timeline + sidebar #}
+{% set timeline_events = fixture.events | rejectattr("type.value", "in", ["motm", "managers_motm"]) | list %}
+{% set award_events    = fixture.events | selectattr("type.value", "in", ["motm", "managers_motm"]) | list %}
+
+<div class="mc-body">
+
+  {# ---- Match timeline ---- #}
+  <div class="mc-timeline-panel">
+    <h3 class="mc-panel-title">Match timeline</h3>
+
+    <div class="mc-filter-tabs">
+      <button class="mc-filter-btn is-active" data-filter="all">All</button>
+      <button class="mc-filter-btn" data-filter="goal">Goals</button>
+      <button class="mc-filter-btn" data-filter="card">Cards</button>
+    </div>
+
+    {% if timeline_events %}
+    <ul class="mc-event-list">
+      {% for event in timeline_events | sort(attribute="minute") %}
+      {% set is_goal = event.type.value in ["goal", "own_goal", "penalty_scored", "penalty_missed"] %}
+      {% set is_card = event.type.value in ["yellow_card", "red_card"] %}
+      <li class="mc-event-row" data-category="{{ 'goal' if is_goal else ('card' if is_card else 'other') }}">
+        <div class="mc-event-icon {{ 'mc-event-icon--goal' if is_goal else ('mc-event-icon--yellow' if event.type.value == 'yellow_card' else ('mc-event-icon--red' if event.type.value == 'red_card' else '')) }}">
+          {{ "⚽" if is_goal else ("🟨" if event.type.value == "yellow_card" else ("🟥" if event.type.value == "red_card" else "⚡")) }}
+        </div>
+        <div class="mc-event-info">
+          <span class="mc-event-name">
+            {{ event.player.name if event.player else "Own goal" }}
+            <span class="mc-event-type-label"> — {{ event.type.value | replace("_", " ") | capitalize }}</span>
+          </span>
+          {% if event.assist_player %}
+          <span class="mc-event-assist">Assist: {{ event.assist_player.name }}</span>
+          {% endif %}
+        </div>
+        <span class="mc-event-minute">{{ event.minute ~ "'" if event.minute else "—" }}</span>
+        <form method="post" action="/fixtures/{{ fixture.id }}/events/{{ event.id }}/delete">
+          <button class="link mc-event-del" type="submit">✕</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty">No events recorded yet.</p>
+    {% endif %}
+
+    <div class="mc-add-event">
+      <h4 class="mc-add-title">Add match event</h4>
+      <form method="post" action="/fixtures/{{ fixture.id }}/events">
+        <div class="mc-add-row">
+          <label class="field">Player
+            <select name="player_id" required>
+              <option value="" disabled selected>Select player</option>
+              {% for player in players %}<option value="{{ player.id }}">{{ player.name }}</option>{% endfor %}
+            </select>
+          </label>
+          <label class="field">Event type
+            <select name="event_type">
+              <option value="" disabled selected>Select event</option>
+              {% for type in goal_types %}
+                <option value="{{ type.value }}">{{ type.value | replace("_", " ") | capitalize }}</option>
+              {% endfor %}
+              {% for type in card_types %}
+                <option value="{{ type.value }}">{{ type.value | replace("_", " ") | capitalize }}</option>
+              {% endfor %}
+              <option value="motm">Man of the match</option>
+              <option value="managers_motm">Managers MOTM</option>
+            </select>
+          </label>
+          <label class="field">Minute
+            <input name="minute" inputmode="numeric" placeholder="e.g. 45" autocomplete="off">
+          </label>
+          <label class="field">Assist
+            <select name="assist_player_id">
+              <option value="">—</option>
+              {% for player in players %}<option value="{{ player.id }}">{{ player.name }}</option>{% endfor %}
+            </select>
+          </label>
+        </div>
+        <button type="submit">+ Add event</button>
+      </form>
+    </div>
+  </div>
+
+  {# ---- Sidebar ---- #}
+  <div class="mc-sidebar">
+
+    <div class="mc-sidebar-panel">
+      <h3 class="mc-panel-title">Match summary</h3>
+      {% set assist_count = fixture.events | selectattr("assist_player_id", "ne", none) | list | length %}
+      {% set yellow_count = fixture.events | selectattr("type.value", "equalto", "yellow_card") | list | length %}
+      {% set red_count    = fixture.events | selectattr("type.value", "equalto", "red_card")    | list | length %}
+      <ul class="mc-summary-list">
+        <li><span class="mc-summary-icon">⚽</span><span class="mc-summary-label">Goals</span><span class="mc-summary-val">{{ fixture.goals_for if fixture.goals_for is not none else "—" }}</span></li>
+        <li><span class="mc-summary-icon">🤝</span><span class="mc-summary-label">Assists</span><span class="mc-summary-val">{{ assist_count }}</span></li>
+        <li><span class="mc-summary-icon">🟨</span><span class="mc-summary-label">Yellow cards</span><span class="mc-summary-val">{{ yellow_count }}</span></li>
+        <li><span class="mc-summary-icon">🟥</span><span class="mc-summary-label">Red cards</span><span class="mc-summary-val">{{ red_count }}</span></li>
+      </ul>
+    </div>
+
+    <div class="mc-sidebar-panel">
+      <h3 class="mc-panel-title">Match awards</h3>
+      {% if award_events %}
+        {% for event in award_events %}
+        <div class="mc-award-row">
+          {% if event.player and event.player.photo_filename %}
+            <img src="/static/player_photos/{{ event.player.photo_filename }}" class="mc-award-photo" alt="">
+          {% elif event.player %}
+            <span class="mc-award-photo mc-award-photo--ph">{{ event.player.first_name[0] }}{{ event.player.last_name[0] }}</span>
+          {% endif %}
+          <div class="mc-award-info">
+            <span class="mc-award-name">{{ event.player.name if event.player else "—" }}</span>
+            <span class="mc-award-label">{{ "Man of the match" if event.type.value == "motm" else "Manager's player" }}</span>
+          </div>
+          <span class="mc-award-trophy">🏆</span>
+          <form method="post" action="/fixtures/{{ fixture.id }}/events/{{ event.id }}/delete">
+            <button class="link" type="submit" style="font-size:12px">Remove</button>
+          </form>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p class="empty" style="font-size:13px;margin:0">No awards yet. Add Man of the match above.</p>
+      {% endif %}
+    </div>
+
+    <div class="mc-sidebar-panel">
+      <h3 class="mc-panel-title">Match notes</h3>
+      <p style="font-size:13px;color:var(--ink-soft);margin:0 0 12px">View starting XI and match notes.</p>
+      <a class="mc-xi-link" href="#lineup">View starting XI ›</a>
+    </div>
+
+  </div>
+</div>
+
+{# Lineup / pitch builder #}
+<div id="lineup" style="scroll-margin-top:20px">
+  <p class="eyebrow" style="margin-top:28px">Lineup</p>
+  <h2 class="section">Starting XI and substitutes</h2>
+  {% include "_pitch_builder.html" %}
+</div>
+
+<script>
+(function () {
+  var btns = document.querySelectorAll('.mc-filter-btn');
+  var rows = document.querySelectorAll('.mc-event-row');
+  btns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      btns.forEach(function (b) { b.classList.remove('is-active'); });
+      btn.classList.add('is-active');
+      var f = btn.dataset.filter;
+      rows.forEach(function (row) {
+        row.style.display = (f === 'all' || row.dataset.category === f) ? '' : 'none';
+      });
+    });
+  });
+})();
+</script>
 
 {% endblock %}
