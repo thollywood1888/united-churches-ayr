@@ -97,6 +97,30 @@
 
 {# Controls row #}
 <div class="sq-controls">
+  {% if is_gaffer %}
+  <details class="adder sq-add-player">
+    <summary>+ Add player</summary>
+    <div style="padding:12px 0 4px">
+      <form class="stack" method="post" action="/squad">
+        <div class="field-row">
+          <label class="field">First name<input name="first_name" required autocomplete="off"></label>
+          <label class="field">Last name<input name="last_name" required autocomplete="off"></label>
+          <label class="field">Squad number<input name="squad_number" inputmode="numeric" autocomplete="off"></label>
+          <label class="field">Position
+            <select name="position">
+              <option value="">—</option>
+              <option>Goalkeeper</option>
+              <option>Defender</option>
+              <option>Midfielder</option>
+              <option>Forward</option>
+            </select>
+          </label>
+        </div>
+        <button type="submit">Add player</button>
+      </form>
+    </div>
+  </details>
+  {% endif %}
   <div class="sq-search-wrap">
     <input type="search" class="sq-search" id="sq-search" placeholder="Search players…" autocomplete="off">
     <select class="sq-pos-filter" id="sq-pos-filter">
@@ -126,6 +150,7 @@
       <th class="num">POTM</th>
       <th class="num">🟨</th>
       <th class="num">🟥</th>
+      {% if is_gaffer %}<th></th>{% endif %}
     </tr>
   </thead>
   <tbody>
@@ -133,12 +158,32 @@
     <tr data-name="{{ line.player.name | lower }}" data-pos="{{ line.player.position or '' | lower }}">
       <td>
         <div class="sq-player-cell">
-          {% if line.player.photo_filename %}
-            <img src="/static/player_photos/{{ line.player.photo_filename }}" class="player-thumb" alt="{{ line.player.name }}">
+          {% if is_gaffer %}
+          <form method="post" action="/squad/{{ line.player.id }}/photo" enctype="multipart/form-data">
+            <label class="player-photo-label" title="Click to upload photo">
+              {% if line.player.photo_filename %}
+                <img src="/static/player_photos/{{ line.player.photo_filename }}" class="player-thumb" alt="{{ line.player.name }}">
+              {% else %}
+                <div class="player-thumb player-thumb--placeholder">{{ line.player.first_name[0] }}{{ line.player.last_name[0] }}</div>
+              {% endif %}
+              <input type="file" name="photo" accept="image/*" style="display:none" onchange="this.form.submit()">
+            </label>
+          </form>
           {% else %}
-            <div class="player-thumb player-thumb--placeholder">{{ line.player.first_name[0] }}{{ line.player.last_name[0] }}</div>
+            {% if line.player.photo_filename %}
+              <img src="/static/player_photos/{{ line.player.photo_filename }}" class="player-thumb" alt="{{ line.player.name }}">
+            {% else %}
+              <div class="player-thumb player-thumb--placeholder">{{ line.player.first_name[0] }}{{ line.player.last_name[0] }}</div>
+            {% endif %}
           {% endif %}
-          <span class="sq-player-name">{{ line.player.name }}</span>
+          <div>
+            {% if is_gaffer %}
+            <a href="/squad/{{ line.player.id }}" class="sq-player-name">{{ line.player.name }}</a>
+            {% else %}
+            <span class="sq-player-name">{{ line.player.name }}</span>
+            {% endif %}
+            {% if line.player.status.value != "active" %}<span class="when">{{ line.player.status.value }}</span>{% endif %}
+          </div>
         </div>
       </td>
       <td class="num">{{ line.player.squad_number or "—" }}</td>
@@ -151,6 +196,14 @@
       <td class="num">{{ line.motm }}</td>
       <td class="num">{{ line.yellow_cards }}</td>
       <td class="num">{{ line.red_cards }}</td>
+      {% if is_gaffer %}
+      <td class="row-actions">
+        <a class="tab" href="/squad/{{ line.player.id }}">Edit</a>
+        <form method="post" action="/squad/{{ line.player.id }}/remove">
+          <button class="link" type="submit">Remove</button>
+        </form>
+      </td>
+      {% endif %}
     </tr>
   {% endfor %}
   </tbody>
