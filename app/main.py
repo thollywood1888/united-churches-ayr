@@ -96,8 +96,12 @@ class _AuthMiddleware(BaseHTTPMiddleware):
         path = request.url.path
         if path in self._PUBLIC or path.startswith("/static"):
             return await call_next(request)
-        if not request.session.get("user"):
+        user = request.session.get("user")
+        if not user:
             return RedirectResponse("/login", status_code=302)
+        if request.method == "POST" and user != "Gaffer":
+            referer = request.headers.get("referer", "/")
+            return RedirectResponse(referer, status_code=303)
         return await call_next(request)
 
 
@@ -122,6 +126,7 @@ def _render(request: Request, template: str, session: Session, **context):
         "club_name": CLUB_NAME,
         "season": season,
         "now": datetime.now(),
+        "is_gaffer": request.session.get("user") == "Gaffer",
     }
     return templates.TemplateResponse(request, template, base | context)
 

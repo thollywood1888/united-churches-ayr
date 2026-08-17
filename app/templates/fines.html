@@ -22,6 +22,7 @@
       </tbody>
     </table>
 
+    {% if is_gaffer %}
     <details class="adder">
       <summary>+ Add fine</summary>
       <form class="stack" method="post" action="/fines">
@@ -45,6 +46,7 @@
         <button type="submit">Issue fine</button>
       </form>
     </details>
+    {% endif %}
   </div>
 
   <div class="panel">
@@ -69,9 +71,11 @@
           <td class="num">£{{ fine.amount_pence // 100 }}{% if fine.amount_pence % 100 %}.{{ "%02d" % (fine.amount_pence % 100) }}{% endif %}</td>
           <td>{{ fine.issued_at.strftime("%-d %b") }}</td>
           <td>
+            {% if is_gaffer %}
             <form method="post" action="/fines/{{ fine.id }}/pay">
               <button class="ghost" type="submit">Mark paid</button>
             </form>
+            {% endif %}
           </td>
         </tr>
         {% endfor %}

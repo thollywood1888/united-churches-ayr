@@ -60,6 +60,7 @@
 <p class="empty">No fixtures scheduled.</p>
 {% endif %}
 
+{% if is_gaffer %}
 <details class="adder">
   <summary>Add a fixture</summary>
   <form class="stack" method="post" action="/fixtures">
@@ -93,5 +94,6 @@
     <button type="submit">Add fixture</button>
   </form>
 </details>
+{% endif %}
 
 {% endblock %}

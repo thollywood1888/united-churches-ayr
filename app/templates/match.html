@@ -28,6 +28,7 @@
   <div class="mc-score-block">
     {% if fixture.is_played %}
     <div class="mc-score-row">
+      {% if is_gaffer %}
       <form method="post" action="/fixtures/{{ fixture.id }}/result">
         <input type="hidden" name="goals_for" value="{{ fixture.goals_for - 1 if fixture.goals_for > 0 else 0 }}">
         <input type="hidden" name="goals_against" value="{{ fixture.goals_against }}">
@@ -38,7 +39,9 @@
         <input type="hidden" name="goals_against" value="{{ fixture.goals_against }}">
         <button class="mc-score-btn" type="submit">+</button>
       </form>
+      {% endif %}
       <div class="mc-score">{{ fixture.goals_for }}–{{ fixture.goals_against }}</div>
+      {% if is_gaffer %}
       <form method="post" action="/fixtures/{{ fixture.id }}/result">
         <input type="hidden" name="goals_for" value="{{ fixture.goals_for }}">
         <input type="hidden" name="goals_against" value="{{ fixture.goals_against - 1 if fixture.goals_against > 0 else 0 }}">
@@ -49,12 +52,14 @@
         <input type="hidden" name="goals_against" value="{{ fixture.goals_against + 1 }}">
         <button class="mc-score-btn" type="submit">+</button>
       </form>
+      {% endif %}
     </div>
     <span class="mc-full-time">FULL TIME</span>
     {% else %}
     <div class="mc-score mc-score--empty">—</div>
     {% endif %}
     <span class="mc-date">{{ fixture.kickoff_at.strftime("%A %-d %B %Y · %H:%M") }}</span>
+    {% if is_gaffer %}
     <details class="mc-edit-score">
       <summary>✏️ {{ "Edit score" if fixture.is_played else "Log result" }}</summary>
       <form method="post" action="/fixtures/{{ fixture.id }}/result" class="mc-score-form">
@@ -63,6 +68,7 @@
         <button type="submit">Save</button>
       </form>
     </details>
+    {% endif %}
   </div>
 
   <div class="mc-hero-team mc-hero-team--right">
@@ -106,9 +112,11 @@
           {% endif %}
         </div>
         <span class="mc-event-minute">{{ event.minute ~ "'" if event.minute else "—" }}</span>
+        {% if is_gaffer %}
         <form method="post" action="/fixtures/{{ fixture.id }}/events/{{ event.id }}/delete">
           <button class="link mc-event-del" type="submit">✕</button>
         </form>
+        {% endif %}
       </li>
       {% endfor %}
     </ul>
@@ -116,6 +124,7 @@
     <p class="empty">No events recorded yet.</p>
     {% endif %}
 
+    {% if is_gaffer %}
     <div class="mc-add-event">
       <h4 class="mc-add-title">Add match event</h4>
       <form method="post" action="/fixtures/{{ fixture.id }}/events">
@@ -152,6 +161,7 @@
         <button type="submit">+ Add event</button>
       </form>
     </div>
+    {% endif %}
   </div>
 
   {# ---- Sidebar ---- #}
@@ -185,9 +195,11 @@
             <span class="mc-award-label">{{ "Man of the match" if event.type.value == "motm" else "Manager's player" }}</span>
           </div>
           <span class="mc-award-trophy">🏆</span>
+          {% if is_gaffer %}
           <form method="post" action="/fixtures/{{ fixture.id }}/events/{{ event.id }}/delete">
             <button class="link" type="submit" style="font-size:12px">Remove</button>
           </form>
+          {% endif %}
         </div>
         {% endfor %}
       {% else %}

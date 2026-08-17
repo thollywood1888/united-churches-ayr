@@ -38,6 +38,7 @@ These standings come from the league, not from results entered here.</p>
 <p class="empty">No standings yet. Paste the league table below.</p>
 {% endif %}
 
+{% if is_gaffer %}
 <details class="adder">
   <summary>Update the table</summary>
   <div>
@@ -50,5 +51,6 @@ These standings come from the league, not from results entered here.</p>
     </form>
   </div>
 </details>
+{% endif %}
 
 {% endblock %}

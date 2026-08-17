@@ -13,6 +13,7 @@
 match centre for each result to attribute them.</p>
 {% endif %}
 
+{% if is_gaffer %}
 <div class="panel" style="margin-bottom:22px">
   <p>Squad</p>
   <h2>Add a player</h2>
@@ -34,6 +35,7 @@ match centre for each result to attribute them.</p>
     <button type="submit">Add player</button>
   </form>
 </div>
+{% endif %}
 
 <p class="eyebrow">Current squad</p>
 <h2 class="section">Appearances, goals, assists and cards</h2>
@@ -60,6 +62,7 @@ match centre for each result to attribute them.</p>
   {% for line in lines %}
     <tr>
       <td style="padding:6px 4px">
+        {% if is_gaffer %}
         <form method="post" action="/squad/{{ line.player.id }}/photo" enctype="multipart/form-data">
           <label class="player-photo-label" title="Click to upload photo">
             {% if line.player.photo_filename %}
@@ -70,6 +73,13 @@ match centre for each result to attribute them.</p>
             <input type="file" name="photo" accept="image/*" style="display:none" onchange="this.form.submit()">
           </label>
         </form>
+        {% else %}
+          {% if line.player.photo_filename %}
+            <img src="/static/player_photos/{{ line.player.photo_filename }}" class="player-thumb" alt="{{ line.player.name }}">
+          {% else %}
+            <div class="player-thumb player-thumb--placeholder">{{ line.player.first_name[0] }}{{ line.player.last_name[0] }}</div>
+          {% endif %}
+        {% endif %}
       </td>
       <td>
         <a href="/squad/{{ line.player.id }}">{{ line.player.name }}</a>
@@ -85,12 +95,16 @@ match centre for each result to attribute them.</p>
       <td class="num">{{ line.assists }}</td>
       <td class="num">{{ line.yellow_cards }}</td>
       <td class="num">{{ line.red_cards }}</td>
+      {% if is_gaffer %}
       <td class="row-actions">
         <a class="tab" href="/squad/{{ line.player.id }}">Edit</a>
         <form method="post" action="/squad/{{ line.player.id }}/remove">
           <button class="link" type="submit">Remove</button>
         </form>
       </td>
+      {% else %}
+      <td></td>
+      {% endif %}
     </tr>
   {% endfor %}
   </tbody>
@@ -142,9 +156,11 @@ match centre for each result to attribute them.</p>
       <a href="/squad/{{ player.id }}">{{ player.name }}</a>
       {% if player.position %}<span class="when">{{ player.position }}</span>{% endif %}
     </span>
+    {% if is_gaffer %}
     <form method="post" action="/squad/{{ player.id }}/restore">
       <button type="submit" class="ghost">Restore</button>
     </form>
+    {% endif %}
   </li>
   {% endfor %}
 </ul>

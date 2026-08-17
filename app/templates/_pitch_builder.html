@@ -1,3 +1,4 @@
+{% if is_gaffer %}
 <div class="formation-switch">
   {% for f in formations %}
   <form method="post" action="/fixtures/{{ fixture.id }}/formation">
@@ -7,21 +8,22 @@
   </form>
   {% endfor %}
 </div>
+{% endif %}
 
 <div class="pos-strip">
   {% for slot in pitch_slots %}
     {% set fill = slot_fill.get(slot.key) %}
-    <a class="pos-chip {{ 'is-filled' if fill }}"
-       href="{{ pick_base }}{{ '&' if '?' in pick_base else '?' }}slot={{ slot.key }}#picker">
+    {% if is_gaffer %}<a class="pos-chip {{ 'is-filled' if fill }}"
+       href="{{ pick_base }}{{ '&' if '?' in pick_base else '?' }}slot={{ slot.key }}#picker">{% else %}<span class="pos-chip {{ 'is-filled' if fill }}">{% endif %}
       <strong>{{ slot.label }}</strong>
       <span>{{ fill.player.last_name if fill else "Add" }}</span>
-    </a>
+    {% if is_gaffer %}</a>{% else %}</span>{% endif %}
   {% endfor %}
 </div>
 
 {% if starters_on_pitch == 0 and not bench and not unplaced_starters %}
 <p class="empty">This week is empty. Tap a position to add a player.</p>
-{% elif not fixture.is_played %}
+{% elif not fixture.is_played and is_gaffer %}
 <form method="post" action="/fixtures/{{ fixture.id }}/lineup/clear" class="clear-lineup">
   <input type="hidden" name="next" value="{{ next_url }}">
   <button type="submit" class="link">Clear this lineup</button>
@@ -78,7 +80,7 @@
   </div>
 </div>
 
-{% if pick_slot %}
+{% if pick_slot and is_gaffer %}
 <section class="picker-sheet" id="picker">
   <div class="picker-sheet-head">
     <p class="eyebrow">Pick {{ pick_label }}</p>
@@ -201,11 +203,13 @@
       </span>
       <span class="slot-name">{{ appearance.player.last_name }}</span>
       <span class="slot-pos">SUB</span>
+      {% if is_gaffer %}
       <form method="post" action="/fixtures/{{ fixture.id }}/lineup/bench">
         <input type="hidden" name="player_id" value="{{ appearance.player.id }}">
         <input type="hidden" name="next" value="{{ next_url }}">
         <button type="submit" class="link bench-remove">Remove</button>
       </form>
+      {% endif %}
     </div>
     {% endfor %}
   </div>
@@ -213,6 +217,7 @@
   <p class="empty">No substitutes named.</p>
   {% endif %}
 
+  {% if is_gaffer %}
   <details class="adder">
     <summary>Add a substitute</summary>
     {% if available_players %}
@@ -239,4 +244,5 @@
     <p class="empty">Everyone is already in the lineup.</p>
     {% endif %}
   </details>
+  {% endif %}
 </div>

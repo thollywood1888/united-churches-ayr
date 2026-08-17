@@ -4,10 +4,14 @@
 <div class="stat-row">
   <div class="card">
     <p class="label">Monthly fee</p>
+    {% if is_gaffer %}
     <form method="post" action="/fees/settings" style="display:flex;gap:8px;align-items:center;margin-top:4px;">
       <input type="number" name="amount" value="{{ settings.monthly_fee_pence // 100 }}" min="0" style="width:80px;">
       <button type="submit" class="ghost" style="padding:9px 14px;">Save</button>
     </form>
+    {% else %}
+    <div class="figure">£{{ settings.monthly_fee_pence // 100 }}</div>
+    {% endif %}
   </div>
   <div class="card">
     <p class="label">Expected this month</p>
@@ -44,7 +48,7 @@
         {% endif %}
       </td>
       <td>
-        {% if not (payments[player.id] is defined and payments[player.id]) %}
+        {% if is_gaffer and not (payments[player.id] is defined and payments[player.id]) %}
         <form method="post" action="/fees/{{ player.id }}/pay">
           <button class="ghost" type="submit">Mark paid</button>
         </form>
