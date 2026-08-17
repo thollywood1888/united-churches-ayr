@@ -170,6 +170,130 @@ def test_lineups_page_shows_pitch_slots(client: TestClient) -> None:
     assert "Who plays GK?" in picker
 
 
+def test_each_game_week_lineup_starts_empty(client: TestClient) -> None:
+    for fixture_id in (1, 2, 3):
+        page = client.get(f"/lineups?fixture_id={fixture_id}").text
+        assert "0/11" in page
+        assert "This week is empty. Tap a position to add a player." in page
+        assert "are in the XI but not on a position yet" not in page
+
+
+def test_placing_on_one_week_leaves_other_weeks_empty(client: TestClient) -> None:
+    client.post(
+        "/squad",
+        data={"first_name": "Ethan", "last_name": "Isolate"},
+        follow_redirects=True,
+    )
+    player_id = _player_id("Ethan", "Isolate")
+    client.post(
+        "/fixtures/1/lineup/place",
+        data={"slot": "st", "player_id": str(player_id), "next": "/lineups?fixture_id=1"},
+    )
+    week_one = client.get("/lineups?fixture_id=1").text
+    week_two = client.get("/lineups?fixture_id=2").text
+    assert 'aria-label="ST: Ethan Isolate"' in week_one
+    assert "1/11" in week_one
+    assert "0/11" in week_two
+    assert 'aria-label="ST: Ethan Isolate"' not in week_two
+    assert "This week is empty. Tap a position to add a player." in week_two
+
+
+def test_clear_lineup_empties_an_unplayed_week(client: TestClient) -> None:
+    client.post(
+        "/squad",
+        data={"first_name": "Clark", "last_name": "Reset"},
+        follow_redirects=True,
+    )
+    player_id = _player_id("Clark", "Reset")
+    client.post(
+        "/fixtures/2/lineup/place",
+        data={"slot": "st", "player_id": str(player_id), "next": "/lineups?fixture_id=2"},
+    )
+    client.post(
+        "/fixtures/2/lineup/bench",
+        data={"player_id": str(player_id), "next": "/lineups?fixture_id=2"},
+    )
+    # Moved to the bench — still named for that week until cleared.
+    named = client.get("/lineups?fixture_id=2").text
+    assert "Reset" in named
+
+    response = client.post(
+        "/fixtures/2/lineup/clear",
+        data={"next": "/lineups?fixture_id=2"},
+        follow_redirects=False,
+    )
+    assert response.status_code == 303
+    empty = client.get("/lineups?fixture_id=2").text
+    assert "0/11" in empty
+    assert 'aria-label="ST: Clark Reset"' not in empty
+    assert 'aria-label="GK: Clark Reset"' not in empty
+    assert "This week is empty. Tap a position to add a player." in empty
+
+    client.post(
+        "/fixtures/2/lineup/place",
+        data={"slot": "gk", "player_id": str(player_id), "next": "/lineups?fixture_id=2"},
+    )
+    again = client.get("/lineups?fixture_id=2").text
+    assert 'aria-label="GK: Clark Reset"' in again
+
+
+def test_clear_lineup_refuses_a_played_match(client: TestClient) -> None:
+    client.post(
+        "/squad",
+        data={"first_name": "Ross", "last_name": "Kept"},
+        follow_redirects=True,
+    )
+    player_id = _player_id("Ross", "Kept")
+    client.post(
+        "/fixtures/1/lineup/place",
+        data={"slot": "st", "player_id": str(player_id)},
+    )
+    client.post("/fixtures/1/result", data={"goals_for": "2", "goals_against": "2"})
+    response = client.post(
+        "/fixtures/1/lineup/clear",
+        data={"next": "/lineups?fixture_id=1"},
+        follow_redirects=False,
+    )
+    assert response.status_code == 400
+    page = client.get("/lineups?fixture_id=1").text
+    assert 'aria-label="ST: Ross Kept"' in page
+
+
+def test_formation_switch_drops_slots_the_new_shape_cannot_show(client: TestClient) -> None:
+    client.post(
+        "/squad",
+        data={"first_name": "John", "last_name": "Currie"},
+        follow_redirects=True,
+    )
+    client.post(
+        "/squad",
+        data={"first_name": "Liam", "last_name": "Dunnachie"},
+        follow_redirects=True,
+    )
+    currie = _player_id("John", "Currie")
+    keeper = _player_id("Liam", "Dunnachie")
+    client.post("/fixtures/1/lineup/place", data={"slot": "st", "player_id": str(currie)})
+    client.post("/fixtures/1/lineup/place", data={"slot": "gk", "player_id": str(keeper)})
+
+    client.post(
+        "/fixtures/1/formation",
+        data={"formation": "3-5-2", "next": "/lineups?fixture_id=1"},
+    )
+    page = client.get("/lineups?fixture_id=1").text
+    assert "Starting XI · 3-5-2" in page
+    assert 'aria-label="ST: John Currie"' not in page
+    assert 'aria-label="LS: John Currie"' not in page
+    assert 'aria-label="GK: Liam Dunnachie"' in page
+    assert "are in the XI but not on a position yet" not in page
+
+    client.post(
+        "/fixtures/1/lineup/place",
+        data={"slot": "ls", "player_id": str(currie), "next": "/lineups?fixture_id=1"},
+    )
+    placed = client.get("/lineups?fixture_id=1").text
+    assert 'aria-label="LS: John Currie"' in placed
+
+
 def test_place_player_on_a_pitch_slot(client: TestClient) -> None:
     client.post(
         "/squad",

@@ -387,6 +387,8 @@ a.g-row:hover { color: var(--navy); }
 .pos-chip strong { font-size: 13px; letter-spacing: 0.04em; }
 .pos-chip.is-filled { background: var(--navy); color: #fff; }
 
+.clear-lineup { margin: 0 0 14px; }
+
 .board {
   position: relative;
   background: #14181d;

@@ -751,8 +751,31 @@ def set_formation(
     if formation not in FORMATIONS:
         raise HTTPException(status_code=400, detail="Unknown formation")
     fixture.formation = formation
+    valid_keys = {slot.key for slot in FORMATIONS[formation]}
+    # Slots do not map across shapes. Drop starters the new pitch cannot show,
+    # otherwise the board looks empty while the 11-player cap still blocks adds.
+    for appearance in list(fixture.appearances):
+        if appearance.role is AppearanceRole.start and appearance.pitch_slot not in valid_keys:
+            session.delete(appearance)
     session.commit()
     dest = _safe_next(next, f"/lineups?fixture_id={fixture_id}")
+    return RedirectResponse(dest, status_code=303)
+
+
+@app.post("/fixtures/{fixture_id}/lineup/clear")
+def clear_lineup(
+    session: SessionDep,
+    fixture_id: int,
+    next: Annotated[str, Form()] = "",
+):
+    fixture = _fixture_or_404(session, fixture_id)
+    dest = _safe_next(next, f"/lineups?fixture_id={fixture_id}")
+    if fixture.is_played:
+        raise HTTPException(status_code=400, detail="Cannot clear a played match")
+    for appearance in list(fixture.appearances):
+        session.delete(appearance)
+    fixture.formation = "4-2-3-1"
+    session.commit()
     return RedirectResponse(dest, status_code=303)
 
 

@@ -19,6 +19,15 @@
   {% endfor %}
 </div>
 
+{% if starters_on_pitch == 0 and not bench and not unplaced_starters %}
+<p class="empty">This week is empty. Tap a position to add a player.</p>
+{% elif not fixture.is_played %}
+<form method="post" action="/fixtures/{{ fixture.id }}/lineup/clear" class="clear-lineup">
+  <input type="hidden" name="next" value="{{ next_url }}">
+  <button type="submit" class="link">Clear this lineup</button>
+</form>
+{% endif %}
+
 <div class="board">
   <div class="board-head">
     <p>Starting XI · {{ formation_key }}</p>
