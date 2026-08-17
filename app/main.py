@@ -662,10 +662,10 @@ def place_on_pitch(
     existing.role = AppearanceRole.start
     existing.pitch_slot = slot
     existing.minute_on = 0
-    matched_slot = next((s for s in formation_slots if s.key == slot), None)
-    if matched_slot:
-        existing.pos_x = matched_slot.default_x
-        existing.pos_y = matched_slot.default_y
+    slot_defaults = [s for s in formation_slots if s.key == slot]
+    if slot_defaults:
+        existing.pos_x = slot_defaults[0].default_x
+        existing.pos_y = slot_defaults[0].default_y
     session.commit()
     return RedirectResponse(dest, status_code=303)
 
