@@ -105,18 +105,26 @@
   <p class="eyebrow">Bench</p>
   <h2 class="section">Substitutes</h2>
   {% if bench %}
-  <ul class="bench-chips">
+  <div class="bench-grid">
     {% for appearance in bench %}
-    <li>
-      {{ appearance.player.name }}
+    <div class="bench-card">
+      <span class="slot-disc is-filled">
+        {% if appearance.player.photo_filename %}
+          <img src="/static/player_photos/{{ appearance.player.photo_filename }}" alt="">
+        {% else %}
+          {{ appearance.player.first_name[0] }}{{ appearance.player.last_name[0] }}
+        {% endif %}
+      </span>
+      <span class="slot-name">{{ appearance.player.last_name }}</span>
+      <span class="slot-pos">SUB</span>
       <form method="post" action="/fixtures/{{ fixture.id }}/lineup/bench">
         <input type="hidden" name="player_id" value="{{ appearance.player.id }}">
         <input type="hidden" name="next" value="{{ next_url }}">
-        <button type="submit" class="link">Remove</button>
+        <button type="submit" class="link bench-remove">Remove</button>
       </form>
-    </li>
+    </div>
     {% endfor %}
-  </ul>
+  </div>
   {% else %}
   <p class="empty">No substitutes named.</p>
   {% endif %}
@@ -129,7 +137,17 @@
       <form method="post" action="/fixtures/{{ fixture.id }}/lineup/bench">
         <input type="hidden" name="player_id" value="{{ player.id }}">
         <input type="hidden" name="next" value="{{ next_url }}">
-        <button type="submit" class="pick-player">{{ player.name }}</button>
+        <button type="submit" class="pick-player">
+          {% if player.photo_filename %}
+            <img src="/static/player_photos/{{ player.photo_filename }}" class="player-thumb" alt="">
+          {% else %}
+            <span class="player-thumb player-thumb--placeholder">{{ player.first_name[0] }}{{ player.last_name[0] }}</span>
+          {% endif %}
+          <span>
+            {{ player.name }}
+            {% if player.squad_number %}<span class="when">#{{ player.squad_number }}</span>{% endif %}
+          </span>
+        </button>
       </form>
       {% endfor %}
     </div>
