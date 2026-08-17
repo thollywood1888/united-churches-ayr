@@ -1330,3 +1330,164 @@ button.md-player:hover { background: var(--page); }
 @media (prefers-reduced-motion: no-preference) {
   .tab, button { transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease; }
 }
+
+/* ---------------------------------------------------------- overview page -- */
+
+.ov-page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.ov-page-title { margin: 0; font-size: 28px; font-weight: 700; color: var(--navy); letter-spacing: -0.02em; }
+.ov-page-sub { margin: 2px 0 0; color: var(--ink-soft); font-size: 14px; }
+
+/* hero */
+.ov-hero {
+  background: var(--navy);
+  border-radius: var(--radius);
+  padding: 24px 28px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  overflow: hidden;
+}
+.ov-hero-inner { flex: 1; min-width: 0; }
+.ov-hero-label {
+  display: inline-block;
+  color: var(--gold);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.ov-hero-matchup {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.ov-hero-team { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+.ov-hero-team--right { justify-content: flex-end; }
+.ov-hero-team--right .ov-hero-team-name { text-align: right; }
+.ov-hero-team-name { color: #fff; font-size: clamp(14px, 2vw, 19px); font-weight: 700; line-height: 1.25; }
+.ov-hero-badge-img {
+  width: 56px; height: 56px; object-fit: contain; flex: none;
+  border-radius: 50%; background: rgba(255,255,255,0.08);
+}
+.ov-hero-badge-ph { width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.12); flex: none; }
+.ov-hero-vs {
+  width: 42px; height: 42px; border-radius: 50%;
+  background: rgba(255,255,255,0.1); border: 1.5px solid rgba(255,255,255,0.2);
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,0.65); font-size: 11px; font-weight: 800; letter-spacing: 0.04em; flex: none;
+}
+.ov-hero-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; color: rgba(255,255,255,0.65); font-size: 14px; }
+.ov-countdown { background: rgba(255,255,255,0.12); border-radius: 999px; padding: 3px 12px; font-size: 13px; color: rgba(255,255,255,0.85); }
+.ov-hero-actions { display: flex; flex-direction: column; gap: 10px; flex: none; }
+.ov-hero-btn-primary {
+  display: block; background: var(--gold); color: var(--navy);
+  font-weight: 700; font-size: 14px; padding: 12px 22px; border-radius: 10px;
+  text-decoration: none; white-space: nowrap; text-align: center;
+}
+.ov-hero-btn-primary:hover { background: #d89800; }
+.ov-hero-btn-secondary {
+  display: block; background: rgba(255,255,255,0.08); color: #fff;
+  font-weight: 600; font-size: 14px; padding: 12px 22px; border-radius: 10px;
+  text-decoration: none; white-space: nowrap; text-align: center;
+  border: 1.5px solid rgba(255,255,255,0.2);
+}
+.ov-hero-btn-secondary:hover { background: rgba(255,255,255,0.16); }
+
+/* stats strip */
+.ov-stats-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--gap); margin-bottom: 14px; }
+.ov-stat-card { background: var(--card); border: 1.5px solid var(--line); border-radius: var(--radius); padding: 16px; }
+.ov-stat-icon { font-size: 20px; margin-bottom: 6px; }
+.ov-stat-label { color: var(--ink-soft); font-size: 12px; font-weight: 500; margin-bottom: 4px; }
+.ov-stat-value { font-size: 26px; font-weight: 700; color: var(--navy); letter-spacing: -0.02em; }
+
+/* three columns */
+.ov-three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--gap); margin-bottom: 14px; align-items: start; }
+.ov-panel { background: var(--card); border: 1.5px solid var(--line); border-radius: var(--radius); padding: 18px; }
+.ov-panel-head { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.ov-panel-icon { font-size: 15px; flex: none; }
+.ov-panel-title { font-size: 14px; font-weight: 600; color: var(--navy); flex: 1; }
+.ov-view-all { font-size: 13px; color: var(--gold); font-weight: 600; text-decoration: none; flex: none; }
+.ov-view-all:hover { text-decoration: underline; }
+
+/* recent result */
+.ov-result-teams { display: flex; align-items: center; gap: 10px; justify-content: center; margin-bottom: 10px; }
+.ov-result-team {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  font-size: 12px; text-align: center; flex: 1; color: var(--ink); line-height: 1.3;
+}
+.ov-result-badge { width: 42px; height: 42px; object-fit: contain; }
+.ov-result-badge--ph { width: 42px; height: 42px; border-radius: 50%; background: var(--accent-soft); }
+.ov-result-score-col { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: none; }
+.ov-result-score { font-size: 30px; font-weight: 700; color: var(--navy); letter-spacing: -0.02em; }
+.ov-outcome-chip { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; padding: 3px 10px; border-radius: 999px; }
+.ov-outcome-W { background: #dcf5e8; color: var(--win); }
+.ov-outcome-D { background: var(--accent-soft); color: var(--navy); }
+.ov-outcome-L { background: #fde8ec; color: var(--loss); }
+.ov-result-date { text-align: center; color: var(--ink-soft); font-size: 12px; margin: 0 0 10px; }
+.ov-view-link { display: block; color: var(--gold); font-size: 13px; font-weight: 600; text-decoration: none; }
+.ov-view-link:hover { text-decoration: underline; }
+
+/* upcoming fixtures */
+.ov-fix-list { list-style: none; margin: 0; padding: 0; }
+.ov-fix-row {
+  display: flex; align-items: center; gap: 10px; padding: 10px 0;
+  border-top: 1px solid var(--line); text-decoration: none; color: var(--ink);
+}
+.ov-fix-badge-wrap { width: 32px; flex: none; }
+.ov-fix-badge { width: 32px; height: 32px; object-fit: contain; }
+.ov-fix-badge--empty { width: 32px; height: 32px; border-radius: 50%; background: var(--accent-soft); }
+.ov-fix-info { flex: 1; min-width: 0; }
+.ov-fix-name { display: block; font-size: 13px; font-weight: 600; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ov-fix-when { display: block; font-size: 12px; color: var(--ink-soft); }
+.ov-fix-venue-chip {
+  width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center;
+  justify-content: center; font-size: 11px; font-weight: 700; flex: none;
+  background: var(--navy); color: #fff;
+}
+.ov-fix-venue-chip.away { background: transparent; color: var(--navy); border: 1.5px solid var(--navy); }
+.ov-fix-venue-chip.neutral { background: var(--accent-soft); color: var(--navy); }
+.ov-fix-arrow { color: var(--ink-soft); font-size: 16px; }
+.ov-table { font-size: 12.5px; }
+.ov-table th, .ov-table td { padding: 7px 4px; }
+
+/* season leaders */
+.ov-leaders { margin-bottom: 24px; }
+.ov-leaders-head { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.ov-leaders-title { font-size: 18px; font-weight: 700; color: var(--navy); }
+.ov-leaders-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gap); }
+.ov-leader-card { background: var(--card); border: 1.5px solid var(--line); border-radius: var(--radius); padding: 16px; }
+.ov-leader-cat { font-size: 13px; font-weight: 600; color: var(--ink-soft); margin-bottom: 12px; }
+.ov-leader-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; }
+.ov-leader-row + .ov-leader-row { border-top: 1px solid var(--line); }
+.ov-leader-photo { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex: none; }
+.ov-leader-photo--ph {
+  width: 32px; height: 32px; border-radius: 50%; background: var(--navy); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; flex: none;
+}
+.ov-leader-name { flex: 1; font-size: 13.5px; font-weight: 500; color: var(--navy); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ov-leader-val { font-size: 18px; font-weight: 700; color: var(--navy); flex: none; }
+
+@media (max-width: 900px) {
+  .ov-three-col { grid-template-columns: 1fr 1fr; }
+  .ov-leaders-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .ov-hero { flex-direction: column; align-items: stretch; }
+  .ov-hero-actions { flex-direction: row; }
+  .ov-hero-btn-primary, .ov-hero-btn-secondary { flex: 1; }
+  .ov-stats-strip { grid-template-columns: repeat(3, 1fr); }
+  .ov-three-col { grid-template-columns: 1fr; }
+  .ov-leaders-grid { grid-template-columns: repeat(2, 1fr); }
+  .ov-page-title { font-size: 22px; }
+}

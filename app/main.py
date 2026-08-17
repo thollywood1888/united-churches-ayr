@@ -193,19 +193,36 @@ def overview(request: Request, session: SessionDep):
     season = _season_or_404(session)
     table = stats.league_table(session, season.id)
     our_row = next((row for row in table if row.club == CLUB_NAME), None)
+    nf = stats.next_fixture(session, season.id)
+    last_result = session.scalar(
+        select(Fixture)
+        .where(Fixture.season_id == season.id, Fixture.status == FixtureStatus.played)
+        .order_by(Fixture.kickoff_at.desc())
+        .limit(1)
+    )
+    upcoming = list(session.scalars(
+        select(Fixture)
+        .where(Fixture.season_id == season.id, Fixture.status == FixtureStatus.scheduled)
+        .order_by(Fixture.kickoff_at)
+        .limit(3)
+    ))
+    days_to_kickoff = (nf.kickoff_at.date() - datetime.now().date()).days if nf else None
     return _render(
         request,
         "overview.html",
         session,
         tab="overview",
         record=stats.team_record(session, season.id),
-        next_fixture=stats.next_fixture(session, season.id),
+        next_fixture=nf,
         table=table[:5],
         our_row=our_row,
         top_scorers=stats.top_scorers(session, season.id, limit=5),
         top_assists=stats.top_assists(session, season.id, limit=5),
         top_motm=stats.top_motm(session, season.id, limit=5),
         top_managers_motm=stats.top_managers_motm(session, season.id, limit=5),
+        last_result=last_result,
+        upcoming_fixtures=upcoming,
+        days_to_kickoff=days_to_kickoff,
     )
 
 

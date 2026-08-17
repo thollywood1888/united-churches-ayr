@@ -1,145 +1,238 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="stat-row">
-  <div class="card">
-    <div class="label">League position</div>
-    <div class="figure">{{ our_row.position ~ ordinal(our_row.position) if our_row else "—" }}</div>
+<div class="ov-page-head">
+  <div>
+    <h1 class="ov-page-title">Club overview</h1>
+    <p class="ov-page-sub">Season {{ season.label }}</p>
   </div>
-  <div class="card">
-    <div class="label">Points</div>
-    <div class="figure">{{ record.points }}</div>
+  <a class="tab" href="/table">View league table</a>
+</div>
+
+{# ---- next match hero ---- #}
+{% if next_fixture %}
+{% set opp_slug = badge_map.get(next_fixture.opponent) %}
+<div class="ov-hero">
+  <div class="ov-hero-inner">
+    <span class="ov-hero-label">NEXT MATCH · {{ next_fixture.venue.value | upper }}</span>
+    <div class="ov-hero-matchup">
+      {% if next_fixture.venue.value == 'away' %}
+        <div class="ov-hero-team">
+          {% if opp_slug %}<img src="/static/badges/{{ opp_slug }}.png" class="ov-hero-badge-img" alt="">{% else %}<div class="ov-hero-badge-img ov-hero-badge-ph"></div>{% endif %}
+          <span class="ov-hero-team-name">{{ next_fixture.opponent }}</span>
+        </div>
+        <div class="ov-hero-vs">VS</div>
+        <div class="ov-hero-team ov-hero-team--right">
+          <span class="ov-hero-team-name">{{ club_name }}</span>
+          <img src="/static/badges/uca.png" class="ov-hero-badge-img" alt="">
+        </div>
+      {% else %}
+        <div class="ov-hero-team">
+          <img src="/static/badges/uca.png" class="ov-hero-badge-img" alt="">
+          <span class="ov-hero-team-name">{{ club_name }}</span>
+        </div>
+        <div class="ov-hero-vs">VS</div>
+        <div class="ov-hero-team ov-hero-team--right">
+          <span class="ov-hero-team-name">{{ next_fixture.opponent }}</span>
+          {% if opp_slug %}<img src="/static/badges/{{ opp_slug }}.png" class="ov-hero-badge-img" alt="">{% else %}<div class="ov-hero-badge-img ov-hero-badge-ph"></div>{% endif %}
+        </div>
+      {% endif %}
+    </div>
+    <div class="ov-hero-meta">
+      <span>{{ next_fixture.kickoff_at.strftime("%A %-d %B · %H:%M") }}</span>
+      {% if days_to_kickoff is not none %}
+        {% if days_to_kickoff == 0 %}<span class="ov-countdown">Today</span>
+        {% elif days_to_kickoff == 1 %}<span class="ov-countdown">1 day to kick-off</span>
+        {% elif days_to_kickoff > 0 %}<span class="ov-countdown">{{ days_to_kickoff }} days to kick-off</span>
+        {% endif %}
+      {% endif %}
+    </div>
   </div>
-  <div class="card">
-    <div class="label">Goals</div>
-    <div class="figure">{{ record.scored }}–{{ record.conceded }}</div>
+  <div class="ov-hero-actions">
+    <a class="ov-hero-btn-primary" href="/fixtures/{{ next_fixture.id }}">Open match centre ›</a>
+    <a class="ov-hero-btn-secondary" href="/lineups?fixture_id={{ next_fixture.id }}">Build lineup</a>
   </div>
-  <div class="card">
-    <div class="label">Record</div>
-    <div class="figure">{{ record.record_line }}</div>
+</div>
+{% else %}
+<div class="ov-hero">
+  <div class="ov-hero-inner">
+    <span class="ov-hero-label">NO UPCOMING FIXTURE</span>
+    <h2 style="color:#fff;margin:12px 0 8px;font-size:20px">Nothing scheduled yet</h2>
+    <p style="color:rgba(255,255,255,0.6);margin:0;font-size:14px">Add a fixture to see the next match here.</p>
+  </div>
+  <div class="ov-hero-actions">
+    <a class="ov-hero-btn-secondary" href="/fixtures">Manage fixtures</a>
+  </div>
+</div>
+{% endif %}
+
+{# ---- stats strip ---- #}
+<div class="ov-stats-strip">
+  <div class="ov-stat-card">
+    <div class="ov-stat-icon">🏆</div>
+    <div class="ov-stat-label">League position</div>
+    <div class="ov-stat-value">{{ (our_row.position ~ ordinal(our_row.position)) if our_row else "—" }}</div>
+  </div>
+  <div class="ov-stat-card">
+    <div class="ov-stat-icon">👕</div>
+    <div class="ov-stat-label">Played</div>
+    <div class="ov-stat-value">{{ record.played }}</div>
+  </div>
+  <div class="ov-stat-card">
+    <div class="ov-stat-icon">📋</div>
+    <div class="ov-stat-label">Record</div>
+    <div class="ov-stat-value">{{ record.record_line }}</div>
+  </div>
+  <div class="ov-stat-card">
+    <div class="ov-stat-icon">⚽</div>
+    <div class="ov-stat-label">Goals</div>
+    <div class="ov-stat-value">{{ record.scored }}–{{ record.conceded }}</div>
+  </div>
+  <div class="ov-stat-card">
+    <div class="ov-stat-icon">⭐</div>
+    <div class="ov-stat-label">Points</div>
+    <div class="ov-stat-value">{{ record.points }}</div>
   </div>
 </div>
 
-<div class="panel-row">
-  <div class="panel">
-    <p>Next match</p>
-    {% if next_fixture %}
-      {% set slug = badge_map.get(next_fixture.opponent) %}
-      {% if slug %}<img src="/static/badges/{{ slug }}.png" style="width:48px;height:48px;object-fit:contain;display:block;margin-bottom:8px;" alt="">{% endif %}
-      <h2>{{ next_fixture.opponent }}</h2>
-      <p>{{ next_fixture.kickoff_at.strftime("%a %-d %b") }} ·
-         {{ next_fixture.kickoff_at.strftime("%H:%M") }} ·
-         {{ next_fixture.venue.value | capitalize }}</p>
-      <a class="tab" href="/fixtures/{{ next_fixture.id }}">Open match centre</a>
+{# ---- three-column section ---- #}
+<div class="ov-three-col">
+
+  {# Recent result #}
+  <div class="ov-panel">
+    <div class="ov-panel-head">
+      <span class="ov-panel-icon">🕐</span>
+      <span class="ov-panel-title">Recent result</span>
+    </div>
+    {% if last_result %}
+    {% set lr_slug = badge_map.get(last_result.opponent) %}
+    <div class="ov-result-teams">
+      <div class="ov-result-team">
+        <img src="/static/badges/uca.png" class="ov-result-badge" alt="">
+        <span>United Churches<br>of Ayr AFC</span>
+      </div>
+      <div class="ov-result-score-col">
+        <div class="ov-result-score">{{ last_result.goals_for }}–{{ last_result.goals_against }}</div>
+        <span class="ov-outcome-chip ov-outcome-{{ last_result.outcome }}">{{ last_result.outcome }}</span>
+      </div>
+      <div class="ov-result-team">
+        {% if lr_slug %}<img src="/static/badges/{{ lr_slug }}.png" class="ov-result-badge" alt="">{% else %}<div class="ov-result-badge ov-result-badge--ph"></div>{% endif %}
+        <span>{{ last_result.opponent }}</span>
+      </div>
+    </div>
+    <p class="ov-result-date">{{ last_result.kickoff_at.strftime("%a %-d %b %Y") }}</p>
+    <a class="ov-view-link" href="/fixtures/{{ last_result.id }}">View match report ›</a>
     {% else %}
-      <h2>No fixture scheduled</h2>
-      <p>Add the next opponent, date, venue and kick-off.</p>
-      <a class="tab" href="/fixtures">Add fixture</a>
+    <p class="empty">No results yet this season.</p>
     {% endif %}
   </div>
 
-  <div class="panel">
-    <p>League start</p>
-    <h2>
-      {% if record.played %}
-        {{ record.points }} point{{ "" if record.points == 1 else "s" }} from {{ record.played }}
-      {% else %}
-        Season not started
-      {% endif %}
-    </h2>
-    <div class="kv"><span>Played</span><span class="pill">{{ record.played }}</span></div>
-    <div class="kv"><span>Won</span><span class="pill">{{ record.won }}</span></div>
-    <div class="kv"><span>Drawn</span><span class="pill">{{ record.drawn }}</span></div>
-    <div class="kv"><span>Scored</span><span class="pill">{{ record.scored }}</span></div>
-    <div class="kv"><span>Conceded</span><span class="pill">{{ record.conceded }}</span></div>
+  {# Upcoming fixtures #}
+  <div class="ov-panel">
+    <div class="ov-panel-head">
+      <span class="ov-panel-icon">📅</span>
+      <span class="ov-panel-title">Upcoming fixtures</span>
+      <a class="ov-view-all" href="/fixtures">View all</a>
+    </div>
+    {% if upcoming_fixtures %}
+    <ul class="ov-fix-list">
+      {% for fix in upcoming_fixtures %}
+      {% set fix_slug = badge_map.get(fix.opponent) %}
+      <li>
+        <a href="/fixtures/{{ fix.id }}" class="ov-fix-row">
+          <div class="ov-fix-badge-wrap">
+            {% if fix_slug %}<img src="/static/badges/{{ fix_slug }}.png" class="ov-fix-badge" alt="">{% else %}<div class="ov-fix-badge ov-fix-badge--empty"></div>{% endif %}
+          </div>
+          <div class="ov-fix-info">
+            <span class="ov-fix-name">{{ fix.opponent }}</span>
+            <span class="ov-fix-when">{{ fix.kickoff_at.strftime("%a %-d %b") }} · {{ fix.kickoff_at.strftime("%H:%M") }}</span>
+          </div>
+          <span class="ov-fix-venue-chip {{ fix.venue.value }}">{{ fix.venue.value[0] | upper }}</span>
+          <span class="ov-fix-arrow">›</span>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty">No upcoming fixtures scheduled.</p>
+    {% endif %}
   </div>
+
+  {# Current table snapshot #}
+  <div class="ov-panel">
+    <div class="ov-panel-head">
+      <span class="ov-panel-icon">⚡</span>
+      <span class="ov-panel-title">Current table snapshot</span>
+      <a class="ov-view-all" href="/table">View all</a>
+    </div>
+    {% if table %}
+    <table class="ov-table">
+      <thead>
+        <tr><th></th><th>Club</th><th class="num">P</th><th class="num">GD</th><th class="num">Pts</th></tr>
+      </thead>
+      <tbody>
+      {% for row in table %}
+        <tr class="{{ 'is-us' if row.club == club_name }}">
+          <td class="pos">{{ row.position }}</td>
+          <td>
+            {% set t_slug = badge_map.get(row.club) %}
+            {% if t_slug %}<img src="/static/badges/{{ t_slug }}.png" class="badge-thumb" alt="">{% endif %}
+            {{ row.club }}
+          </td>
+          <td class="num">{{ row.played }}</td>
+          <td class="num">{{ "%+d" % row.goal_difference if row.goal_difference != 0 else "0" }}</td>
+          <td class="num">{{ row.points }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="empty" style="font-size:13px">No standings yet. Paste on the <a href="/table">League table</a> tab.</p>
+    {% endif %}
+  </div>
+
 </div>
 
-{% macro award_row(player, value) %}
-<a class="g-row" href="/squad/{{ player.id }}">
+{# ---- season leaders ---- #}
+{% macro leader_row(player, value) %}
+<div class="ov-leader-row">
   {% if player.photo_filename %}
-    <img src="/static/player_photos/{{ player.photo_filename }}" class="player-thumb g-thumb" alt="">
+    <img src="/static/player_photos/{{ player.photo_filename }}" class="ov-leader-photo" alt="">
   {% else %}
-    <span class="player-thumb player-thumb--placeholder g-thumb">{{ player.first_name[0] }}{{ player.last_name[0] }}</span>
+    <span class="ov-leader-photo ov-leader-photo--ph">{{ player.first_name[0] }}{{ player.last_name[0] }}</span>
   {% endif %}
-  <span class="g-name">{{ player.name }}</span>
-  <span class="g-val">{{ value }}</span>
-</a>
+  <span class="ov-leader-name">{{ player.name }}</span>
+  <span class="ov-leader-val">{{ value }}</span>
+</div>
 {% endmacro %}
 
-<div class="awards-section" id="awards">
-  <p class="eyebrow">Season awards</p>
-  <div class="glass-grid">
-
-    <div class="glass-card">
-      <div class="g-label">Top scorers</div>
-      {% if top_scorers %}
-        {% for line in top_scorers %}
-          {{ award_row(line.player, line.goals ~ (" goal" if line.goals == 1 else " goals")) }}
-        {% endfor %}
-      {% else %}
-        <p class="g-empty">No goals yet</p>
-      {% endif %}
+<div class="ov-leaders">
+  <div class="ov-leaders-head">
+    <span>🏆</span>
+    <span class="ov-leaders-title">Season leaders</span>
+  </div>
+  <div class="ov-leaders-grid">
+    <div class="ov-leader-card">
+      <div class="ov-leader-cat">⚽ Goals</div>
+      {% if top_scorers %}{% for line in top_scorers %}{{ leader_row(line.player, line.goals) }}{% endfor %}
+      {% else %}<p class="empty" style="font-size:13px;margin:0">No goals yet</p>{% endif %}
     </div>
-
-    <div class="glass-card">
-      <div class="g-label">Top assists</div>
-      {% if top_assists %}
-        {% for line in top_assists %}
-          {{ award_row(line.player, line.assists) }}
-        {% endfor %}
-      {% else %}
-        <p class="g-empty">No assists yet</p>
-      {% endif %}
+    <div class="ov-leader-card">
+      <div class="ov-leader-cat">🤝 Assists</div>
+      {% if top_assists %}{% for line in top_assists %}{{ leader_row(line.player, line.assists) }}{% endfor %}
+      {% else %}<p class="empty" style="font-size:13px;margin:0">No assists yet</p>{% endif %}
     </div>
-
-    <div class="glass-card">
-      <div class="g-label">Man of the match</div>
-      {% if top_motm %}
-        {% for line in top_motm %}
-          {{ award_row(line.player, line.motm ~ "×") }}
-        {% endfor %}
-      {% else %}
-        <p class="g-empty">No awards yet</p>
-      {% endif %}
+    <div class="ov-leader-card">
+      <div class="ov-leader-cat">⭐ Man of the match</div>
+      {% if top_motm %}{% for line in top_motm %}{{ leader_row(line.player, line.motm) }}{% endfor %}
+      {% else %}<p class="empty" style="font-size:13px;margin:0">No awards yet</p>{% endif %}
     </div>
-
-    <div class="glass-card">
-      <div class="g-label">Managers MOTM</div>
-      {% if top_managers_motm %}
-        {% for line in top_managers_motm %}
-          {{ award_row(line.player, line.managers_motm ~ "×") }}
-        {% endfor %}
-      {% else %}
-        <p class="g-empty">No awards yet</p>
-      {% endif %}
+    <div class="ov-leader-card">
+      <div class="ov-leader-cat">🛡️ Manager's player</div>
+      {% if top_managers_motm %}{% for line in top_managers_motm %}{{ leader_row(line.player, line.managers_motm) }}{% endfor %}
+      {% else %}<p class="empty" style="font-size:13px;margin:0">No awards yet</p>{% endif %}
     </div>
-
   </div>
 </div>
-
-<p class="eyebrow">League snapshot</p>
-<h2 class="section">{{ season.division }}</h2>
-{% if table %}
-<table>
-  <thead>
-    <tr><th class="pos">Pos</th><th>Club</th><th class="num">P</th><th class="num">GD</th><th class="num">Pts</th></tr>
-  </thead>
-  <tbody>
-  {% for row in table %}
-    <tr class="{{ 'is-us' if row.club == club_name }}">
-      <td class="pos">{{ row.position }}</td>
-      <td>{% set slug = badge_map.get(row.club) %}{% if slug %}<img src="/static/badges/{{ slug }}.png" class="badge-thumb" alt="" style="margin-right:7px;">{% endif %}{{ row.club }}</td>
-      <td class="num">{{ row.played }}</td>
-      <td class="num">{{ "%+d" % row.goal_difference if row.goal_difference else 0 }}</td>
-      <td class="num">{{ row.points }}</td>
-    </tr>
-  {% endfor %}
-  </tbody>
-</table>
-<p class="empty"><a href="/table">Full table</a></p>
-{% else %}
-<p class="empty">No standings yet. Paste the league table on the League table tab.</p>
-{% endif %}
 
 {% endblock %}
