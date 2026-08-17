@@ -177,6 +177,8 @@ class Appearance(Base):
     role: Mapped[AppearanceRole] = mapped_column(Enum(AppearanceRole, native_enum=False))
     shirt_number: Mapped[int | None] = mapped_column(default=None)
     pitch_slot: Mapped[str | None] = mapped_column(String(16), default=None)
+    pos_x: Mapped[float | None] = mapped_column(default=None)
+    pos_y: Mapped[float | None] = mapped_column(default=None)
     minute_on: Mapped[int] = mapped_column(default=0)
     minute_off: Mapped[int] = mapped_column(default=90)
 

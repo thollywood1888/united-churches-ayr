@@ -15,7 +15,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, Response, UploadFile
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -662,6 +662,10 @@ def place_on_pitch(
     existing.role = AppearanceRole.start
     existing.pitch_slot = slot
     existing.minute_on = 0
+    matched_slot = next((s for s in formation_slots if s.key == slot), None)
+    if matched_slot:
+        existing.pos_x = matched_slot.default_x
+        existing.pos_y = matched_slot.default_y
     session.commit()
     return RedirectResponse(dest, status_code=303)
 
@@ -718,6 +722,22 @@ def swap_slots(
         app_b.pitch_slot = slot_a
     session.commit()
     return RedirectResponse(_safe_next(next, f"/lineups?fixture_id={fixture_id}"), status_code=303)
+
+
+@app.post("/fixtures/{fixture_id}/lineup/move")
+async def move_player(request: Request, session: SessionDep, fixture_id: int):
+    fixture = _fixture_or_404(session, fixture_id)
+    form = await request.form()
+    player_id = int(form["player_id"])
+    pos_x = float(form["pos_x"])
+    pos_y = float(form["pos_y"])
+    appearance = _appearance_for_player(fixture, player_id)
+    if appearance is None or appearance.role is not AppearanceRole.start:
+        return Response(status_code=404)
+    appearance.pos_x = max(0.0, min(100.0, pos_x))
+    appearance.pos_y = max(0.0, min(100.0, pos_y))
+    session.commit()
+    return Response(status_code=204)
 
 
 @app.post("/fixtures/{fixture_id}/formation")

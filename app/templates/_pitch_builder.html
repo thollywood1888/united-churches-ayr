@@ -35,30 +35,35 @@
     <div class="mark mark-six mark-six--top"></div>
     <div class="mark mark-six mark-six--bottom"></div>
 
-    <div class="pitch-xi">
-      {% for row in pitch_rows %}
-      <div class="pitch-row">
-        {% for slot in row %}
-          {% set fill = slot_fill.get(slot.key) %}
-          <a class="pitch-slot"
-             href="{{ pick_base }}{{ '&' if '?' in pick_base else '?' }}slot={{ slot.key }}#picker"
-             data-slot="{{ slot.key }}"
-             data-filled="{{ 'true' if fill else 'false' }}"
-             aria-label="{% if fill %}{{ slot.label }}: {{ fill.player.name }}{% else %}{{ slot.label }}, empty{% endif %}">
-            <span class="slot-disc {{ 'is-filled' if fill else 'is-empty' }}">
-              {% if fill and fill.player.photo_filename %}
-                <img src="/static/player_photos/{{ fill.player.photo_filename }}" alt="">
-              {% elif fill %}
-                {{ fill.player.first_name[0] }}{{ fill.player.last_name[0] }}
-              {% else %}
-                +
-              {% endif %}
-            </span>
-            <span class="slot-name">{{ fill.player.last_name if fill else slot.label }}</span>
-            {% if fill %}<span class="slot-pos">{{ slot.label }}</span>{% endif %}
-          </a>
-        {% endfor %}
-      </div>
+    <div class="pitch-free" data-fixture-id="{{ fixture.id }}">
+      {% for slot in pitch_slots %}
+        {% set fill = slot_fill.get(slot.key) %}
+        {% if fill %}
+          {% set px = fill.pos_x if fill.pos_x is not none else slot.default_x %}
+          {% set py = fill.pos_y if fill.pos_y is not none else slot.default_y %}
+        {% else %}
+          {% set px = slot.default_x %}
+          {% set py = slot.default_y %}
+        {% endif %}
+        <a class="pitch-slot-free {{ 'is-filled' if fill else 'is-empty' }}"
+           href="{{ pick_base }}{{ '&' if '?' in pick_base else '?' }}slot={{ slot.key }}#picker"
+           data-slot="{{ slot.key }}"
+           data-filled="{{ 'true' if fill else 'false' }}"
+           {% if fill %}data-player-id="{{ fill.player.id }}"{% endif %}
+           style="left: {{ px }}%; top: {{ py }}%;"
+           aria-label="{% if fill %}{{ slot.label }}: {{ fill.player.name }}{% else %}{{ slot.label }}, empty{% endif %}">
+          <span class="slot-disc {{ 'is-filled' if fill else 'is-empty' }}">
+            {% if fill and fill.player.photo_filename %}
+              <img src="/static/player_photos/{{ fill.player.photo_filename }}" alt="">
+            {% elif fill %}
+              {{ fill.player.first_name[0] }}{{ fill.player.last_name[0] }}
+            {% else %}
+              +
+            {% endif %}
+          </span>
+          <span class="slot-name">{{ fill.player.last_name if fill else slot.label }}</span>
+          {% if fill %}<span class="slot-pos">{{ slot.label }}</span>{% endif %}
+        </a>
       {% endfor %}
     </div>
   </div>
@@ -108,47 +113,58 @@
 </section>
 {% endif %}
 
-<form id="swap-form" method="post" action="/fixtures/{{ fixture.id }}/lineup/swap" style="display:none">
-  <input type="hidden" name="slot_a" value="">
-  <input type="hidden" name="slot_b" value="">
-  <input type="hidden" name="next" value="{{ next_url }}">
-</form>
-
 <script>
 (function () {
-  var src = null;
-  var slots = document.querySelectorAll('.pitch-slot[data-slot]');
-  slots.forEach(function (el) {
-    if (el.dataset.filled === 'true') {
-      el.draggable = true;
-      el.addEventListener('dragstart', function (e) {
-        src = el.dataset.slot;
+  var pitch = document.querySelector('.pitch-free');
+  if (!pitch) return;
+  var fixtureId = pitch.dataset.fixtureId;
+  var dragEl = null, startX, startY, startLeft, startTop, wasDragged = false;
+  var THRESHOLD = 6;
+
+  document.querySelectorAll('.pitch-slot-free[data-filled="true"]').forEach(function (el) {
+    el.addEventListener('pointerdown', function (e) {
+      if (e.button !== 0 && e.pointerType === 'mouse') return;
+      dragEl = el;
+      wasDragged = false;
+      startX = e.clientX;
+      startY = e.clientY;
+      startLeft = parseFloat(el.style.left);
+      startTop = parseFloat(el.style.top);
+    });
+
+    el.addEventListener('pointermove', function (e) {
+      if (dragEl !== el) return;
+      var dx = e.clientX - startX;
+      var dy = e.clientY - startY;
+      if (!wasDragged && Math.sqrt(dx * dx + dy * dy) < THRESHOLD) return;
+      if (!wasDragged) {
+        wasDragged = true;
+        el.setPointerCapture(e.pointerId);
         el.classList.add('is-dragging');
-        e.dataTransfer.effectAllowed = 'move';
-      });
-      el.addEventListener('dragend', function () {
-        el.classList.remove('is-dragging');
-        src = null;
-      });
-    }
-    el.addEventListener('dragover', function (e) {
-      if (src && src !== el.dataset.slot) {
-        e.preventDefault();
-        el.classList.add('drag-over');
       }
-    });
-    el.addEventListener('dragleave', function () {
-      el.classList.remove('drag-over');
-    });
-    el.addEventListener('drop', function (e) {
       e.preventDefault();
-      el.classList.remove('drag-over');
-      if (src && src !== el.dataset.slot) {
-        var form = document.getElementById('swap-form');
-        form.querySelector('[name=slot_a]').value = src;
-        form.querySelector('[name=slot_b]').value = el.dataset.slot;
-        form.submit();
+      var rect = pitch.getBoundingClientRect();
+      el.style.left = Math.max(3, Math.min(97, startLeft + dx / rect.width * 100)) + '%';
+      el.style.top = Math.max(3, Math.min(97, startTop + dy / rect.height * 100)) + '%';
+    });
+
+    el.addEventListener('pointerup', function (e) {
+      if (dragEl !== el) return;
+      if (wasDragged) {
+        el.classList.remove('is-dragging');
+        var x = parseFloat(el.style.left);
+        var y = parseFloat(el.style.top);
+        fetch('/fixtures/' + fixtureId + '/lineup/move', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: 'player_id=' + el.dataset.playerId + '&pos_x=' + x.toFixed(1) + '&pos_y=' + y.toFixed(1)
+        });
       }
+      dragEl = null;
+    });
+
+    el.addEventListener('click', function (e) {
+      if (wasDragged) { e.preventDefault(); wasDragged = false; }
     });
   });
 })();

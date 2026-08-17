@@ -42,6 +42,7 @@ def create_schema() -> None:
     Base.metadata.create_all(engine)
     _ensure_appearance_pitch_slot()
     _ensure_fixture_formation()
+    _ensure_appearance_pos()
 
 
 def _ensure_appearance_pitch_slot() -> None:
@@ -53,6 +54,18 @@ def _ensure_appearance_pitch_slot() -> None:
         return
     with engine.begin() as connection:
         connection.execute(text("ALTER TABLE appearance ADD COLUMN pitch_slot VARCHAR(16)"))
+
+
+def _ensure_appearance_pos() -> None:
+    inspector = inspect(engine)
+    if "appearance" not in inspector.get_table_names():
+        return
+    columns = {col["name"] for col in inspector.get_columns("appearance")}
+    with engine.begin() as conn:
+        if "pos_x" not in columns:
+            conn.execute(text("ALTER TABLE appearance ADD COLUMN pos_x FLOAT"))
+        if "pos_y" not in columns:
+            conn.execute(text("ALTER TABLE appearance ADD COLUMN pos_y FLOAT"))
 
 
 def _ensure_fixture_formation() -> None:

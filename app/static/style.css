@@ -578,10 +578,33 @@ button.pick-player:hover { background: var(--page); border-color: var(--navy); c
   color: #999;
 }
 
+.pitch-free {
+  position: relative;
+  min-height: 520px;
+}
+.pitch-slot-free {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 64px;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.pitch-slot-free[data-filled="true"] { cursor: grab; }
+.pitch-slot-free.is-dragging { cursor: grabbing; z-index: 50; }
+.pitch-slot-free.is-dragging .slot-disc {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  transform: scale(1.1);
+}
+
 @media (max-width: 640px) {
   .board { padding: 14px 8px 16px; }
   .board-rail { display: none; }
   .pitch-slot { width: 54px; }
+  .pitch-slot-free { width: 54px; }
   .slot-disc { width: 46px; height: 46px; font-size: 18px; }
   .slot-disc.is-filled { font-size: 11px; }
 }
