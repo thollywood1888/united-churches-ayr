@@ -37,8 +37,13 @@
       {% if starters_on_pitch > 0 %}
       <a class="md-btn md-btn-ghost" href="/fixtures/{{ fixture.id }}/lineup-card" target="_blank">
         <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
-        View card
+        {% if fixture.lineup_confirmed %}✓ Confirmed XI{% else %}View card{% endif %}
       </a>
+      {% if is_gaffer and not fixture.lineup_confirmed %}
+      <form method="post" action="/fixtures/{{ fixture.id }}/lineup/confirm">
+        <button type="submit">Confirm Starting XI</button>
+      </form>
+      {% endif %}
       {% endif %}
     </div>
     {% endif %}

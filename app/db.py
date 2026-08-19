@@ -44,6 +44,7 @@ def create_schema() -> None:
     _ensure_fixture_formation()
     _ensure_appearance_pos()
     _ensure_fixture_captain()
+    _ensure_fixture_lineup_confirmed()
 
 
 def _ensure_appearance_pitch_slot() -> None:
@@ -91,6 +92,17 @@ def _ensure_fixture_captain() -> None:
         return
     with engine.begin() as connection:
         connection.execute(text("ALTER TABLE fixture ADD COLUMN captain_player_id INTEGER"))
+
+
+def _ensure_fixture_lineup_confirmed() -> None:
+    inspector = inspect(engine)
+    if "fixture" not in inspector.get_table_names():
+        return
+    columns = {col["name"] for col in inspector.get_columns("fixture")}
+    if "lineup_confirmed" in columns:
+        return
+    with engine.begin() as conn:
+        conn.execute(text("ALTER TABLE fixture ADD COLUMN lineup_confirmed BOOLEAN DEFAULT FALSE"))
 
 
 def get_session() -> Iterator[Session]:

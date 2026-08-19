@@ -287,7 +287,14 @@
 
     <div class="lc-header">
       <div>
-        <div class="lc-title-box">Starting 11</div>
+        <div class="lc-title-box">
+          {% if fixture.lineup_confirmed %}✓ Confirmed XI{% else %}Starting 11{% endif %}
+        </div>
+        {% if fixture.lineup_confirmed %}
+        <div style="margin-top:6px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#4ade80;">
+          Lineup confirmed
+        </div>
+        {% endif %}
       </div>
       <div class="lc-badge">
         <img src="/static/badges/uca.png" alt="UCA FC">
@@ -312,6 +319,20 @@
       <div class="lc-bench-names">
         {% for app in bench %}{{ app.player.name }}{% if not loop.last %}, {% endif %}{% endfor %}
       </div>
+    </div>
+    {% endif %}
+
+    {% if is_gaffer %}
+    <div style="margin-top:12px;">
+      {% if fixture.lineup_confirmed %}
+      <form method="post" action="/fixtures/{{ fixture.id }}/lineup/unconfirm">
+        <button type="submit" style="width:100%;background:#1e2d42;border-color:#2a3d52;color:rgba(255,255,255,.6);font-size:13px;padding:8px;">Unconfirm lineup</button>
+      </form>
+      {% else %}
+      <form method="post" action="/fixtures/{{ fixture.id }}/lineup/confirm">
+        <button type="submit" style="width:100%;background:#f0a500;border-color:#f0a500;color:#0f1b2d;font-weight:800;font-size:14px;padding:10px;letter-spacing:.03em;">Confirm Starting XI</button>
+      </form>
+      {% endif %}
     </div>
     {% endif %}
 

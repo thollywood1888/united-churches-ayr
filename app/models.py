@@ -143,6 +143,7 @@ class Fixture(Base):
     notes: Mapped[str | None] = mapped_column(String(500), default=None)
     formation: Mapped[str] = mapped_column(String(10), default="4-2-3-1")
     captain_player_id: Mapped[int | None] = mapped_column(ForeignKey("player.id"), default=None)
+    lineup_confirmed: Mapped[bool] = mapped_column(default=False)
 
     season: Mapped[Season] = relationship(back_populates="fixtures")
     appearances: Mapped[list[Appearance]] = relationship(

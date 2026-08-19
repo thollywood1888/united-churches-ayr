@@ -966,6 +966,25 @@ async def save_lineup(request: Request, session: SessionDep, fixture_id: int):
     return RedirectResponse(f"/fixtures/{fixture_id}", status_code=303)
 
 
+# -------------------------------------------------- confirm / unconfirm XI --
+
+
+@app.post("/fixtures/{fixture_id}/lineup/confirm")
+def confirm_lineup(session: SessionDep, fixture_id: int):
+    fixture = _fixture_or_404(session, fixture_id)
+    fixture.lineup_confirmed = True
+    session.commit()
+    return RedirectResponse(f"/fixtures/{fixture_id}/lineup-card", status_code=303)
+
+
+@app.post("/fixtures/{fixture_id}/lineup/unconfirm")
+def unconfirm_lineup(session: SessionDep, fixture_id: int):
+    fixture = _fixture_or_404(session, fixture_id)
+    fixture.lineup_confirmed = False
+    session.commit()
+    return RedirectResponse(f"/lineups?fixture_id={fixture_id}", status_code=303)
+
+
 # --------------------------------------------------------- lineup card view --
 
 
