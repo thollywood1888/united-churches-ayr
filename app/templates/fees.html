@@ -29,6 +29,7 @@
 <table>
   <thead>
     <tr>
+      <th></th>
       <th>Player</th>
       <th class="num">Due</th>
       <th>Status</th>
@@ -38,6 +39,13 @@
   <tbody>
     {% for player in players %}
     <tr>
+      <td>
+        {% if player.photo_filename %}
+        <img src="/static/player_photos/{{ player.photo_filename }}" class="player-thumb" alt="">
+        {% else %}
+        <div class="player-thumb player-thumb--placeholder"></div>
+        {% endif %}
+      </td>
       <td>{{ player.first_name }} {{ player.last_name }}</td>
       <td class="num">£{{ settings.monthly_fee_pence // 100 }}</td>
       <td>
