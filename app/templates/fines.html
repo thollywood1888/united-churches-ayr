@@ -82,6 +82,7 @@
     <table>
       <thead>
         <tr>
+          <th></th>
           <th>Player</th>
           <th>Reason</th>
           <th class="num">Amount</th>
@@ -92,6 +93,13 @@
       <tbody>
         {% for fine in outstanding %}
         <tr>
+          <td>
+            {% if fine.player.photo_filename %}
+            <img src="/static/player_photos/{{ fine.player.photo_filename }}" class="player-thumb" alt="">
+            {% else %}
+            <div class="player-thumb player-thumb--placeholder"></div>
+            {% endif %}
+          </td>
           <td>{{ fine.player.name }}</td>
           <td>{{ fine.reason }}</td>
           <td class="num">£{{ fine.amount_pence // 100 }}{% if fine.amount_pence % 100 %}.{{ "%02d" % (fine.amount_pence % 100) }}{% endif %}</td>
