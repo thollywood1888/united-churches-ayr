@@ -84,7 +84,7 @@
     <tbody>
       {% set palette = ['#2a9d8f','#457b9d','#6a4c93','#e76f51','#2d6a4f','#1d3557','#c77dff','#b5838d'] %}
       {% for player in players %}
-      {% set initials = (player.first_name[0] + player.last_name[0])|upper %}
+      {% set initials = ((player.first_name or '')[:1] + (player.last_name or '')[:1])|upper %}
       {% set bg = palette[loop.index0 % palette|length] %}
       <tr>
         <td class="fees-avatar-cell">
