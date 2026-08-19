@@ -1122,6 +1122,26 @@ def pay_fine(session: SessionDep, fine_id: int):
     return RedirectResponse("/fines", status_code=303)
 
 
+@app.post("/fines/schedule")
+def add_schedule_item(
+    session: SessionDep,
+    description: Annotated[str, Form()],
+    amount_pence: Annotated[int, Form()],
+):
+    session.add(FineScheduleItem(description=description.strip(), amount_pence=amount_pence))
+    session.commit()
+    return RedirectResponse("/fines", status_code=303)
+
+
+@app.post("/fines/schedule/{item_id}/remove")
+def remove_schedule_item(session: SessionDep, item_id: int):
+    item = session.get(FineScheduleItem, item_id)
+    if item is not None:
+        item.is_active = False
+        session.commit()
+    return RedirectResponse("/fines", status_code=303)
+
+
 # -------------------------------------------------------------------- fees --
 
 

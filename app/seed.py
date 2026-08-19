@@ -120,11 +120,15 @@ def _seed_fine_schedule(session: Session) -> int:
     if session.scalar(select(FineScheduleItem).limit(1)) is not None:
         return 0
     items = [
-        FineScheduleItem(description="Late to meet", amount_pence=200),
-        FineScheduleItem(description="Late to training", amount_pence=500),
-        FineScheduleItem(description="Missed training", amount_pence=1000),
-        FineScheduleItem(description="Match no-show", amount_pence=2000),
-        FineScheduleItem(description="Red card", amount_pence=1000),
+        FineScheduleItem(description="Late for a home game", amount_pence=100),
+        FineScheduleItem(description="Kicking the ball over the fence", amount_pence=100),
+        FineScheduleItem(description="Late for training", amount_pence=100),
+        FineScheduleItem(description="Getting nutmegged in training", amount_pence=100),
+        FineScheduleItem(description="Forgetting kit", amount_pence=200),
+        FineScheduleItem(description="Ball goes into the car park", amount_pence=200),
+        FineScheduleItem(description="No training kit", amount_pence=200),
+        FineScheduleItem(description="Red card", amount_pence=500),
+        FineScheduleItem(description="Out drinking the night before a game", amount_pence=500),
     ]
     for item in items:
         session.add(item)

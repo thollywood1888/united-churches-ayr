@@ -4,12 +4,13 @@
 <div class="panel-row">
   <div class="panel">
     <p class="eyebrow">Club finance</p>
-    <h2>Starter fine schedule</h2>
+    <h2>2026/27 Season fines</h2>
     <table>
       <thead>
         <tr>
           <th>Offence</th>
           <th class="num">Amount</th>
+          {% if is_gaffer %}<th></th>{% endif %}
         </tr>
       </thead>
       <tbody>
@@ -17,14 +18,35 @@
         <tr>
           <td>{{ item.description }}</td>
           <td class="num">£{{ item.amount_pence // 100 }}{% if item.amount_pence % 100 %}.{{ "%02d" % (item.amount_pence % 100) }}{% endif %}</td>
+          {% if is_gaffer %}
+          <td>
+            <form method="post" action="/fines/schedule/{{ item.id }}/remove">
+              <button class="ghost" type="submit">Remove</button>
+            </form>
+          </td>
+          {% endif %}
         </tr>
         {% endfor %}
       </tbody>
     </table>
+    <p class="empty" style="margin-top:.75rem">⚠ Fine not paid within 1 week — fine doubles.</p>
 
     {% if is_gaffer %}
     <details class="adder">
-      <summary>+ Add fine</summary>
+      <summary>+ Add to schedule</summary>
+      <form class="stack" method="post" action="/fines/schedule">
+        <label class="field">Offence
+          <input type="text" name="description" placeholder="e.g. Late for training" required>
+        </label>
+        <label class="field">Amount (pence)
+          <input type="number" name="amount_pence" value="100" min="1" required>
+        </label>
+        <button type="submit">Add offence</button>
+      </form>
+    </details>
+
+    <details class="adder">
+      <summary>+ Issue fine</summary>
       <form class="stack" method="post" action="/fines">
         <label class="field">Player
           <select name="player_id">
@@ -36,7 +58,7 @@
         <label class="field">Reason
           <select name="reason">
             {% for item in schedule %}
-            <option value="{{ item.description }}">{{ item.description }}</option>
+            <option value="{{ item.description }}">{{ item.description }} (£{{ item.amount_pence // 100 }}{% if item.amount_pence % 100 %}.{{ "%02d" % (item.amount_pence % 100) }}{% endif %})</option>
             {% endfor %}
           </select>
         </label>
