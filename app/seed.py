@@ -141,7 +141,7 @@ def _seed_club_settings(session: Session, season: Season) -> int:
     )
     if existing is not None:
         return 0
-    session.add(ClubSettings(season_id=season.id, monthly_fee_pence=2000))
+    session.add(ClubSettings(season_id=season.id, monthly_fee_pence=2650))
     return 1
 
 
