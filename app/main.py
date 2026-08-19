@@ -1184,7 +1184,7 @@ def update_fee_settings(
 ):
     season = _season_or_404(session)
     settings = _get_or_create_settings(session, season.id)
-    settings.monthly_fee_pence = int(amount) * 100
+    settings.monthly_fee_pence = round(float(amount) * 100)
     session.commit()
     return RedirectResponse("/fees", status_code=303)
 

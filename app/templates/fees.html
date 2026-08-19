@@ -1,72 +1,124 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="stat-row">
-  <div class="card">
-    <p class="label">Monthly fee</p>
-    {% if is_gaffer %}
-    <form method="post" action="/fees/settings" style="display:flex;gap:8px;align-items:center;margin-top:4px;">
-      <input type="number" name="amount" value="{{ settings.monthly_fee_pence // 100 }}" min="0" style="width:80px;">
-      <button type="submit" class="ghost" style="padding:9px 14px;">Save</button>
-    </form>
-    {% else %}
-    <div class="figure">£{{ settings.monthly_fee_pence // 100 }}</div>
-    {% endif %}
+{% macro fmt(pence) %}£{{ pence // 100 }}{% if pence % 100 %}.{{ "%02d" % (pence % 100) }}{% endif %}{% endmacro %}
+
+{# ── stat cards ── #}
+<div class="fees-stat-row">
+
+  <div class="fees-stat-card fees-stat-card--accent">
+    <div class="fees-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+      </svg>
+    </div>
+    <div class="fees-stat-body">
+      <p class="fees-label">Monthly fee</p>
+      {% if is_gaffer %}
+      <form method="post" action="/fees/settings" class="fees-edit-form">
+        <input type="number" name="amount" value="{{ '%.2f' % (settings.monthly_fee_pence / 100) }}" step="0.50" min="0" class="fees-edit-input">
+        <button type="submit" class="ghost fees-edit-save">Save</button>
+      </form>
+      {% else %}
+      <div class="fees-value">{{ fmt(settings.monthly_fee_pence) }}</div>
+      {% endif %}
+      <p class="fees-sub">Per player</p>
+    </div>
   </div>
-  <div class="card">
-    <p class="label">Expected this month</p>
-    <div class="figure">£{{ expected_pence // 100 }}</div>
+
+  <div class="fees-stat-card">
+    <div class="fees-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+    </div>
+    <div class="fees-stat-body">
+      <p class="fees-label">Due date</p>
+      <div class="fees-value fees-value--md">1st of every month</div>
+      <p class="fees-sub">Fees are due on the 1st</p>
+    </div>
   </div>
-  <div class="card">
-    <p class="label">Outstanding</p>
-    <div class="figure">£{{ outstanding_pence // 100 }}</div>
+
+  <div class="fees-stat-card">
+    <div class="fees-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7z"/>
+      </svg>
+    </div>
+    <div class="fees-stat-body">
+      <p class="fees-label">Season</p>
+      <div class="fees-value">{{ season.label }}</div>
+      <p class="fees-sub">Current season</p>
+    </div>
+  </div>
+
+</div>
+
+{# ── section header ── #}
+<div class="fees-section-head">
+  <img src="/static/badges/uca.png" class="fees-section-badge" alt="">
+  <div>
+    <p class="fees-eyebrow">{{ season.label }} season &bull; current month</p>
+    <h2 class="fees-title">Monthly fees tracker</h2>
   </div>
 </div>
 
-<p class="eyebrow">{{ season.label }} season · current month</p>
-<h2 class="section">Monthly fees tracker</h2>
+{# ── info pill ── #}
+<div class="fees-info-pill">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="8"/><line x1="12" y1="12" x2="12" y2="16"/></svg>
+  <span><strong>{{ fmt(settings.monthly_fee_pence) }}</strong> per player &bull; Due on the 1st of every month</span>
+</div>
 
-<table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>Player</th>
-      <th class="num">Due</th>
-      <th>Status</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for player in players %}
-    <tr>
-      <td>
-        {% if player.photo_filename %}
-        <img src="/static/player_photos/{{ player.photo_filename }}" class="player-thumb" alt="">
-        {% else %}
-        <div class="player-thumb player-thumb--placeholder"></div>
+{# ── player table ── #}
+<div class="fees-table-wrap">
+  <table class="fees-table">
+    <thead>
+      <tr>
+        <th colspan="2">Player</th>
+        <th>Fee due</th>
+        <th>Due date</th>
+        <th>Status</th>
+        {% if is_gaffer %}<th></th>{% endif %}
+      </tr>
+    </thead>
+    <tbody>
+      {% set palette = ['#2a9d8f','#457b9d','#6a4c93','#e76f51','#2d6a4f','#1d3557','#c77dff','#b5838d'] %}
+      {% for player in players %}
+      {% set initials = (player.first_name[0] + player.last_name[0])|upper %}
+      {% set bg = palette[loop.index0 % palette|length] %}
+      <tr>
+        <td class="fees-avatar-cell">
+          {% if player.photo_filename %}
+          <img src="/static/player_photos/{{ player.photo_filename }}" class="player-thumb" alt="">
+          {% else %}
+          <div class="fees-avatar" style="background:{{ bg }}">{{ initials }}</div>
+          {% endif %}
+        </td>
+        <td class="fees-player-name">{{ player.first_name }} {{ player.last_name }}</td>
+        <td class="fees-amount">{{ fmt(settings.monthly_fee_pence) }}</td>
+        <td class="fees-due">1st</td>
+        <td>
+          {% if payments[player.id] is defined and payments[player.id] %}
+          <span class="fees-badge fees-badge--paid">Paid</span>
+          {% else %}
+          <span class="fees-badge fees-badge--outstanding">
+            <span class="fees-badge-dot"></span>Outstanding
+          </span>
+          {% endif %}
+        </td>
+        {% if is_gaffer %}
+        <td>
+          {% if not (payments[player.id] is defined and payments[player.id]) %}
+          <form method="post" action="/fees/{{ player.id }}/pay">
+            <button class="ghost" type="submit">Mark paid</button>
+          </form>
+          {% endif %}
+        </td>
         {% endif %}
-      </td>
-      <td>{{ player.first_name }} {{ player.last_name }}</td>
-      <td class="num">£{{ settings.monthly_fee_pence // 100 }}</td>
-      <td>
-        {% if payments[player.id] is defined and payments[player.id] %}
-        <span class="pill-paid">Paid</span>
-        {% else %}
-        <span class="pill-outstanding">Outstanding</span>
-        {% endif %}
-      </td>
-      <td>
-        {% if is_gaffer and not (payments[player.id] is defined and payments[player.id]) %}
-        <form method="post" action="/fees/{{ player.id }}/pay">
-          <button class="ghost" type="submit">Mark paid</button>
-        </form>
-        {% endif %}
-      </td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
-
-<p class="empty">Fee and fine amounts are editable settings; payment records are stored per player per month.</p>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 
 {% endblock %}

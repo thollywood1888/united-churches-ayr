@@ -1685,3 +1685,113 @@ button.md-player:hover { background: var(--page); }
 @media (max-width: 480px) {
   .sq-leaders { grid-template-columns: 1fr; }
 }
+
+/* ── Monthly fees redesign ───────────────────────────────────────────── */
+.fees-stat-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--gap);
+  margin-bottom: 28px;
+}
+.fees-stat-card {
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+.fees-stat-card--accent { border-left: 4px solid var(--gold); }
+.fees-icon {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--navy);
+  display: flex; align-items: center; justify-content: center;
+  flex: none;
+}
+.fees-stat-body { min-width: 0; }
+.fees-label {
+  font-size: 11px; font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--gold);
+  margin: 0 0 4px;
+}
+.fees-value {
+  font-size: 30px; font-weight: 800; letter-spacing: -.02em;
+  color: var(--navy); line-height: 1.1; margin: 0 0 4px;
+}
+.fees-value--md { font-size: 22px; }
+.fees-sub { font-size: 13px; color: var(--ink-soft); margin: 0; }
+
+.fees-edit-form { display: flex; align-items: center; gap: 6px; margin: 2px 0 4px; }
+.fees-edit-input {
+  width: 90px; font-size: 24px; font-weight: 800; letter-spacing: -.02em;
+  color: var(--navy); border: 1.5px solid var(--line); border-radius: 8px;
+  padding: 2px 8px; background: var(--page);
+}
+.fees-edit-save { padding: 6px 12px !important; font-size: 13px !important; }
+
+.fees-section-head {
+  display: flex; align-items: center; gap: 18px;
+  margin: 4px 0 16px;
+}
+.fees-section-badge { width: 58px; height: 58px; object-fit: contain; flex: none; }
+.fees-eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--gold); margin: 0 0 4px;
+}
+.fees-title {
+  font-size: 28px; font-weight: 800; letter-spacing: -.025em;
+  color: var(--navy); margin: 0;
+}
+
+.fees-info-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--accent-soft);
+  border-radius: 999px; padding: 7px 16px;
+  font-size: 13px; color: var(--navy);
+  margin-bottom: 20px;
+}
+
+.fees-table-wrap {
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.fees-table { width: 100%; border-collapse: collapse; }
+.fees-table thead th {
+  font-size: 11px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--ink-soft);
+  padding: 12px 16px; text-align: left;
+  border-bottom: 1.5px solid var(--gold);
+}
+.fees-table tbody tr { border-bottom: 1px solid var(--line); }
+.fees-table tbody tr:last-child { border-bottom: none; }
+.fees-table tbody td { padding: 10px 16px; vertical-align: middle; }
+.fees-avatar-cell { width: 52px; padding-right: 0 !important; }
+.fees-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: #fff; flex: none;
+}
+.fees-player-name { font-weight: 500; color: var(--navy); }
+.fees-amount { font-weight: 600; color: var(--navy); }
+.fees-due { color: var(--ink-soft); }
+
+.fees-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  border-radius: 999px; padding: 4px 14px;
+  font-size: 13px; font-weight: 600;
+}
+.fees-badge--outstanding { background: #fef5e0; color: #8a5f00; }
+.fees-badge-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--gold); flex: none;
+}
+.fees-badge--paid { background: #dcf5e7; color: var(--win); }
+
+@media (max-width: 700px) {
+  .fees-stat-row { grid-template-columns: 1fr; }
+  .fees-value { font-size: 24px; }
+  .fees-value--md { font-size: 18px; }
+}
