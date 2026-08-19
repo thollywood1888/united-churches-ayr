@@ -32,6 +32,10 @@
     <p class="empty" style="margin-top:.75rem">⚠ Fine not paid within 1 week — fine doubles.</p>
 
     {% if is_gaffer %}
+    <form method="post" action="/fines/schedule/reset" style="margin-top:.5rem">
+      <button class="ghost" type="submit">Reset to 2026/27 defaults</button>
+    </form>
+
     <details class="adder">
       <summary>+ Add to schedule</summary>
       <form class="stack" method="post" action="/fines/schedule">

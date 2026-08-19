@@ -1133,6 +1133,27 @@ def add_schedule_item(
     return RedirectResponse("/fines", status_code=303)
 
 
+@app.post("/fines/schedule/reset")
+def reset_schedule(session: SessionDep):
+    for item in session.scalars(select(FineScheduleItem)):
+        item.is_active = False
+    new_items = [
+        FineScheduleItem(description="Late for a home game", amount_pence=100),
+        FineScheduleItem(description="Kicking the ball over the fence", amount_pence=100),
+        FineScheduleItem(description="Late for training", amount_pence=100),
+        FineScheduleItem(description="Getting nutmegged in training", amount_pence=100),
+        FineScheduleItem(description="Forgetting kit", amount_pence=200),
+        FineScheduleItem(description="Ball goes into the car park", amount_pence=200),
+        FineScheduleItem(description="No training kit", amount_pence=200),
+        FineScheduleItem(description="Red card", amount_pence=500),
+        FineScheduleItem(description="Out drinking the night before a game", amount_pence=500),
+    ]
+    for item in new_items:
+        session.add(item)
+    session.commit()
+    return RedirectResponse("/fines", status_code=303)
+
+
 @app.post("/fines/schedule/{item_id}/remove")
 def remove_schedule_item(session: SessionDep, item_id: int):
     item = session.get(FineScheduleItem, item_id)
