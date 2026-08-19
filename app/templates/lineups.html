@@ -29,10 +29,18 @@
       <p class="md-lead">Build your starting XI for the upcoming fixture.</p>
     </div>
     {% if fixture %}
-    <a class="md-btn md-btn-ghost" href="{{ next_url }}{{ '&' if '?' in next_url else '?' }}saved=1">
-      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M6 4h11l3 3v13H6V4zm2 2v12h10V8.8L15.2 6H8zm2 3h6v2H10V9zm0 4h6v2H10v-2z"/></svg>
-      Save draft
-    </a>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <a class="md-btn md-btn-ghost" href="{{ next_url }}{{ '&' if '?' in next_url else '?' }}saved=1">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M6 4h11l3 3v13H6V4zm2 2v12h10V8.8L15.2 6H8zm2 3h6v2H10V9zm0 4h6v2H10v-2z"/></svg>
+        Save draft
+      </a>
+      {% if starters_on_pitch > 0 %}
+      <a class="md-btn md-btn-ghost" href="/fixtures/{{ fixture.id }}/lineup-card" target="_blank">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+        View card
+      </a>
+      {% endif %}
+    </div>
     {% endif %}
   </div>
 

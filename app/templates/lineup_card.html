@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ club_name }} – Lineup vs {{ fixture.opponent }}</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: #0a0e17; font-family: system-ui, -apple-system, sans-serif; }
+
+    /* ── layout ── */
+    .lc-wrap {
+      display: flex;
+      min-height: 100vh;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    /* ── pitch panel (left ~60%) ── */
+    .lc-pitch-panel {
+      flex: 6;
+      position: relative;
+      background: linear-gradient(180deg, #2a7c2a 0%, #227022 50%, #1e6a1e 100%);
+      overflow: hidden;
+    }
+    /* subtle pitch stripe bands */
+    .lc-pitch-panel::before {
+      content: "";
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(
+        180deg,
+        transparent 0px, transparent 40px,
+        rgba(0,0,0,.07) 40px, rgba(0,0,0,.07) 80px
+      );
+      pointer-events: none;
+    }
+    .lc-pitch-svg {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+    }
+    .lc-players {
+      position: absolute; inset: 0;
+    }
+
+    /* ── shirt items ── */
+    .lc-shirt {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+    .lc-shirt svg { width: 46px; height: 50px; display: block; margin: 0 auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,.55)); }
+    .lc-shirt-name {
+      color: #fff;
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      text-shadow: 0 1px 3px rgba(0,0,0,.9);
+      margin-top: 3px;
+      max-width: 64px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    /* ── back link ── */
+    .lc-back {
+      position: absolute;
+      top: 12px; left: 12px;
+      color: rgba(255,255,255,.7);
+      font-size: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      background: rgba(0,0,0,.3);
+      border-radius: 20px;
+      padding: 5px 12px;
+      letter-spacing: .02em;
+      z-index: 10;
+    }
+    .lc-back:hover { color: #fff; }
+
+    /* ── info panel (right ~40%) ── */
+    .lc-info {
+      flex: 4;
+      background: #0f1b2d;
+      display: flex;
+      flex-direction: column;
+      padding: 28px 24px 24px;
+    }
+
+    /* team header */
+    .lc-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+    .lc-title-box {
+      background: #f0a500;
+      color: #0f1b2d;
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: 8px 16px;
+      border-radius: 6px;
+      line-height: 1.2;
+    }
+    .lc-badge {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: #fff;
+      overflow: hidden;
+      flex: none;
+      display: flex; align-items: center; justify-content: center;
+      border: 3px solid rgba(255,255,255,.15);
+    }
+    .lc-badge img { width: 52px; height: 52px; object-fit: contain; }
+
+    /* match info */
+    .lc-match-info {
+      font-size: 11px;
+      color: rgba(255,255,255,.45);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      margin-bottom: 16px;
+    }
+
+    /* player list */
+    .lc-xi { list-style: none; flex: 1; overflow: hidden; }
+    .lc-xi li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 5px 0;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      color: #fff;
+    }
+    .lc-xi li:last-child { border-bottom: none; }
+    .lc-num {
+      font-size: 13px;
+      font-weight: 800;
+      color: #f0a500;
+      width: 18px;
+      text-align: right;
+      flex: none;
+    }
+    .lc-name {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      flex: 1;
+    }
+    .lc-cap {
+      font-size: 10px;
+      color: #f0a500;
+      font-weight: 800;
+    }
+    .lc-pos {
+      font-size: 10px;
+      color: rgba(255,255,255,.4);
+      font-weight: 700;
+      letter-spacing: .04em;
+    }
+
+    /* bench strip */
+    .lc-bench {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255,255,255,.1);
+    }
+    .lc-bench-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.35);
+      margin-bottom: 6px;
+    }
+    .lc-bench-names {
+      font-size: 11px;
+      color: rgba(255,255,255,.5);
+      line-height: 1.6;
+    }
+
+    /* footer */
+    .lc-footer {
+      margin-top: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .lc-formation {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.35);
+    }
+    .lc-club { font-size: 11px; color: rgba(255,255,255,.3); }
+
+    @media (max-width: 600px) {
+      .lc-wrap { flex-direction: column; }
+      .lc-pitch-panel { aspect-ratio: 3/4; flex: none; }
+      .lc-info { padding: 20px 16px; }
+      .lc-xi li { padding: 4px 0; }
+    }
+  </style>
+</head>
+<body>
+<div class="lc-wrap">
+
+  {# ── PITCH PANEL ── #}
+  <div class="lc-pitch-panel">
+    <a class="lc-back" href="/lineups?fixture_id={{ fixture.id }}">← Back</a>
+
+    {# pitch markings #}
+    <svg class="lc-pitch-svg" viewBox="0 0 100 130" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <g stroke="rgba(255,255,255,.3)" stroke-width=".8" fill="none">
+        <rect x="4" y="4" width="92" height="122"/>
+        <line x1="4" y1="65" x2="96" y2="65"/>
+        <circle cx="50" cy="65" r="11"/>
+        <circle cx="50" cy="65" r=".9" fill="rgba(255,255,255,.5)" stroke="none"/>
+        {# top penalty area #}
+        <rect x="22" y="4" width="56" height="20"/>
+        <rect x="33" y="4" width="34" height="9"/>
+        <path d="M36,24 A10,10 0 0 1 64,24"/>
+        <circle cx="50" cy="19" r=".9" fill="rgba(255,255,255,.5)" stroke="none"/>
+        {# bottom penalty area #}
+        <rect x="22" y="106" width="56" height="20"/>
+        <rect x="33" y="117" width="34" height="9"/>
+        <path d="M36,106 A10,10 0 0 0 64,106"/>
+        <circle cx="50" cy="111" r=".9" fill="rgba(255,255,255,.5)" stroke="none"/>
+        {# corner arcs #}
+        <path d="M4,7 A3,3 0 0 0 7,4"/>
+        <path d="M93,4 A3,3 0 0 0 96,7"/>
+        <path d="M96,123 A3,3 0 0 0 93,126"/>
+        <path d="M7,126 A3,3 0 0 0 4,123"/>
+      </g>
+    </svg>
+
+    {# player shirts #}
+    <div class="lc-players">
+      {% for slot in formation_slots %}
+      {% if slot.key in by_slot %}
+      {% set app = by_slot[slot.key] %}
+      {% set pl = app.player %}
+      {% set px = app.pos_x if app.pos_x is not none else slot.default_x %}
+      {% set py = app.pos_y if app.pos_y is not none else slot.default_y %}
+      {% set is_gk = slot.key == 'gk' %}
+      {% set num = pl.squad_number or '' %}
+      <div class="lc-shirt" style="left:{{ px }}%;top:{{ py }}%;">
+        <svg viewBox="0 0 40 44" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="sp-{{ slot.key }}" x="0" y="0" width="8" height="100" patternUnits="userSpaceOnUse">
+              {% if is_gk %}
+              <rect width="4" height="100" fill="#f59e0b"/>
+              <rect x="4" width="4" height="100" fill="#111"/>
+              {% else %}
+              <rect width="4" height="100" fill="#fff"/>
+              <rect x="4" width="4" height="100" fill="#111"/>
+              {% endif %}
+            </pattern>
+            <clipPath id="sc-{{ slot.key }}">
+              <path d="M11,5 C11,10 29,10 29,5 L39,13 L30,17 L30,40 L10,40 L10,17 L1,13 Z"/>
+            </clipPath>
+          </defs>
+          {# shirt body #}
+          <path d="M11,5 C11,10 29,10 29,5 L39,13 L30,17 L30,40 L10,40 L10,17 L1,13 Z"
+                fill="url(#sp-{{ slot.key }})" stroke="rgba(0,0,0,.4)" stroke-width=".8"
+                clip-path="url(#sc-{{ slot.key }})"/>
+          {# sleeve edges #}
+          <path d="M11,5 C11,10 29,10 29,5 L39,13 L30,17 L30,40 L10,40 L10,17 L1,13 Z"
+                fill="none" stroke="rgba(0,0,0,.5)" stroke-width=".8"/>
+          {# squad number #}
+          <text x="20" y="30" text-anchor="middle"
+                font-family="system-ui,sans-serif" font-size="12" font-weight="900"
+                fill="{{ '#111' if not is_gk else '#fff' }}">{{ num }}</text>
+        </svg>
+        <div class="lc-shirt-name">{{ (pl.last_name or pl.first_name or '')|truncate(9, true, '') }}</div>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+
+  {# ── INFO PANEL ── #}
+  <div class="lc-info">
+
+    <div class="lc-header">
+      <div>
+        <div class="lc-title-box">Starting 11</div>
+      </div>
+      <div class="lc-badge">
+        <img src="/static/badges/uca.png" alt="UCA FC">
+      </div>
+    </div>
+
+    <p class="lc-match-info">vs {{ fixture.opponent }} &bull; {{ fixture.kickoff_at.strftime("%-d %b %Y") }} &bull; {{ fixture.venue.value|capitalize }}</p>
+
+    <ol class="lc-xi">
+      {% for item in xi %}
+      <li>
+        <span class="lc-num">{{ loop.index }}</span>
+        <span class="lc-name">{{ (item.player.last_name or item.player.first_name or '')|upper }}{% if captain_id == item.player.id %} <span class="lc-cap">(C)</span>{% endif %}</span>
+        <span class="lc-pos">{{ item.slot.label }}</span>
+      </li>
+      {% endfor %}
+    </ol>
+
+    {% if bench %}
+    <div class="lc-bench">
+      <div class="lc-bench-label">Bench</div>
+      <div class="lc-bench-names">
+        {% for app in bench %}{{ app.player.name }}{% if not loop.last %}, {% endif %}{% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="lc-footer">
+      <span class="lc-formation">{{ formation_key }}</span>
+      <span class="lc-club">{{ club_name }}</span>
+    </div>
+
+  </div>
+
+</div>
+</body>
+</html>

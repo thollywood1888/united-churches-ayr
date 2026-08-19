@@ -966,6 +966,44 @@ async def save_lineup(request: Request, session: SessionDep, fixture_id: int):
     return RedirectResponse(f"/fixtures/{fixture_id}", status_code=303)
 
 
+# --------------------------------------------------------- lineup card view --
+
+
+@app.get("/fixtures/{fixture_id}/lineup-card")
+def lineup_card(request: Request, session: SessionDep, fixture_id: int):
+    season = _season_or_404(session)
+    fixture = _fixture_or_404(session, fixture_id)
+    formation_key = fixture.formation if fixture.formation in FORMATIONS else "4-2-3-1"
+    formation_slots = FORMATIONS[formation_key]
+    slot_keys = {slot.key for slot in formation_slots}
+    by_slot: dict[str, Appearance] = {}
+    bench: list[Appearance] = []
+    for appearance in fixture.appearances:
+        if appearance.role is AppearanceRole.sub:
+            bench.append(appearance)
+        elif appearance.pitch_slot in slot_keys:
+            by_slot[appearance.pitch_slot] = appearance
+    # XI ordered GK-first for the numbered list
+    xi = [
+        {"slot": slot, "player": by_slot[slot.key].player}
+        for slot in reversed(formation_slots)
+        if slot.key in by_slot
+    ]
+    context = {
+        "request": request,
+        "club_name": CLUB_NAME,
+        "fixture": fixture,
+        "formation_key": formation_key,
+        "formation_slots": formation_slots,
+        "by_slot": by_slot,
+        "bench": bench,
+        "xi": xi,
+        "captain_id": fixture.captain_player_id,
+        "is_gaffer": request.session.get("user") == "Gaffer",
+    }
+    return templates.TemplateResponse(request, "lineup_card.html", context)
+
+
 # ------------------------------------------------------------ league table --
 
 
