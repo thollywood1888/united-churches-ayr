@@ -3069,10 +3069,95 @@ a.sq2-card-name:hover { color: #c9a84c; }
 }
 .fx2-submit-btn:hover { background: #1a2d45; }
 
+/* Matchup (vs badges) */
+.fx2-matchup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0 6px;
+}
+.fx2-matchup-team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+.fx2-matchup-team--uca { align-items: center; }
+.fx2-mu-badge {
+  width: 54px;
+  height: 54px;
+  object-fit: contain;
+  border-radius: 50%;
+  background: #f5f2ec;
+  border: 1.5px solid #e8e0d0;
+}
+.fx2-mu-badge--ph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #8a8070;
+}
+.fx2-mu-name {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: #5a5248;
+  text-align: center;
+  line-height: 1.25;
+}
+.fx2-vs {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #22344f;
+  color: #c8963a;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Venue & map */
+.fx2-venue-section {
+  background: #fff;
+  border: 1px solid #e8e4dc;
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+.fx2-venue-info {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 12px;
+}
+.fx2-venue-pin { color: #c8963a; flex-shrink: 0; }
+.fx2-venue-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #22344f;
+  letter-spacing: .02em;
+}
+.fx2-map {
+  width: 100%;
+  height: 260px;
+  border: 0;
+  border-radius: 10px;
+  display: block;
+}
+
 /* Responsive */
 @media (max-width: 700px) {
   .fx2-hero-row,
   .fx2-split-row { grid-template-columns: 1fr; }
   .fx2-wrap { padding: 16px 16px 36px; }
   .fx2-row:hover { margin: 0; padding: 13px 0; }
+  .fx2-map { height: 200px; }
 }
