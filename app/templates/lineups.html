@@ -23,6 +23,7 @@
 {%- endmacro %}
 
 <div class="md-lineup">
+  {% if is_gaffer %}
   <div class="md-top">
     <div>
       <h2 class="md-title">Matchday lineup</h2>
@@ -48,9 +49,12 @@
     </div>
     {% endif %}
   </div>
+  {% endif %}{# end is_gaffer md-top #}
 
+  {% if is_gaffer %}
   {% if saved %}
   <p class="md-flash" role="status">Lineup saved</p>
+  {% endif %}
   {% endif %}
 
   {% if fixtures %}
@@ -70,9 +74,108 @@
   {% endif %}
 
   {% if not fixture %}
-  <p class="empty">Add a fixture first, then tap a position to add a player.</p>
-  <a class="tab" href="/fixtures">Go to fixtures</a>
+  <p class="empty">{% if is_gaffer %}Add a fixture first, then tap a position to add a player.{% else %}No fixtures scheduled yet.{% endif %}</p>
+  {% if is_gaffer %}<a class="tab" href="/fixtures">Go to fixtures</a>{% endif %}
+  {% elif not is_gaffer %}
+
+  {# ── SQUAD CARD VIEW ── #}
+  {% if starters_on_pitch == 0 %}
+  <p class="empty" style="margin-top:32px;text-align:center;">No lineup announced yet — check back closer to kick-off.</p>
   {% else %}
+  <div class="lsq-card">
+
+    {# pitch panel #}
+    <div class="lsq-pitch">
+      <svg class="lsq-pitch-svg" viewBox="0 0 100 130" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <g stroke="rgba(255,255,255,.28)" stroke-width=".8" fill="none">
+          <rect x="4" y="4" width="92" height="122"/>
+          <line x1="4" y1="65" x2="96" y2="65"/>
+          <circle cx="50" cy="65" r="11"/>
+          <circle cx="50" cy="65" r=".9" fill="rgba(255,255,255,.45)" stroke="none"/>
+          <rect x="22" y="4" width="56" height="20"/>
+          <rect x="33" y="4" width="34" height="9"/>
+          <path d="M36,24 A10,10 0 0 1 64,24"/>
+          <circle cx="50" cy="19" r=".9" fill="rgba(255,255,255,.45)" stroke="none"/>
+          <rect x="22" y="106" width="56" height="20"/>
+          <rect x="33" y="117" width="34" height="9"/>
+          <path d="M36,106 A10,10 0 0 0 64,106"/>
+          <circle cx="50" cy="111" r=".9" fill="rgba(255,255,255,.45)" stroke="none"/>
+          <path d="M4,7 A3,3 0 0 0 7,4"/>
+          <path d="M93,4 A3,3 0 0 0 96,7"/>
+          <path d="M96,123 A3,3 0 0 0 93,126"/>
+          <path d="M7,126 A3,3 0 0 0 4,123"/>
+        </g>
+      </svg>
+      {% set pal = ['#2a9d8f','#457b9d','#6a4c93','#e76f51','#2d6a4f','#1d3557','#c77dff','#b5838d'] %}
+      {% for slot in pitch_slots %}
+      {% if slot.key in slot_fill %}
+      {% set app = slot_fill[slot.key] %}
+      {% set pl = app.player %}
+      {% set px = app.pos_x if app.pos_x is not none else slot.default_x %}
+      {% set py = app.pos_y if app.pos_y is not none else slot.default_y %}
+      {% set is_gk = slot.key == 'gk' %}
+      {% set num = pl.squad_number or '' %}
+      <div class="lsq-shirt" style="left:{{ px }}%;top:{{ py }}%;">
+        <svg viewBox="0 0 40 44" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="lsp-{{ slot.key }}" x="0" y="0" width="8" height="100" patternUnits="userSpaceOnUse">
+              {% if is_gk %}<rect width="4" height="100" fill="#f59e0b"/><rect x="4" width="4" height="100" fill="#111"/>
+              {% else %}<rect width="4" height="100" fill="#fff"/><rect x="4" width="4" height="100" fill="#111"/>{% endif %}
+            </pattern>
+          </defs>
+          <path d="M11,5 C11,10 29,10 29,5 L39,13 L30,17 L30,40 L10,40 L10,17 L1,13 Z"
+                fill="url(#lsp-{{ slot.key }})" stroke="rgba(0,0,0,.4)" stroke-width=".8"/>
+          <text x="20" y="30" text-anchor="middle" font-family="system-ui,sans-serif"
+                font-size="12" font-weight="900" fill="{{ '#fff' if is_gk else '#111' }}">{{ num }}</text>
+        </svg>
+        <div class="lsq-shirt-name">{{ (pl.last_name or pl.first_name or '')|truncate(9,true,'') }}</div>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+
+    {# info panel #}
+    <div class="lsq-panel">
+      <div class="lsq-header">
+        <div>
+          <div class="lsq-title-box">{% if fixture.lineup_confirmed %}✓ Confirmed XI{% else %}Starting 11{% endif %}</div>
+          <div class="lsq-meta">vs {{ fixture.opponent }} &bull; {{ fixture.kickoff_at.strftime("%-d %b") }} &bull; {{ fixture.venue.value|capitalize }}</div>
+        </div>
+        <div class="lsq-badge"><img src="/static/badges/uca.png" alt="UCA FC"></div>
+      </div>
+
+      <div class="lsq-list">
+        {% set ns = namespace(n=0) %}
+        {% for slot in pitch_slots|reverse %}
+        {% if slot.key in slot_fill %}
+        {% set ns.n = ns.n + 1 %}
+        {% set pl = slot_fill[slot.key].player %}
+        <div class="lsq-row">
+          <span class="lsq-num">{{ ns.n }}</span>
+          {% if pl.photo_filename %}
+          <img src="/static/player_photos/{{ pl.photo_filename }}" class="lsq-thumb" alt="">
+          {% else %}
+          {% set bg = pal[(ns.n - 1) % pal|length] %}
+          <div class="lsq-initial" style="background:{{ bg }}">{{ ((pl.first_name or '')[:1] + (pl.last_name or '')[:1])|upper }}</div>
+          {% endif %}
+          <span class="lsq-name">{{ (pl.last_name or pl.first_name or '')|upper }}{% if captain_id == pl.id %} <span class="lsq-cap">(C)</span>{% endif %}</span>
+          <span class="lsq-pos">{{ slot.label }}</span>
+        </div>
+        {% endif %}
+        {% endfor %}
+      </div>
+
+      {% if bench %}
+      <div class="lsq-bench">
+        <span class="lsq-bench-label">Bench:</span>
+        {% for app in bench %}{{ app.player.name }}{% if not loop.last %}, {% endif %}{% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% else %}{# is_gaffer builder #}
 
   <section class="md-match">
     <div class="md-match-club">
@@ -317,7 +420,8 @@
       </a>
     </div>
   </div>
-  {% endif %}
+  {% endif %}{# end is_gaffer builder #}
+
 </div>
 
 <script>
