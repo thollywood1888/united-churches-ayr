@@ -11,7 +11,7 @@ import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import date as date_type
-from datetime import datetime
+from datetime import datetime, time as time_type, timedelta
 from pathlib import Path
 from typing import Annotated
 from urllib.parse import urlencode
@@ -20,7 +20,7 @@ from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, Respon
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.sessions import SessionMiddleware
@@ -1152,8 +1152,24 @@ def parse_table(pasted: str) -> list[dict[str, object]]:
 # ------------------------------------------------------------------- fines --
 
 
+def _this_monday() -> date_type:
+    today = date_type.today()
+    return today - timedelta(days=today.weekday())
+
+
 @app.get("/fines")
-def fines(request: Request, session: SessionDep):
+def fines(request: Request, session: SessionDep, week: str = None):
+    if week:
+        try:
+            parsed = date_type.fromisoformat(week)
+            week_start = parsed - timedelta(days=parsed.weekday())
+        except ValueError:
+            week_start = _this_monday()
+    else:
+        week_start = _this_monday()
+
+    week_end = week_start + timedelta(days=7)
+
     schedule = list(
         session.scalars(
             select(FineScheduleItem)
@@ -1161,25 +1177,43 @@ def fines(request: Request, session: SessionDep):
             .order_by(FineScheduleItem.amount_pence)
         )
     )
-    outstanding = list(
+
+    week_fines = list(
         session.scalars(
             select(PlayerFine)
-            .where(PlayerFine.paid == False)  # noqa: E712
+            .where(
+                PlayerFine.issued_at >= datetime.combine(week_start, time_type.min),
+                PlayerFine.issued_at < datetime.combine(week_end, time_type.min),
+            )
             .order_by(PlayerFine.issued_at.desc())
         )
     )
-    # Eager-load players for the outstanding fines
-    for fine in outstanding:
+    for fine in week_fines:
         _ = fine.player
+
+    total_outstanding_pence = session.scalar(
+        select(func.sum(PlayerFine.amount_pence)).where(PlayerFine.paid == False)  # noqa: E712
+    ) or 0
+
     players = _active_players(session)
+    prev_week = (week_start - timedelta(days=7)).isoformat()
+    next_week = (week_start + timedelta(days=7)).isoformat()
+    week_end_display = week_start + timedelta(days=6)
+    week_label = f"{week_start.strftime('%-d %b')} — {week_end_display.strftime('%-d %b %Y')}"
+
     return _render(
         request,
         "fines.html",
         session,
         tab="fines",
         schedule=schedule,
-        outstanding=outstanding,
+        week_fines=week_fines,
         players=players,
+        total_outstanding_pence=total_outstanding_pence,
+        week_start=week_start,
+        prev_week=prev_week,
+        next_week=next_week,
+        week_label=week_label,
     )
 
 
@@ -1189,6 +1223,7 @@ def add_fine(
     player_id: Annotated[int, Form()],
     reason: Annotated[str, Form()],
     amount_pence: Annotated[int, Form()],
+    week: str = None,
 ):
     session.add(
         PlayerFine(
@@ -1198,17 +1233,17 @@ def add_fine(
         )
     )
     session.commit()
-    return RedirectResponse("/fines", status_code=303)
+    return RedirectResponse(f"/fines?week={week}" if week else "/fines", status_code=303)
 
 
 @app.post("/fines/{fine_id}/pay")
-def pay_fine(session: SessionDep, fine_id: int):
+def pay_fine(session: SessionDep, fine_id: int, week: str = None):
     fine = session.get(PlayerFine, fine_id)
     if fine is not None:
         fine.paid = True
         fine.paid_at = datetime.now()
         session.commit()
-    return RedirectResponse("/fines", status_code=303)
+    return RedirectResponse(f"/fines?week={week}" if week else "/fines", status_code=303)
 
 
 @app.post("/fines/schedule")

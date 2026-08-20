@@ -1,27 +1,74 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="panel-row">
-  <div class="panel">
-    <p class="eyebrow">Club finance</p>
-    <h2>2026/27 Season fines</h2>
-    <table>
+{# ── Icon macro — maps offence description to emoji ── #}
+{% macro offence_icon(desc) %}
+  {%- set d = desc | lower -%}
+  {%- if 'late' in d -%}⏰
+  {%- elif 'kit' in d -%}👕
+  {%- elif 'car' in d -%}🚗
+  {%- elif 'nutmeg' in d or 'nut meg' in d or 'megged' in d -%}😅
+  {%- elif 'fence' in d or 'ball' in d -%}⚽
+  {%- elif 'goal' in d -%}🎯
+  {%- elif 'drink' in d -%}🍺
+  {%- elif 'red card' in d -%}🟥
+  {%- else -%}📋
+  {%- endif -%}
+{% endmacro %}
+
+{# ── Page header ── #}
+<div class="fn2-header">
+  <div class="fn2-header-left">
+    <div class="fn2-shield" aria-hidden="true">
+      <svg viewBox="0 0 24 28" fill="none" width="30" height="35">
+        <path d="M12 2L2 6v8c0 5.5 4 10.5 10 12.5C18 24.5 22 19.5 22 14V6L12 2z" stroke="#c8963a" stroke-width="1.6" stroke-linejoin="round"/>
+        <text x="12" y="18" text-anchor="middle" fill="#c8963a" font-size="9.5" font-weight="700" font-family="sans-serif">£</text>
+      </svg>
+    </div>
+    <div>
+      <h1 class="fn2-page-title">FINES</h1>
+      <p class="fn2-page-sub">Manage club fines, view outstanding fines and keep the squad accountable.</p>
+    </div>
+  </div>
+  <div class="fn2-header-bg" aria-hidden="true">£</div>
+</div>
+
+{# ── Two-column layout ── #}
+<div class="fn2-cols">
+
+  {# ── LEFT — Fine schedule ── #}
+  <div class="fn2-card">
+    <div class="fn2-card-head">
+      <div>
+        <p class="fn2-eyebrow">CLUB FINANCE</p>
+        <h2 class="fn2-card-title">{{ season.label }} Season fines</h2>
+      </div>
+      <div class="fn2-outstanding-box">
+        <p class="fn2-outstanding-label">TOTAL OUTSTANDING</p>
+        <p class="fn2-outstanding-val">£{{ total_outstanding_pence // 100 }}{% if total_outstanding_pence % 100 %}.{{ "%02d" % (total_outstanding_pence % 100) }}{% endif %}</p>
+      </div>
+    </div>
+
+    <table class="fn2-sched-table">
       <thead>
         <tr>
-          <th>Offence</th>
-          <th class="num">Amount</th>
+          <th>OFFENCE</th>
+          <th>AMOUNT</th>
           {% if is_gaffer %}<th></th>{% endif %}
         </tr>
       </thead>
       <tbody>
         {% for item in schedule %}
         <tr>
-          <td>{{ item.description }}</td>
-          <td class="num">£{{ item.amount_pence // 100 }}{% if item.amount_pence % 100 %}.{{ "%02d" % (item.amount_pence % 100) }}{% endif %}</td>
+          <td class="fn2-offence-cell">
+            <span class="fn2-offence-icon">{{ offence_icon(item.description) }}</span>
+            {{ item.description }}
+          </td>
+          <td class="fn2-amount-cell">£{{ item.amount_pence // 100 }}{% if item.amount_pence % 100 %}.{{ "%02d" % (item.amount_pence % 100) }}{% endif %}</td>
           {% if is_gaffer %}
-          <td>
+          <td class="fn2-action-cell">
             <form method="post" action="/fines/schedule/{{ item.id }}/remove">
-              <button class="ghost" type="submit">Remove</button>
+              <button class="fn2-remove-btn" type="submit">Remove</button>
             </form>
           </td>
           {% endif %}
@@ -29,96 +76,131 @@
         {% endfor %}
       </tbody>
     </table>
-    <p class="empty" style="margin-top:.75rem">⚠ Fine not paid within 1 week — fine doubles.</p>
+
+    <p class="fn2-note">⚠ Fine not paid within 1 week — fine doubles.</p>
 
     {% if is_gaffer %}
-    <form method="post" action="/fines/schedule/reset" style="margin-top:.5rem">
-      <button class="ghost" type="submit">Reset to 2026/27 defaults</button>
-    </form>
-
-    <details class="adder">
-      <summary>+ Add to schedule</summary>
-      <form class="stack" method="post" action="/fines/schedule">
-        <label class="field">Offence
-          <input type="text" name="description" placeholder="e.g. Late for training" required>
-        </label>
-        <label class="field">Amount (pence)
-          <input type="number" name="amount_pence" value="100" min="1" required>
-        </label>
-        <button type="submit">Add offence</button>
+    <div class="fn2-gaffer-controls">
+      <form method="post" action="/fines/schedule/reset" style="display:inline">
+        <button class="fn2-ghost-btn" type="submit">Reset to defaults</button>
       </form>
-    </details>
 
-    <details class="adder">
-      <summary>+ Issue fine</summary>
-      <form class="stack" method="post" action="/fines">
-        <label class="field">Player
-          <select name="player_id">
-            {% for player in players %}
-            <option value="{{ player.id }}">{{ player.name }}</option>
-            {% endfor %}
-          </select>
-        </label>
-        <label class="field">Reason
-          <select name="reason">
-            {% for item in schedule %}
-            <option value="{{ item.description }}">{{ item.description }} (£{{ item.amount_pence // 100 }}{% if item.amount_pence % 100 %}.{{ "%02d" % (item.amount_pence % 100) }}{% endif %})</option>
-            {% endfor %}
-          </select>
-        </label>
-        <label class="field">Amount (pence)
-          <input type="number" name="amount_pence" value="0" min="0">
-        </label>
-        <button type="submit">Issue fine</button>
-      </form>
-    </details>
+      <details class="fn2-adder">
+        <summary class="fn2-adder-summary">+ Add offence</summary>
+        <div class="fn2-adder-body">
+          <form class="fn2-adder-form" method="post" action="/fines/schedule">
+            <label class="fn2-field">Offence
+              <input type="text" name="description" placeholder="e.g. Late for training" required>
+            </label>
+            <label class="fn2-field">Amount (pence)
+              <input type="number" name="amount_pence" value="100" min="1" required>
+            </label>
+            <button class="fn2-submit-btn" type="submit">Add offence</button>
+          </form>
+        </div>
+      </details>
+    </div>
     {% endif %}
   </div>
 
-  <div class="panel">
-    <p class="eyebrow">Outstanding fines</p>
-    <h2>Fine list</h2>
-    {% if outstanding %}
-    <table>
-      <thead>
-        <tr>
-          <th></th>
-          <th>Player</th>
-          <th>Reason</th>
-          <th class="num">Amount</th>
-          <th>Issued</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for fine in outstanding %}
-        <tr>
-          <td>
-            {% if fine.player.photo_filename %}
-            <img src="/static/player_photos/{{ fine.player.photo_filename }}" class="player-thumb" alt="">
-            {% else %}
-            <div class="player-thumb player-thumb--placeholder"></div>
-            {% endif %}
-          </td>
-          <td>{{ fine.player.name }}</td>
-          <td>{{ fine.reason }}</td>
-          <td class="num">£{{ fine.amount_pence // 100 }}{% if fine.amount_pence % 100 %}.{{ "%02d" % (fine.amount_pence % 100) }}{% endif %}</td>
-          <td>{{ fine.issued_at.strftime("%-d %b") }}</td>
-          <td>
-            {% if is_gaffer %}
-            <form method="post" action="/fines/{{ fine.id }}/pay">
-              <button class="ghost" type="submit">Mark paid</button>
-            </form>
-            {% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  {# ── RIGHT — Fine list (weekly) ── #}
+  <div class="fn2-card">
+    <p class="fn2-eyebrow">OUTSTANDING FINES</p>
+    <h2 class="fn2-card-title">Fine list</h2>
+
+    {# Weekly navigator #}
+    <div class="fn2-week-nav">
+      <a href="/fines?week={{ prev_week }}" class="fn2-week-arrow" title="Previous week">&#8249;</a>
+      <span class="fn2-week-label">{{ week_label }}</span>
+      <a href="/fines?week={{ next_week }}" class="fn2-week-arrow" title="Next week">&#8250;</a>
+    </div>
+
+    {# Issue fine (gaffer only) #}
+    {% if is_gaffer %}
+    <details class="fn2-adder fn2-issue-fine">
+      <summary class="fn2-adder-summary">+ Issue fine this week</summary>
+      <div class="fn2-adder-body">
+        <form class="fn2-adder-form" method="post" action="/fines?week={{ week_start.isoformat() }}">
+          <label class="fn2-field">Player
+            <select name="player_id">
+              {% for player in players %}
+              <option value="{{ player.id }}">{{ player.name }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label class="fn2-field">Reason
+            <select name="reason" id="fn2-reason-sel" onchange="
+              var opt = this.options[this.selectedIndex];
+              var amt = document.getElementById('fn2-amount-inp');
+              if (amt && opt.dataset.amount) amt.value = opt.dataset.amount;
+            ">
+              {% for item in schedule %}
+              <option value="{{ item.description }}" data-amount="{{ item.amount_pence }}">
+                {{ item.description }} (£{{ item.amount_pence // 100 }})
+              </option>
+              {% endfor %}
+            </select>
+          </label>
+          <label class="fn2-field">Amount (pence)
+            <input type="number" name="amount_pence" id="fn2-amount-inp"
+                   value="{{ schedule[0].amount_pence if schedule else 100 }}" min="1" required>
+          </label>
+          <button class="fn2-submit-btn" type="submit">Issue fine</button>
+        </form>
+      </div>
+    </details>
+    {% endif %}
+
+    {# Fine list #}
+    {% if week_fines %}
+    <div class="fn2-fine-list">
+      <div class="fn2-fine-hdr">
+        <span class="fn2-col-player">PLAYER</span>
+        <span class="fn2-col-reason">REASON</span>
+        <span class="fn2-col-amount">AMOUNT</span>
+        <span class="fn2-col-issued">ISSUED</span>
+        <span class="fn2-col-status">STATUS</span>
+      </div>
+
+      {% for fine in week_fines %}
+      <div class="fn2-fine-row">
+        <div class="fn2-col-player fn2-player-cell">
+          {% if fine.player.photo_filename %}
+          <img src="/static/player_photos/{{ fine.player.photo_filename }}" class="fn2-player-photo" alt="">
+          {% else %}
+          <div class="fn2-player-initials">{{ fine.player.first_name[:1] }}{{ (fine.player.last_name or '')[:1] }}</div>
+          {% endif %}
+          <span class="fn2-player-name">{{ fine.player.first_name }}<br>{{ fine.player.last_name }}</span>
+        </div>
+        <div class="fn2-col-reason fn2-reason-text">{{ fine.reason }}</div>
+        <div class="fn2-col-amount fn2-amount-text">£{{ fine.amount_pence // 100 }}{% if fine.amount_pence % 100 %}.{{ "%02d" % (fine.amount_pence % 100) }}{% endif %}</div>
+        <div class="fn2-col-issued fn2-issued-text">{{ fine.issued_at.strftime("%-d %b") }}</div>
+        <div class="fn2-col-status">
+          {% if fine.paid %}
+          <div class="fn2-status-paid">
+            <span class="fn2-paid-check">✓</span>
+            <div class="fn2-paid-text">
+              <span>Paid</span>
+              {% if fine.paid_at %}<span class="fn2-paid-date">{{ fine.paid_at.strftime("%-d %b") }}</span>{% endif %}
+            </div>
+          </div>
+          {% else %}
+          <div class="fn2-status-unpaid">Outstanding</div>
+          {% if is_gaffer %}
+          <form method="post" action="/fines/{{ fine.id }}/pay?week={{ week_start.isoformat() }}" style="margin-top:4px">
+            <button class="fn2-pay-btn" type="submit">Mark paid</button>
+          </form>
+          {% endif %}
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
     {% else %}
-    <p class="empty">No player fines logged yet. Added fines will show the player, reason, amount, due date and payment status.</p>
+    <p class="fn2-empty">No fines issued this week. Use the arrow to navigate weeks or issue a fine above.</p>
     {% endif %}
   </div>
+
 </div>
 
 {% endblock %}
