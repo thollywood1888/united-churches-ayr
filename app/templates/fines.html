@@ -4,14 +4,14 @@
 {# ── Icon macro — maps offence description to emoji ── #}
 {% macro offence_icon(desc) %}
   {%- set d = desc | lower -%}
-  {%- if 'late' in d -%}⏰
-  {%- elif 'kit' in d -%}👕
-  {%- elif 'car' in d -%}🚗
-  {%- elif 'nutmeg' in d or 'nut meg' in d or 'megged' in d -%}😅
-  {%- elif 'fence' in d or 'ball' in d -%}⚽
-  {%- elif 'goal' in d -%}🎯
-  {%- elif 'drink' in d -%}🍺
+  {%- if 'late' in d -%}🕐
   {%- elif 'red card' in d -%}🟥
+  {%- elif 'kit' in d -%}👕
+  {%- elif 'car' in d -%}🅿️
+  {%- elif 'nutmeg' in d or 'nut meg' in d or 'megged' in d -%}💀
+  {%- elif 'fence' in d or 'ball' in d -%}⚽
+  {%- elif 'goal' in d -%}🥅
+  {%- elif 'drink' in d -%}🍻
   {%- else -%}📋
   {%- endif -%}
 {% endmacro %}
