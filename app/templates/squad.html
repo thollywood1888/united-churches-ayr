@@ -1,6 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
 
+{# Hero banner — two images side by side #}
+<div class="sq-hero-pair">
+  <div class="sq-hero-img sq-hero-img--treble" style="background-image:url('/static/squad-treble.jpg')"></div>
+  <div class="sq-hero-img sq-hero-img--team"   style="background-image:url('/static/squad-hero.jpg')"></div>
+</div>
+
 {# Page header #}
 <div class="sq-page-head">
   <div>
@@ -133,93 +139,54 @@
   </div>
 </div>
 
-{# Player card grid — grouped by position #}
+{# Player card grid — pre-grouped by position in the route #}
+{% macro player_cards(group_lines) %}
+<div class="sq-grid">
+  {% for line in group_lines %}
+  {% set pl = line.player %}
+  <div>
+    {% if is_gaffer %}
+    <a href="/squad/{{ pl.id }}" class="sq-card" title="{{ pl.name }}" data-name="{{ pl.name | lower }}" data-pos="{{ (pl.position or '') | lower }}">
+    {% else %}
+    <div class="sq-card" title="{{ pl.name }}" data-name="{{ pl.name | lower }}" data-pos="{{ (pl.position or '') | lower }}">
+    {% endif %}
+      {% if pl.photo_filename %}
+        <img src="/static/player_photos/{{ pl.photo_filename }}" class="sq-card-img" alt="{{ pl.name }}">
+      {% else %}
+        <div class="sq-card-img sq-card-img--ph">{{ pl.first_name[:1] }}{{ (pl.last_name or '')[:1] }}</div>
+      {% endif %}
+      <div class="sq-card-fade"></div>
+      <div class="sq-card-meta">
+        {% if pl.squad_number %}<span class="sq-card-num">{{ pl.squad_number }}</span>{% endif %}
+        <span class="sq-card-first">{{ pl.first_name or '' }}</span>
+        <span class="sq-card-last">{{ pl.last_name or '' }}</span>
+      </div>
+    {% if is_gaffer %}</a>{% else %}</div>{% endif %}
+    {% if is_gaffer %}
+    <div class="sq-card-actions">
+      <form method="post" action="/squad/{{ pl.id }}/remove">
+        <button class="link" type="submit">Remove</button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endmacro %}
+
 {% if lines %}
 
-{% set position_groups = [
-  ('Goalkeeper', 'Goalkeepers'),
-  ('Defender', 'Defenders'),
-  ('Midfielder', 'Midfielders'),
-  ('Forward', 'Forwards')
-] %}
-
-{% for pos_val, pos_label in position_groups %}
-  {% set grp = lines | selectattr("player.position", "equalto", pos_val) | list %}
-  {% if grp %}
-  <div class="sq-pos-section" data-section="{{ pos_val | lower }}">
-    <p class="sq-pos-label">{{ pos_label }}</p>
-    <div class="sq-grid">
-      {% for line in grp %}
-      {% set pl = line.player %}
-      <div>
-        {% if is_gaffer %}
-        <a href="/squad/{{ pl.id }}" class="sq-card" title="{{ pl.name }}" data-name="{{ pl.name | lower }}" data-pos="{{ pl.position | lower }}">
-        {% else %}
-        <div class="sq-card" title="{{ pl.name }}" data-name="{{ pl.name | lower }}" data-pos="{{ (pl.position or '') | lower }}">
-        {% endif %}
-          {% if pl.photo_filename %}
-            <img src="/static/player_photos/{{ pl.photo_filename }}" class="sq-card-img" alt="{{ pl.name }}">
-          {% else %}
-            <div class="sq-card-img sq-card-img--ph">{{ pl.first_name[:1] }}{{ (pl.last_name or '')[:1] }}</div>
-          {% endif %}
-          <div class="sq-card-fade"></div>
-          <div class="sq-card-meta">
-            {% if pl.squad_number %}<span class="sq-card-num">{{ pl.squad_number }}</span>{% endif %}
-            <span class="sq-card-first">{{ pl.first_name or '' }}</span>
-            <span class="sq-card-last">{{ pl.last_name or '' }}</span>
-          </div>
-        {% if is_gaffer %}</a>{% else %}</div>{% endif %}
-        {% if is_gaffer %}
-        <div class="sq-card-actions">
-          <form method="post" action="/squad/{{ pl.id }}/remove">
-            <button class="link" type="submit">Remove</button>
-          </form>
-        </div>
-        {% endif %}
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-  {% endif %}
+{% for pos, grp in position_groups %}
+<div class="sq-pos-section" data-section="{{ pos | lower }}">
+  <p class="sq-pos-label">{{ pos }}s</p>
+  {{ player_cards(grp) }}
+</div>
 {% endfor %}
 
-{# Players with no position set #}
-{% set known_pos = ['Goalkeeper', 'Defender', 'Midfielder', 'Forward'] %}
-{% set ungrouped = lines | rejectattr("player.position", "in", known_pos) | list %}
-{% if ungrouped %}
+{% if ungrouped_lines %}
 <div class="sq-pos-section" data-section="">
   <p class="sq-pos-label">Unassigned</p>
-  <div class="sq-grid">
-    {% for line in ungrouped %}
-    {% set pl = line.player %}
-    <div>
-      {% if is_gaffer %}
-      <a href="/squad/{{ pl.id }}" class="sq-card" title="{{ pl.name }}" data-name="{{ pl.name | lower }}" data-pos="">
-      {% else %}
-      <div class="sq-card" title="{{ pl.name }}" data-name="{{ pl.name | lower }}" data-pos="">
-      {% endif %}
-        {% if pl.photo_filename %}
-          <img src="/static/player_photos/{{ pl.photo_filename }}" class="sq-card-img" alt="{{ pl.name }}">
-        {% else %}
-          <div class="sq-card-img sq-card-img--ph">{{ pl.first_name[:1] }}{{ (pl.last_name or '')[:1] }}</div>
-        {% endif %}
-        <div class="sq-card-fade"></div>
-        <div class="sq-card-meta">
-          {% if pl.squad_number %}<span class="sq-card-num">{{ pl.squad_number }}</span>{% endif %}
-          <span class="sq-card-first">{{ pl.first_name or '' }}</span>
-          <span class="sq-card-last">{{ pl.last_name or '' }}</span>
-        </div>
-      {% if is_gaffer %}</a>{% else %}</div>{% endif %}
-      {% if is_gaffer %}
-      <div class="sq-card-actions">
-        <form method="post" action="/squad/{{ pl.id }}/remove">
-          <button class="link" type="submit">Remove</button>
-        </form>
-      </div>
-      {% endif %}
-    </div>
-    {% endfor %}
-  </div>
+  {{ player_cards(ungrouped_lines) }}
 </div>
 {% endif %}
 

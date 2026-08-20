@@ -370,6 +370,9 @@ def _player_has_history(session: Session, player_id: int) -> bool:
     return False
 
 
+_SQUAD_POSITIONS = ["Goalkeeper", "Defender", "Midfielder", "Forward"]
+
+
 @app.get("/squad")
 def squad(request: Request, session: SessionDep):
     season = _season_or_404(session)
@@ -385,12 +388,22 @@ def squad(request: Request, session: SessionDep):
     scorers = stats.top_scorers(session, season.id, limit=1)
     assisters = stats.top_assists(session, season.id, limit=1)
     motm_leaders = stats.top_motm(session, season.id, limit=1)
+    grouped: dict[str, list] = {pos: [] for pos in _SQUAD_POSITIONS}
+    ungrouped: list = []
+    for line in lines:
+        pos = line.player.position
+        if pos in grouped:
+            grouped[pos].append(line)
+        else:
+            ungrouped.append(line)
     return _render(
         request,
         "squad.html",
         session,
         tab="squad",
         lines=lines,
+        position_groups=[(pos, grouped[pos]) for pos in _SQUAD_POSITIONS if grouped[pos]],
+        ungrouped_lines=ungrouped,
         left_players=left,
         squad_size=len(lines),
         team_goals=record.scored,
