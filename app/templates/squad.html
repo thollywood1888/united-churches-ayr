@@ -194,43 +194,6 @@
 <p class="empty">No players in the current squad. Add one above.</p>
 {% endif %}
 
-{# Left the club #}
-{% if left_players %}
-<div class="sq-pos-section" style="margin-top:36px">
-  <p class="sq-pos-label" style="color:rgba(0,0,0,.4);font-size:16px">Left the club</p>
-  <div class="sq-grid">
-    {% for pl in left_players %}
-    <div>
-      {% if is_gaffer %}
-      <a href="/squad/{{ pl.id }}" class="sq-card" title="{{ pl.name }}" data-name="{{ pl.name | lower }}" data-pos="" style="opacity:.5">
-      {% else %}
-      <div class="sq-card" title="{{ pl.name }}" data-name="{{ pl.name | lower }}" data-pos="" style="opacity:.5">
-      {% endif %}
-        {% if pl.photo_filename %}
-          <img src="/static/player_photos/{{ pl.photo_filename }}" class="sq-card-img" alt="{{ pl.name }}">
-        {% else %}
-          <div class="sq-card-img sq-card-img--ph">{{ pl.first_name[:1] }}{{ (pl.last_name or '')[:1] }}</div>
-        {% endif %}
-        <div class="sq-card-fade"></div>
-        <div class="sq-card-meta">
-          {% if pl.squad_number %}<span class="sq-card-num">{{ pl.squad_number }}</span>{% endif %}
-          <span class="sq-card-first">{{ pl.first_name or '' }}</span>
-          <span class="sq-card-last">{{ pl.last_name or '' }}</span>
-        </div>
-      {% if is_gaffer %}</a>{% else %}</div>{% endif %}
-      {% if is_gaffer %}
-      <div class="sq-card-actions">
-        <form method="post" action="/squad/{{ pl.id }}/restore">
-          <button class="link" type="submit">Restore</button>
-        </form>
-      </div>
-      {% endif %}
-    </div>
-    {% endfor %}
-  </div>
-</div>
-{% endif %}
-
 {# Awards #}
 {% set all_award_lines = lines | selectattr("motm", ">", 0) | list %}
 {% set mgr_award_lines = lines | selectattr("managers_motm", ">", 0) | list %}
