@@ -1738,7 +1738,7 @@ main.sq-main {
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 0;
 }
 .sq2-eyebrow {
   font-size: 11px;
@@ -1860,7 +1860,107 @@ main.sq-main {
   background: #0d1117;
   padding: 28px 32px 52px;
 }
+.sq2-dark--leaders { padding-bottom: 28px; }
+.sq2-dark--grid { padding-top: 0; }
 .sq2-dark-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* ── Team photo hero ── */
+.sq2-hero {
+  height: 340px;
+  border-radius: 16px;
+  background-size: cover;
+  background-position: center top;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0;
+  margin-top: 20px;
+}
+.sq2-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.35) 55%, rgba(0,0,0,0.55) 100%);
+  border-radius: inherit;
+}
+.sq2-hero-left {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 24px 28px;
+}
+.sq2-hero-badge {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  border-radius: 50%;
+  flex: none;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+}
+.sq2-hero-text { }
+.sq2-hero-club {
+  margin: 0 0 6px;
+  font-size: clamp(20px, 2.5vw, 28px);
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+}
+.sq2-hero-season {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #c9a84c;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.sq2-hero-right {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 28px;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(4px);
+  border-radius: 0 0 16px 0;
+  border-left: 1px solid rgba(255,255,255,0.1);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  align-self: flex-end;
+}
+.sq2-hero-ico { flex: none; }
+.sq2-hero-num {
+  margin: 0;
+  font-size: 48px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.sq2-hero-lbl {
+  margin: 4px 0 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.65);
+  line-height: 1.4;
+}
+
+/* ── Cream stat strip ── */
+.sq2-stat-strip {
+  background: #f5f0e8;
+  padding: 24px 32px;
+}
+.sq2-stat-strip-inner {
   max-width: 1280px;
   margin: 0 auto;
 }
@@ -2231,8 +2331,16 @@ a.sq2-card-name:hover { color: #c9a84c; }
 @media (max-width: 640px) {
   .sq2-top { padding: 20px 16px 16px; }
   .sq2-dark { padding: 20px 16px 36px; }
+  .sq2-dark--leaders { padding-bottom: 16px; }
+  .sq2-stat-strip { padding: 20px 16px; }
   .sq2-stat-row { grid-template-columns: 1fr 1fr; }
   .sq2-grid { grid-template-columns: 1fr; }
+  .sq2-hero { height: 240px; margin-top: 16px; }
+  .sq2-hero-club { font-size: 18px; }
+  .sq2-hero-badge { width: 52px; height: 52px; }
+  .sq2-hero-num { font-size: 36px; }
+  .sq2-hero-left { padding: 16px; gap: 10px; }
+  .sq2-hero-right { padding: 14px 16px; }
 }
 
 

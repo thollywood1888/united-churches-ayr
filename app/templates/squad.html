@@ -2,7 +2,7 @@
 {% block main_class %}sq-main{% endblock %}
 {% block content %}
 
-{# ── TOP AREA (warm cream) ── #}
+{# ── CREAM HEADER ── #}
 <div class="sq2-top">
   <div class="sq2-top-inner">
     <div class="sq2-top-hdr">
@@ -12,52 +12,14 @@
       </div>
       <span class="sq2-season-badge">{{ season.label }}</span>
     </div>
-
-    <div class="sq2-stat-row">
-      <div class="sq2-stat-card">
-        <span class="sq2-stat-icon">👕</span>
-        <div>
-          <p class="sq2-sc-label">SQUAD SIZE</p>
-          <p class="sq2-sc-num">{{ squad_size }}</p>
-          <p class="sq2-sc-sub">Registered players</p>
-        </div>
-      </div>
-      <div class="sq2-stat-card">
-        <span class="sq2-stat-icon">⚽</span>
-        <div>
-          <p class="sq2-sc-label">TEAM GOALS</p>
-          <p class="sq2-sc-num">{{ team_goals }}</p>
-          <p class="sq2-sc-sub">Goals scored</p>
-        </div>
-      </div>
-      <div class="sq2-stat-card">
-        <span class="sq2-stat-icon sq2-stat-icon--lg">👥</span>
-        <div>
-          <p class="sq2-sc-label">UNASSIGNED</p>
-          <p class="sq2-sc-num">{{ unassigned_count }}</p>
-          <p class="sq2-sc-sub">Players</p>
-        </div>
-      </div>
-      <div class="sq2-gaffer-card">
-        <p class="sq2-gaffer-label">GAFFER</p>
-        <div class="sq2-gaffer-photo-ph">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#9a8e78" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6"/></svg>
-        </div>
-        <div>
-          <p class="sq2-gaffer-name">MANAGER PHOTO</p>
-          <p class="sq2-gaffer-desc">Add your photo to personalise your club dashboard.</p>
-        </div>
-      </div>
-    </div>
   </div>
 </div>
 
-{# ── DARK SECTION ── #}
-<div class="sq2-dark">
+{# ── DARK SECTION: LEADERS + SEARCH ── #}
+<div class="sq2-dark sq2-dark--leaders">
   <div class="sq2-dark-inner">
     <p class="sq2-dark-label">CURRENT SQUAD</p>
 
-    {# Add player (gaffer only) #}
     {% if is_gaffer %}
     <details class="sq2-add-player">
       <summary class="sq2-add-summary">+ Add player</summary>
@@ -165,19 +127,84 @@
       </div>
     </div>
 
+    {# ── TEAM PHOTO HERO ── #}
+    <div class="sq2-hero" style="background-image: url('/static/squad-hero.png')">
+      <div class="sq2-hero-left">
+        <img src="/static/badges/uca.png" class="sq2-hero-badge" alt="">
+        <div class="sq2-hero-text">
+          <h2 class="sq2-hero-club">UNITED CHURCHES<br>OF AYR AFC</h2>
+          <p class="sq2-hero-season">SQUAD {{ season.label }}</p>
+        </div>
+      </div>
+      <div class="sq2-hero-right">
+        <svg viewBox="0 0 24 24" width="36" height="36" aria-hidden="true" class="sq2-hero-ico"><path fill="#c9a84c" d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+        <div>
+          <p class="sq2-hero-num">{{ squad_size }}</p>
+          <p class="sq2-hero-lbl">REGISTERED<br>PLAYERS</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{# ── CREAM STAT STRIP ── #}
+<div class="sq2-stat-strip">
+  <div class="sq2-stat-strip-inner">
+    <div class="sq2-stat-row">
+      <div class="sq2-stat-card">
+        <span class="sq2-stat-icon">👕</span>
+        <div>
+          <p class="sq2-sc-label">SQUAD SIZE</p>
+          <p class="sq2-sc-num">{{ squad_size }}</p>
+          <p class="sq2-sc-sub">Registered players</p>
+        </div>
+      </div>
+      <div class="sq2-stat-card">
+        <span class="sq2-stat-icon">⚽</span>
+        <div>
+          <p class="sq2-sc-label">TEAM GOALS</p>
+          <p class="sq2-sc-num">{{ team_goals }}</p>
+          <p class="sq2-sc-sub">Goals scored</p>
+        </div>
+      </div>
+      <div class="sq2-stat-card">
+        <span class="sq2-stat-icon sq2-stat-icon--lg">👥</span>
+        <div>
+          <p class="sq2-sc-label">UNASSIGNED</p>
+          <p class="sq2-sc-num">{{ unassigned_count }}</p>
+          <p class="sq2-sc-sub">Players</p>
+        </div>
+      </div>
+      <div class="sq2-gaffer-card">
+        <p class="sq2-gaffer-label">GAFFER</p>
+        <div class="sq2-gaffer-photo-ph">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#9a8e78" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6"/></svg>
+        </div>
+        <div>
+          <p class="sq2-gaffer-name">MANAGER PHOTO</p>
+          <p class="sq2-gaffer-desc">Add your photo to personalise your club dashboard.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ── DARK SECTION: SQUAD GRID ── #}
+<div class="sq2-dark sq2-dark--grid">
+  <div class="sq2-dark-inner">
+
     {# ── Player card macro ── #}
     {% macro render_card(line) %}
     {% set pl = line.player %}
     <div class="sq2-card" data-name="{{ pl.name | lower }}" data-pos="{{ (pl.position or '') | lower }}">
 
-      {# Circular photo / initials #}
       {% if pl.photo_filename %}
       <img src="/static/player_photos/{{ pl.photo_filename }}" class="sq2-card-photo" alt="{{ pl.name }}">
       {% else %}
       <div class="sq2-card-initials">{{ pl.first_name[:1] }}{{ (pl.last_name or '')[:1] }}</div>
       {% endif %}
 
-      {# Right body #}
       <div class="sq2-card-body">
 
         <div class="sq2-card-top">
@@ -191,7 +218,6 @@
               {% endif %}
             </div>
 
-            {# Position — dropdown for gaffer, text for squad #}
             {% if is_gaffer %}
             <form method="post" action="/squad/{{ pl.id }}/position" class="sq2-pos-form">
               <select name="position" class="sq2-pos-select" onchange="this.form.submit()">
@@ -207,7 +233,6 @@
             {% endif %}
           </div>
 
-          {# Gaffer context menu #}
           {% if is_gaffer %}
           <details class="sq2-menu">
             <summary class="sq2-dots-btn" title="Actions">⋯</summary>
@@ -221,7 +246,6 @@
           {% endif %}
         </div>
 
-        {# Stats row — varies by position #}
         {%- set pos = pl.position or '' -%}
         <div class="sq2-card-stats">
           <div class="sq2-s-col">
@@ -263,7 +287,6 @@
     </div>
     {% endmacro %}
 
-    {# ── Position-grouped sections ── #}
     {% if lines %}
 
     {% for pos, grp in position_groups %}
