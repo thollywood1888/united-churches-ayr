@@ -27,13 +27,13 @@
         </div>
         <div class="fx2-vs">VS</div>
         <div class="fx2-matchup-team fx2-matchup-team--uca">
-          <span class="fx2-mu-name">United Churches of Ayr AFC</span>
           {%- set uca_slug = badge_map.get("United Churches of Ayr AFC") -%}
           {% if uca_slug %}
           <img src="/static/badges/{{ uca_slug }}.png" class="fx2-mu-badge" alt="">
           {% else %}
           <div class="fx2-mu-badge fx2-mu-badge--ph">UC</div>
           {% endif %}
+          <span class="fx2-mu-name">United Churches of Ayr AFC</span>
         </div>
       </div>
       <p class="fx2-hero-meta">
