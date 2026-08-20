@@ -1580,6 +1580,127 @@ button.md-player:hover { background: var(--page); }
   .ov-leaders-grid { grid-template-columns: 1fr; }
 }
 
+/* ------------------------------------------------------- overview v2 --- */
+
+.ov2-page-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px; margin-bottom: 16px; flex-wrap: wrap;
+}
+.ov2-page-title { margin: 0; font-size: 28px; font-weight: 700; color: var(--navy); letter-spacing: -0.02em; }
+.ov2-page-sub { margin: 2px 0 0; color: var(--gold); font-size: 14px; font-weight: 600; }
+.ov2-season-pill {
+  display: flex; align-items: center; gap: 7px; flex: none;
+  border: 1.5px solid var(--gold); border-radius: 8px;
+  padding: 8px 16px; font-size: 13px; font-weight: 600; color: var(--navy);
+  background: #fff8e7;
+}
+.ov2-hero {
+  background: var(--navy); border-radius: var(--radius); padding: 28px 24px;
+  margin-bottom: 14px; display: flex; align-items: stretch; overflow: hidden; min-height: 200px;
+}
+.ov2-hero-divider { width: 1px; background: rgba(240,165,0,0.35); flex: none; margin: 0 22px; }
+.ov2-hero-club { flex: 0 0 auto; display: flex; align-items: center; gap: 16px; max-width: 230px; }
+.ov2-hero-crest { width: 80px; height: 80px; object-fit: contain; flex: none; }
+.ov2-hero-club-name { color: #fff; font-size: 17px; font-weight: 900; line-height: 1.15; letter-spacing: -0.01em; text-transform: uppercase; }
+.ov2-hero-motto { color: var(--gold); font-size: 10px; font-weight: 700; letter-spacing: 0.06em; margin-top: 8px; }
+.ov2-hero-est { color: var(--gold); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; border-top: 1px solid rgba(240,165,0,0.5); padding-top: 5px; margin-top: 5px; }
+.ov2-treble {
+  flex: 0 0 auto; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 4px; min-width: 110px;
+  background: linear-gradient(180deg, #6b4c00 0%, #c49000 40%, #8a6500 100%);
+  border-radius: 6px; padding: 18px 14px 28px; position: relative;
+  clip-path: polygon(0 0, 100% 0, 100% 82%, 50% 100%, 0 82%);
+}
+.ov2-treble-stars { color: #fff; font-size: 13px; letter-spacing: 3px; }
+.ov2-treble-title { color: #fff; font-size: 14px; font-weight: 900; text-align: center; line-height: 1.2; letter-spacing: 0.04em; text-transform: uppercase; }
+.ov2-treble-year { color: rgba(255,255,255,0.85); font-size: 12px; font-weight: 700; }
+.ov2-hero-match { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.ov2-hero-match-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; color: var(--gold); text-transform: uppercase; }
+.ov2-hero-matchup { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
+.ov2-hero-team { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.ov2-hero-team--right { justify-content: flex-end; }
+.ov2-hero-team--right .ov2-hero-team-name { text-align: right; }
+.ov2-hero-team-name { color: #fff; font-size: clamp(13px, 1.5vw, 16px); font-weight: 700; line-height: 1.3; }
+.ov2-hero-badge { width: 52px; height: 52px; object-fit: contain; flex: none; }
+.ov2-hero-badge--ph { width: 52px; height: 52px; border-radius: 50%; background: rgba(255,255,255,0.12); flex: none; }
+.ov2-hero-vs { color: rgba(255,255,255,0.5); font-size: 13px; font-weight: 700; flex: none; padding: 0 4px; }
+.ov2-hero-match-date { display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7); font-size: 14px; }
+.ov2-hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.ov2-btn-primary { background: var(--gold); color: var(--navy); font-weight: 700; font-size: 14px; padding: 10px 18px; border-radius: 8px; text-decoration: none; white-space: nowrap; transition: background 0.15s; }
+.ov2-btn-primary:hover { background: #d89800; }
+.ov2-btn-secondary { display: flex; align-items: center; gap: 7px; background: rgba(255,255,255,0.1); color: #fff; font-weight: 600; font-size: 14px; padding: 10px 18px; border-radius: 8px; text-decoration: none; border: 1.5px solid rgba(255,255,255,0.25); white-space: nowrap; transition: background 0.15s; }
+.ov2-btn-secondary:hover { background: rgba(255,255,255,0.18); }
+.ov2-no-fix-text { color: rgba(255,255,255,0.5); font-size: 14px; margin: 0; }
+.ov2-hero-colours { flex: 0 0 auto; display: flex; flex-direction: column; gap: 12px; min-width: 160px; }
+.ov2-colours-hd { display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; }
+.ov2-colours-row { display: flex; gap: 18px; align-items: flex-start; }
+.ov2-shirt-wrap { display: flex; flex-direction: column; align-items: center; gap: 7px; }
+.ov2-shirt-svg { width: 56px; height: 56px; }
+.ov2-shirt-lbl { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.85); text-align: center; line-height: 1.5; letter-spacing: 0.05em; }
+.ov2-shirt-lbl span { color: rgba(255,255,255,0.55); font-weight: 500; }
+.ov2-stats-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--gap); margin-bottom: 14px; }
+.ov2-stat-card { background: var(--card); border: 1.5px solid var(--line); border-radius: var(--radius); padding: 16px 14px; display: flex; align-items: center; gap: 14px; }
+.ov2-stat-icon { width: 42px; height: 42px; border-radius: 50%; background: var(--navy); display: flex; align-items: center; justify-content: center; flex: none; }
+.ov2-stat-label { color: var(--ink-soft); font-size: 11px; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 4px; }
+.ov2-stat-value { font-size: 24px; font-weight: 800; color: var(--navy); letter-spacing: -0.02em; line-height: 1; }
+.ov2-three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--gap); margin-bottom: 24px; align-items: start; }
+.ov2-panel { background: var(--card); border: 1.5px solid var(--line); border-radius: var(--radius); padding: 18px; }
+.ov2-panel-head { display: flex; align-items: center; gap: 7px; margin-bottom: 14px; }
+.ov2-panel-title { font-size: 13px; font-weight: 700; color: var(--navy); flex: 1; letter-spacing: 0.03em; }
+.ov2-view-all { font-size: 12px; color: var(--gold); font-weight: 700; text-decoration: none; flex: none; }
+.ov2-view-all:hover { text-decoration: underline; }
+.ov2-result-teams { display: flex; align-items: center; gap: 10px; justify-content: center; margin-bottom: 10px; }
+.ov2-result-team { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; font-size: 12px; font-weight: 500; color: var(--navy); text-align: center; line-height: 1.4; }
+.ov2-result-badge { width: 44px; height: 44px; object-fit: contain; }
+.ov2-result-badge--ph { width: 44px; height: 44px; border-radius: 50%; background: var(--accent-soft); }
+.ov2-result-score-col { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: none; padding: 0 6px; }
+.ov2-result-score { font-size: 32px; font-weight: 800; color: var(--navy); letter-spacing: -0.03em; }
+.ov2-outcome-chip { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; padding: 3px 10px; border-radius: 999px; }
+.ov2-outcome-W { background: #dcf5e8; color: var(--win); }
+.ov2-outcome-D { background: var(--accent-soft); color: var(--navy); }
+.ov2-outcome-L { background: #fde8ec; color: var(--loss); }
+.ov2-result-date { display: flex; align-items: center; gap: 5px; justify-content: center; color: var(--ink-soft); font-size: 12px; margin: 0 0 10px; }
+.ov2-view-link { display: block; color: var(--gold); font-size: 13px; font-weight: 700; text-decoration: none; }
+.ov2-view-link:hover { text-decoration: underline; }
+.ov2-fix-list { list-style: none; margin: 0; padding: 0; }
+.ov2-fix-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); text-decoration: none; }
+.ov2-fix-row:last-child { border-bottom: none; }
+.ov2-fix-badge-wrap { width: 34px; flex: none; }
+.ov2-fix-badge { width: 34px; height: 34px; object-fit: contain; }
+.ov2-fix-badge--empty { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-soft); }
+.ov2-fix-info { flex: 1; min-width: 0; }
+.ov2-fix-name { display: block; font-size: 13px; font-weight: 600; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ov2-fix-when { display: block; font-size: 11.5px; color: var(--ink-soft); }
+.ov2-fix-venue { width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex: none; background: var(--navy); color: #fff; }
+.ov2-fix-venue.away { background: transparent; color: var(--navy); border: 1.5px solid var(--navy); }
+.ov2-fix-venue.neutral { background: var(--accent-soft); color: var(--navy); }
+.ov2-fix-arrow { color: var(--ink-soft); font-size: 16px; flex: none; }
+.ov2-table { width: 100%; font-size: 12.5px; border-collapse: collapse; }
+.ov2-table th { color: var(--ink-soft); font-size: 11px; font-weight: 700; letter-spacing: 0.05em; padding: 0 4px 8px; text-align: left; border-bottom: 1.5px solid var(--line); }
+.ov2-table td { padding: 7px 4px; border-bottom: 1px solid var(--line); color: var(--navy); }
+.ov2-table tr:last-child td { border-bottom: none; }
+.ov2-table .num { text-align: right; }
+.ov2-table .pos { width: 28px; font-weight: 700; }
+.ov2-table-club { display: flex; align-items: center; gap: 7px; }
+.ov2-table tr.ov2-us td { background: var(--navy); color: #fff; font-weight: 700; }
+.ov2-table tr.ov2-us .badge-thumb { filter: brightness(0) invert(1); opacity: 0.9; }
+@media (max-width: 1020px) {
+  .ov2-hero { flex-wrap: wrap; gap: 16px; }
+  .ov2-hero-divider { display: none; }
+  .ov2-hero-colours { width: 100%; flex-direction: row; align-items: center; gap: 20px; }
+  .ov2-colours-row { margin-left: auto; }
+}
+@media (max-width: 860px) {
+  .ov2-stats-strip { grid-template-columns: repeat(3, 1fr); }
+  .ov2-three-col { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 600px) {
+  .ov2-stats-strip { grid-template-columns: repeat(2, 1fr); }
+  .ov2-three-col { grid-template-columns: 1fr; }
+  .ov2-page-title { font-size: 22px; }
+  .ov2-season-pill { font-size: 11px; padding: 6px 12px; }
+}
+
 /* --------------------------------------------------------- match centre -- */
 
 .mc-page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }

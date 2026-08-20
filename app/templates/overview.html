@@ -1,154 +1,235 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="ov-page-head">
+{# ---- page header ---- #}
+<div class="ov2-page-head">
   <div>
-    <h1 class="ov-page-title">Club overview</h1>
-    <p class="ov-page-sub">Season {{ season.label }}</p>
+    <h1 class="ov2-page-title">Club overview</h1>
+    <p class="ov2-page-sub">Season {{ season.label }}</p>
   </div>
-  <a class="tab" href="/table">View league table</a>
+  <div class="ov2-season-pill">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M17 3H7l-1 7a5 5 0 0010 0L17 3z"/><path d="M5 8H3a2 2 0 000 4 4 4 0 004 4M19 8h2a2 2 0 010 4 4 4 0 01-4 4"/></svg>
+    {{ season.label }} – {{ season.division }}
+  </div>
 </div>
 
-{# ---- next match hero ---- #}
-{% if next_fixture %}
-{% set opp_slug = badge_map.get(next_fixture.opponent) %}
-<div class="ov-hero">
-  <div class="ov-hero-inner">
-    <span class="ov-hero-label">NEXT MATCH · {{ next_fixture.venue.value | upper }}</span>
-    <div class="ov-hero-matchup">
+{# ---- hero banner ---- #}
+<div class="ov2-hero">
+
+  {# Club identity #}
+  <div class="ov2-hero-club">
+    <img src="/static/badges/uca.png" class="ov2-hero-crest" alt="UCA">
+    <div class="ov2-hero-club-text">
+      <div class="ov2-hero-club-name">UNITED<br>CHURCHES<br>OF AYR AFC</div>
+      <div class="ov2-hero-motto">BE STRONG &amp; COURAGEOUS</div>
+      <div class="ov2-hero-est">EST. 2013</div>
+    </div>
+  </div>
+
+  <div class="ov2-hero-divider"></div>
+
+  {# Treble winners ribbon #}
+  <div class="ov2-treble">
+    <div class="ov2-treble-stars">★ ★ ★</div>
+    <div class="ov2-treble-title">TREBLE<br>WINNERS</div>
+    <div class="ov2-treble-year">2025/26</div>
+  </div>
+
+  <div class="ov2-hero-divider"></div>
+
+  {# Next match #}
+  {% if next_fixture %}
+  {% set opp_slug = badge_map.get(next_fixture.opponent) %}
+  <div class="ov2-hero-match">
+    <span class="ov2-hero-match-label">NEXT MATCH · {{ next_fixture.venue.value | upper }}</span>
+    <div class="ov2-hero-matchup">
       {% if next_fixture.venue.value == 'away' %}
-        <div class="ov-hero-team">
-          {% if opp_slug %}<img src="/static/badges/{{ opp_slug }}.png" class="ov-hero-badge-img" alt="">{% else %}<div class="ov-hero-badge-img ov-hero-badge-ph"></div>{% endif %}
-          <span class="ov-hero-team-name">{{ next_fixture.opponent }}</span>
+        <div class="ov2-hero-team">
+          {% if opp_slug %}<img src="/static/badges/{{ opp_slug }}.png" class="ov2-hero-badge" alt="">{% else %}<div class="ov2-hero-badge ov2-hero-badge--ph"></div>{% endif %}
+          <span class="ov2-hero-team-name">{{ next_fixture.opponent }}</span>
         </div>
-        <div class="ov-hero-vs">VS</div>
-        <div class="ov-hero-team ov-hero-team--right">
-          <span class="ov-hero-team-name">{{ club_name }}</span>
-          <img src="/static/badges/uca.png" class="ov-hero-badge-img" alt="">
+        <div class="ov2-hero-vs">VS</div>
+        <div class="ov2-hero-team ov2-hero-team--right">
+          <span class="ov2-hero-team-name">{{ club_name }}</span>
+          <img src="/static/badges/uca.png" class="ov2-hero-badge" alt="">
         </div>
       {% else %}
-        <div class="ov-hero-team">
-          <img src="/static/badges/uca.png" class="ov-hero-badge-img" alt="">
-          <span class="ov-hero-team-name">{{ club_name }}</span>
+        <div class="ov2-hero-team">
+          <img src="/static/badges/uca.png" class="ov2-hero-badge" alt="">
+          <span class="ov2-hero-team-name">{{ club_name }}</span>
         </div>
-        <div class="ov-hero-vs">VS</div>
-        <div class="ov-hero-team ov-hero-team--right">
-          <span class="ov-hero-team-name">{{ next_fixture.opponent }}</span>
-          {% if opp_slug %}<img src="/static/badges/{{ opp_slug }}.png" class="ov-hero-badge-img" alt="">{% else %}<div class="ov-hero-badge-img ov-hero-badge-ph"></div>{% endif %}
+        <div class="ov2-hero-vs">VS</div>
+        <div class="ov2-hero-team ov2-hero-team--right">
+          <span class="ov2-hero-team-name">{{ next_fixture.opponent }}</span>
+          {% if opp_slug %}<img src="/static/badges/{{ opp_slug }}.png" class="ov2-hero-badge" alt="">{% else %}<div class="ov2-hero-badge ov2-hero-badge--ph"></div>{% endif %}
         </div>
       {% endif %}
     </div>
-    <div class="ov-hero-meta">
-      <span>{{ next_fixture.kickoff_at.strftime("%A %-d %B · %H:%M") }}</span>
-      {% if days_to_kickoff is not none %}
-        {% if days_to_kickoff == 0 %}<span class="ov-countdown">Today</span>
-        {% elif days_to_kickoff == 1 %}<span class="ov-countdown">1 day to kick-off</span>
-        {% elif days_to_kickoff > 0 %}<span class="ov-countdown">{{ days_to_kickoff }} days to kick-off</span>
-        {% endif %}
-      {% endif %}
+    <div class="ov2-hero-match-date">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      {{ next_fixture.kickoff_at.strftime("%A %-d %B · %H:%M") }}
+    </div>
+    <div class="ov2-hero-actions">
+      <a class="ov2-btn-primary" href="/fixtures/{{ next_fixture.id }}">Open match centre ›</a>
+      <a class="ov2-btn-secondary" href="/lineups?fixture_id={{ next_fixture.id }}">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        Build lineup
+      </a>
     </div>
   </div>
-  <div class="ov-hero-actions">
-    <a class="ov-hero-btn-primary" href="/fixtures/{{ next_fixture.id }}">Open match centre ›</a>
-    <a class="ov-hero-btn-secondary" href="/lineups?fixture_id={{ next_fixture.id }}">Build lineup</a>
+  {% else %}
+  <div class="ov2-hero-match">
+    <span class="ov2-hero-match-label">NO UPCOMING FIXTURE</span>
+    <p class="ov2-no-fix-text">Nothing scheduled yet.</p>
+    <div class="ov2-hero-actions">
+      <a class="ov2-btn-secondary" href="/fixtures">Manage fixtures</a>
+    </div>
   </div>
+  {% endif %}
+
+  <div class="ov2-hero-divider"></div>
+
+  {# Club colours #}
+  <div class="ov2-hero-colours">
+    <div class="ov2-colours-hd">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 20c-3.87-3.87-1.72-9.23 1-11.38M17.06 21.66C16.08 20 14 17.17 12 20"/></svg>
+      CLUB COLOURS
+    </div>
+    <div class="ov2-colours-row">
+      <div class="ov2-shirt-wrap">
+        <svg class="ov2-shirt-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="bw-stripe" patternUnits="userSpaceOnUse" width="13" height="100">
+              <rect width="7" height="100" fill="#1a1a1a"/>
+              <rect x="7" width="6" height="100" fill="#ffffff"/>
+            </pattern>
+            <clipPath id="shirt-clip-bw">
+              <path d="M35,6 Q50,0 65,6 L90,28 L74,36 L74,95 L26,95 L26,36 L10,28 Z"/>
+            </clipPath>
+          </defs>
+          <path d="M35,6 Q50,0 65,6 L90,28 L74,36 L74,95 L26,95 L26,36 L10,28 Z" fill="url(#bw-stripe)"/>
+          <path d="M35,6 Q50,0 65,6 L90,28 L74,36 L74,95 L26,95 L26,36 L10,28 Z" fill="none" stroke="#555" stroke-width="2"/>
+        </svg>
+        <div class="ov2-shirt-lbl">PRIMARY<br><span>Black &amp; White</span></div>
+      </div>
+      <div class="ov2-shirt-wrap">
+        <svg class="ov2-shirt-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <path d="M35,6 Q50,0 65,6 L90,28 L74,36 L74,95 L26,95 L26,36 L10,28 Z" fill="#cc1f1f"/>
+          <path d="M35,6 Q50,0 65,6 L90,28 L74,36 L74,95 L26,95 L26,36 L10,28 Z" fill="none" stroke="#991515" stroke-width="2"/>
+        </svg>
+        <div class="ov2-shirt-lbl">SECONDARY<br><span>Red</span></div>
+      </div>
+    </div>
+  </div>
+
 </div>
-{% else %}
-<div class="ov-hero">
-  <div class="ov-hero-inner">
-    <span class="ov-hero-label">NO UPCOMING FIXTURE</span>
-    <h2 style="color:#fff;margin:12px 0 8px;font-size:20px">Nothing scheduled yet</h2>
-    <p style="color:rgba(255,255,255,0.6);margin:0;font-size:14px">Add a fixture to see the next match here.</p>
-  </div>
-  <div class="ov-hero-actions">
-    <a class="ov-hero-btn-secondary" href="/fixtures">Manage fixtures</a>
-  </div>
-</div>
-{% endif %}
 
 {# ---- stats strip ---- #}
-<div class="ov-stats-strip">
-  <div class="ov-stat-card">
-    <div class="ov-stat-icon">🏆</div>
-    <div class="ov-stat-label">League position</div>
-    <div class="ov-stat-value">{{ (our_row.position ~ ordinal(our_row.position)) if our_row else "—" }}</div>
+<div class="ov2-stats-strip">
+  <div class="ov2-stat-card">
+    <div class="ov2-stat-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M8 21h8M12 17v4M17 3H7l-1 7a5 5 0 0010 0L17 3z"/><path d="M5 8H3a2 2 0 000 4 4 4 0 004 4M19 8h2a2 2 0 010 4 4 4 0 01-4 4"/></svg>
+    </div>
+    <div>
+      <div class="ov2-stat-label">LEAGUE POSITION</div>
+      <div class="ov2-stat-value">{{ (our_row.position ~ ordinal(our_row.position)) if our_row else "—" }}</div>
+    </div>
   </div>
-  <div class="ov-stat-card">
-    <div class="ov-stat-icon">👕</div>
-    <div class="ov-stat-label">Played</div>
-    <div class="ov-stat-value">{{ record.played }}</div>
+  <div class="ov2-stat-card">
+    <div class="ov2-stat-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M20.38 3.46L16 2a4 4 0 01-8 0L3.62 3.46a2 2 0 00-1.34 2.23l.58 3.57a1 1 0 00.99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 002-2V10h2.15a1 1 0 00.99-.84l.58-3.57a2 2 0 00-1.34-2.23z"/></svg>
+    </div>
+    <div>
+      <div class="ov2-stat-label">PLAYED</div>
+      <div class="ov2-stat-value">{{ record.played }}</div>
+    </div>
   </div>
-  <div class="ov-stat-card">
-    <div class="ov-stat-icon">📋</div>
-    <div class="ov-stat-label">Record</div>
-    <div class="ov-stat-value">{{ record.record_line }}</div>
+  <div class="ov2-stat-card">
+    <div class="ov2-stat-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="11" y2="16"/></svg>
+    </div>
+    <div>
+      <div class="ov2-stat-label">RECORD</div>
+      <div class="ov2-stat-value">{{ record.record_line }}</div>
+    </div>
   </div>
-  <div class="ov-stat-card">
-    <div class="ov-stat-icon">⚽</div>
-    <div class="ov-stat-label">Goals</div>
-    <div class="ov-stat-value">{{ record.scored }}–{{ record.conceded }}</div>
+  <div class="ov2-stat-card">
+    <div class="ov2-stat-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10A15.3 15.3 0 018 12a15.3 15.3 0 014-10z"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+    </div>
+    <div>
+      <div class="ov2-stat-label">GOALS</div>
+      <div class="ov2-stat-value">{{ record.scored }}–{{ record.conceded }}</div>
+    </div>
   </div>
-  <div class="ov-stat-card">
-    <div class="ov-stat-icon">⭐</div>
-    <div class="ov-stat-label">Points</div>
-    <div class="ov-stat-value">{{ record.points }}</div>
+  <div class="ov2-stat-card">
+    <div class="ov2-stat-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    </div>
+    <div>
+      <div class="ov2-stat-label">POINTS</div>
+      <div class="ov2-stat-value">{{ record.points }}</div>
+    </div>
   </div>
 </div>
 
-{# ---- three-column section ---- #}
-<div class="ov-three-col">
+{# ---- three-column panels ---- #}
+<div class="ov2-three-col">
 
   {# Recent result #}
-  <div class="ov-panel">
-    <div class="ov-panel-head">
-      <span class="ov-panel-icon">🕐</span>
-      <span class="ov-panel-title">Recent result</span>
+  <div class="ov2-panel">
+    <div class="ov2-panel-head">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span class="ov2-panel-title">RECENT RESULT</span>
     </div>
     {% if last_result %}
     {% set lr_slug = badge_map.get(last_result.opponent) %}
-    <div class="ov-result-teams">
-      <div class="ov-result-team">
-        <img src="/static/badges/uca.png" class="ov-result-badge" alt="">
+    <div class="ov2-result-teams">
+      <div class="ov2-result-team">
+        <img src="/static/badges/uca.png" class="ov2-result-badge" alt="">
         <span>United Churches<br>of Ayr AFC</span>
       </div>
-      <div class="ov-result-score-col">
-        <div class="ov-result-score">{{ last_result.goals_for }}–{{ last_result.goals_against }}</div>
-        <span class="ov-outcome-chip ov-outcome-{{ last_result.outcome }}">{{ last_result.outcome }}</span>
+      <div class="ov2-result-score-col">
+        <div class="ov2-result-score">{{ last_result.goals_for }}–{{ last_result.goals_against }}</div>
+        <span class="ov2-outcome-chip ov2-outcome-{{ last_result.outcome }}">{{ last_result.outcome }}</span>
       </div>
-      <div class="ov-result-team">
-        {% if lr_slug %}<img src="/static/badges/{{ lr_slug }}.png" class="ov-result-badge" alt="">{% else %}<div class="ov-result-badge ov-result-badge--ph"></div>{% endif %}
+      <div class="ov2-result-team">
+        {% if lr_slug %}<img src="/static/badges/{{ lr_slug }}.png" class="ov2-result-badge" alt="">{% else %}<div class="ov2-result-badge ov2-result-badge--ph"></div>{% endif %}
         <span>{{ last_result.opponent }}</span>
       </div>
     </div>
-    <p class="ov-result-date">{{ last_result.kickoff_at.strftime("%a %-d %b %Y") }}</p>
-    <a class="ov-view-link" href="/fixtures/{{ last_result.id }}">View match report ›</a>
+    <p class="ov2-result-date">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      {{ last_result.kickoff_at.strftime("%a %-d %b %Y") }}
+    </p>
+    <a class="ov2-view-link" href="/fixtures/{{ last_result.id }}">View match report ›</a>
     {% else %}
     <p class="empty">No results yet this season.</p>
     {% endif %}
   </div>
 
   {# Upcoming fixtures #}
-  <div class="ov-panel">
-    <div class="ov-panel-head">
-      <span class="ov-panel-icon">📅</span>
-      <span class="ov-panel-title">Upcoming fixtures</span>
-      <a class="ov-view-all" href="/fixtures">View all</a>
+  <div class="ov2-panel">
+    <div class="ov2-panel-head">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span class="ov2-panel-title">UPCOMING FIXTURES</span>
+      <a class="ov2-view-all" href="/fixtures">View all</a>
     </div>
     {% if upcoming_fixtures %}
-    <ul class="ov-fix-list">
+    <ul class="ov2-fix-list">
       {% for fix in upcoming_fixtures %}
       {% set fix_slug = badge_map.get(fix.opponent) %}
       <li>
-        <a href="/fixtures/{{ fix.id }}" class="ov-fix-row">
-          <div class="ov-fix-badge-wrap">
-            {% if fix_slug %}<img src="/static/badges/{{ fix_slug }}.png" class="ov-fix-badge" alt="">{% else %}<div class="ov-fix-badge ov-fix-badge--empty"></div>{% endif %}
+        <a href="/fixtures/{{ fix.id }}" class="ov2-fix-row">
+          <div class="ov2-fix-badge-wrap">
+            {% if fix_slug %}<img src="/static/badges/{{ fix_slug }}.png" class="ov2-fix-badge" alt="">{% else %}<div class="ov2-fix-badge ov2-fix-badge--empty"></div>{% endif %}
           </div>
-          <div class="ov-fix-info">
-            <span class="ov-fix-name">{{ fix.opponent }}</span>
-            <span class="ov-fix-when">{{ fix.kickoff_at.strftime("%a %-d %b") }} · {{ fix.kickoff_at.strftime("%H:%M") }}</span>
+          <div class="ov2-fix-info">
+            <span class="ov2-fix-name">{{ fix.opponent }}</span>
+            <span class="ov2-fix-when">{{ fix.kickoff_at.strftime("%a %-d %b") }} · {{ fix.kickoff_at.strftime("%H:%M") }}</span>
           </div>
-          <span class="ov-fix-venue-chip {{ fix.venue.value }}">{{ fix.venue.value[0] | upper }}</span>
-          <span class="ov-fix-arrow">›</span>
+          <span class="ov2-fix-venue {{ fix.venue.value }}">{{ fix.venue.value[0] | upper }}</span>
+          <span class="ov2-fix-arrow">›</span>
         </a>
       </li>
       {% endfor %}
@@ -158,23 +239,23 @@
     {% endif %}
   </div>
 
-  {# Current table snapshot #}
-  <div class="ov-panel">
-    <div class="ov-panel-head">
-      <span class="ov-panel-icon">⚡</span>
-      <span class="ov-panel-title">Current table snapshot</span>
-      <a class="ov-view-all" href="/table">View all</a>
+  {# League table snapshot #}
+  <div class="ov2-panel">
+    <div class="ov2-panel-head">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span class="ov2-panel-title">LEAGUE TABLE SNAPSHOT</span>
+      <a class="ov2-view-all" href="/table">View full table</a>
     </div>
     {% if table %}
-    <table class="ov-table">
+    <table class="ov2-table">
       <thead>
-        <tr><th></th><th>Club</th><th class="num">P</th><th class="num">GD</th><th class="num">Pts</th></tr>
+        <tr><th>POS</th><th>CLUB</th><th class="num">P</th><th class="num">GD</th><th class="num">PTS</th></tr>
       </thead>
       <tbody>
       {% for row in table %}
-        <tr class="{{ 'is-us' if row.club == club_name }}">
+        <tr class="{{ 'ov2-us' if row.club == club_name }}">
           <td class="pos">{{ row.position }}</td>
-          <td>
+          <td class="ov2-table-club">
             {% set t_slug = badge_map.get(row.club) %}
             {% if t_slug %}<img src="/static/badges/{{ t_slug }}.png" class="badge-thumb" alt="">{% endif %}
             {{ row.club }}
@@ -191,48 +272,6 @@
     {% endif %}
   </div>
 
-</div>
-
-{# ---- season leaders ---- #}
-{% macro leader_row(player, value) %}
-<div class="ov-leader-row">
-  {% if player.photo_filename %}
-    <img src="/static/player_photos/{{ player.photo_filename }}" class="ov-leader-photo" alt="">
-  {% else %}
-    <span class="ov-leader-photo ov-leader-photo--ph">{{ player.first_name[0] }}{{ player.last_name[0] }}</span>
-  {% endif %}
-  <span class="ov-leader-name">{{ player.name }}</span>
-  <span class="ov-leader-val">{{ value }}</span>
-</div>
-{% endmacro %}
-
-<div class="ov-leaders">
-  <div class="ov-leaders-head">
-    <span>🏆</span>
-    <span class="ov-leaders-title">Season leaders</span>
-  </div>
-  <div class="ov-leaders-grid">
-    <div class="ov-leader-card">
-      <div class="ov-leader-cat">⚽ Goals</div>
-      {% if top_scorers %}{% for line in top_scorers %}{{ leader_row(line.player, line.goals) }}{% endfor %}
-      {% else %}<p class="empty" style="font-size:13px;margin:0">No goals yet</p>{% endif %}
-    </div>
-    <div class="ov-leader-card">
-      <div class="ov-leader-cat">🤝 Assists</div>
-      {% if top_assists %}{% for line in top_assists %}{{ leader_row(line.player, line.assists) }}{% endfor %}
-      {% else %}<p class="empty" style="font-size:13px;margin:0">No assists yet</p>{% endif %}
-    </div>
-    <div class="ov-leader-card">
-      <div class="ov-leader-cat">⭐ Man of the match</div>
-      {% if top_motm %}{% for line in top_motm %}{{ leader_row(line.player, line.motm) }}{% endfor %}
-      {% else %}<p class="empty" style="font-size:13px;margin:0">No awards yet</p>{% endif %}
-    </div>
-    <div class="ov-leader-card">
-      <div class="ov-leader-cat">🛡️ Manager's player</div>
-      {% if top_managers_motm %}{% for line in top_managers_motm %}{{ leader_row(line.player, line.managers_motm) }}{% endfor %}
-      {% else %}<p class="empty" style="font-size:13px;margin:0">No awards yet</p>{% endif %}
-    </div>
-  </div>
 </div>
 
 {% endblock %}
