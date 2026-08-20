@@ -1699,16 +1699,24 @@ button.md-player:hover { background: var(--page); }
   .ov2-three-col { grid-template-columns: 1fr; }
   .ov2-page-title { font-size: 22px; }
   .ov2-season-pill { font-size: 11px; padding: 6px 12px; }
+  /* hero: column stack; hide decorative panels that don't work at this width */
+  .ov2-hero { flex-direction: column; flex-wrap: nowrap; gap: 16px; min-height: 0; }
+  .ov2-treble { display: none; }
+  .ov2-hero-colours { display: none; }
+  .ov2-hero-club { max-width: none; width: 100%; }
+  .ov2-hero-match { width: 100%; }
+  /* matchup: 3-col grid so each name is capped to its own half */
   .ov2-hero-matchup {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 36px minmax(0, 1fr);
     align-items: center;
     gap: 10px;
     width: 100%;
+    flex: none;
   }
   .ov2-hero-team { min-width: 0; width: 100%; }
   .ov2-hero-team-name { white-space: normal; overflow-wrap: break-word; word-break: normal; line-height: 1.15; max-width: 100%; }
-  .ov2-hero-badge { flex-shrink: 0; }
+  .ov2-hero-badge { width: 40px; height: 40px; flex-shrink: 0; }
   .ov2-hero-vs { width: 36px; flex-shrink: 0; text-align: center; padding: 0; }
 }
 
