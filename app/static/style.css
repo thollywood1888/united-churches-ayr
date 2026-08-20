@@ -2456,6 +2456,33 @@ a.sq2-card-name:hover { color: #c9a84c; }
   color: var(--navy); margin: 0;
 }
 
+.fees-month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: #faf7f2;
+  border: 1px solid #ece5d8;
+  border-radius: 10px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+}
+.fees-month-arrow {
+  color: #c8963a;
+  font-size: 22px;
+  font-weight: 700;
+  text-decoration: none;
+  line-height: 1;
+  padding: 0 4px;
+}
+.fees-month-arrow:hover { color: #a07020; }
+.fees-month-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+}
+
 .fees-info-pill {
   display: inline-flex; align-items: center; gap: 8px;
   background: var(--accent-soft);
@@ -2463,6 +2490,9 @@ a.sq2-card-name:hover { color: #c9a84c; }
   font-size: 13px; color: var(--navy);
   margin-bottom: 20px;
 }
+
+.fees-action-cell { white-space: nowrap; }
+.fees-unpay-btn { color: var(--loss); border-color: var(--loss); }
 
 .fees-table-wrap {
   background: var(--card);

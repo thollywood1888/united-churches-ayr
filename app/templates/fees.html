@@ -58,9 +58,16 @@
 <div class="fees-section-head">
   <img src="/static/badges/uca.png" class="fees-section-badge" alt="">
   <div>
-    <p class="fees-eyebrow">{{ season.label }} season &bull; current month</p>
+    <p class="fees-eyebrow">{{ season.label }} season &bull; {{ month_label }}</p>
     <h2 class="fees-title">Monthly fees tracker</h2>
   </div>
+</div>
+
+{# ── month navigator ── #}
+<div class="fees-month-nav">
+  <a href="/fees?month={{ prev_month }}" class="fees-month-arrow" title="Previous month">&#8249;</a>
+  <span class="fees-month-label">{{ month_label }}{% if is_current_month %} &bull; Current month{% endif %}</span>
+  <a href="/fees?month={{ next_month }}" class="fees-month-arrow" title="Next month">&#8250;</a>
 </div>
 
 {# ── info pill ── #}
@@ -86,6 +93,7 @@
       {% for player in players %}
       {% set initials = ((player.first_name or '')[:1] + (player.last_name or '')[:1])|upper %}
       {% set bg = palette[loop.index0 % palette|length] %}
+      {% set is_paid = payments[player.id] is defined and payments[player.id] %}
       <tr>
         <td class="fees-avatar-cell">
           {% if player.photo_filename %}
@@ -98,7 +106,7 @@
         <td class="fees-amount">{{ fmt(settings.monthly_fee_pence) }}</td>
         <td class="fees-due">1st</td>
         <td>
-          {% if payments[player.id] is defined and payments[player.id] %}
+          {% if is_paid %}
           <span class="fees-badge fees-badge--paid">Paid</span>
           {% else %}
           <span class="fees-badge fees-badge--outstanding">
@@ -107,9 +115,15 @@
           {% endif %}
         </td>
         {% if is_gaffer %}
-        <td>
-          {% if not (payments[player.id] is defined and payments[player.id]) %}
+        <td class="fees-action-cell">
+          {% if is_paid %}
+          <form method="post" action="/fees/{{ player.id }}/unpay">
+            <input type="hidden" name="month" value="{{ month_param }}">
+            <button class="ghost fees-unpay-btn" type="submit">Mark outstanding</button>
+          </form>
+          {% else %}
           <form method="post" action="/fees/{{ player.id }}/pay">
+            <input type="hidden" name="month" value="{{ month_param }}">
             <button class="ghost" type="submit">Mark paid</button>
           </form>
           {% endif %}

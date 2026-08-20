@@ -1338,18 +1338,42 @@ def update_fee_settings(
     return RedirectResponse("/fees", status_code=303)
 
 
+def _parse_fee_month(month: str | None) -> date_type:
+    if month:
+        try:
+            year, mon = month.split("-")
+            return date_type(int(year), int(mon), 1)
+        except (ValueError, TypeError, AttributeError):
+            pass
+    now = datetime.now()
+    return date_type(now.year, now.month, 1)
+
+
+def _adjacent_months(d: date_type) -> tuple[date_type, date_type]:
+    if d.month == 1:
+        prev = date_type(d.year - 1, 12, 1)
+    else:
+        prev = date_type(d.year, d.month - 1, 1)
+    if d.month == 12:
+        nxt = date_type(d.year + 1, 1, 1)
+    else:
+        nxt = date_type(d.year, d.month + 1, 1)
+    return prev, nxt
+
+
 @app.get("/fees")
-def fees(request: Request, session: SessionDep):
+def fees(request: Request, session: SessionDep, month: str | None = None):
     season = _season_or_404(session)
     settings = _get_or_create_settings(session, season.id)
     players = _active_players(session)
+    display_month = _parse_fee_month(month)
+    prev_month, next_month = _adjacent_months(display_month)
     now = datetime.now()
-    current_month = date_type(now.year, now.month, 1)
     fee_payments = list(
         session.scalars(
             select(FeePayment).where(
                 FeePayment.season_id == season.id,
-                FeePayment.month == current_month,
+                FeePayment.month == display_month,
             )
         )
     )
@@ -1368,23 +1392,32 @@ def fees(request: Request, session: SessionDep):
         settings=settings,
         players=players,
         payments=payments_dict,
-        current_month=current_month,
+        display_month=display_month,
+        month_param=display_month.strftime("%Y-%m"),
+        month_label=display_month.strftime("%B %Y"),
+        prev_month=prev_month.strftime("%Y-%m"),
+        next_month=next_month.strftime("%Y-%m"),
+        is_current_month=(display_month == date_type(now.year, now.month, 1)),
         expected_pence=expected_pence,
         outstanding_pence=outstanding_pence,
     )
 
 
 @app.post("/fees/{player_id}/pay")
-def pay_fee(session: SessionDep, player_id: int):
+def pay_fee(
+    session: SessionDep,
+    player_id: int,
+    month: Annotated[str, Form()] = "",
+):
     season = _season_or_404(session)
     settings = _get_or_create_settings(session, season.id)
+    target_month = _parse_fee_month(month)
     now = datetime.now()
-    current_month = date_type(now.year, now.month, 1)
     existing = session.scalar(
         select(FeePayment).where(
             FeePayment.player_id == player_id,
             FeePayment.season_id == season.id,
-            FeePayment.month == current_month,
+            FeePayment.month == target_month,
         )
     )
     if existing is None:
@@ -1392,7 +1425,7 @@ def pay_fee(session: SessionDep, player_id: int):
             FeePayment(
                 player_id=player_id,
                 season_id=season.id,
-                month=current_month,
+                month=target_month,
                 amount_pence=settings.monthly_fee_pence,
                 paid_at=now,
             )
@@ -1401,7 +1434,28 @@ def pay_fee(session: SessionDep, player_id: int):
         existing.paid_at = now
         existing.amount_pence = settings.monthly_fee_pence
     session.commit()
-    return RedirectResponse("/fees", status_code=303)
+    return RedirectResponse(f"/fees?month={month}" if month else "/fees", status_code=303)
+
+
+@app.post("/fees/{player_id}/unpay")
+def unpay_fee(
+    session: SessionDep,
+    player_id: int,
+    month: Annotated[str, Form()] = "",
+):
+    season = _season_or_404(session)
+    target_month = _parse_fee_month(month)
+    existing = session.scalar(
+        select(FeePayment).where(
+            FeePayment.player_id == player_id,
+            FeePayment.season_id == season.id,
+            FeePayment.month == target_month,
+        )
+    )
+    if existing is not None:
+        session.delete(existing)
+        session.commit()
+    return RedirectResponse(f"/fees?month={month}" if month else "/fees", status_code=303)
 
 
 @app.get("/links")
