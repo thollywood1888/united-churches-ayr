@@ -1,255 +1,306 @@
 {% extends "base.html" %}
+{% block main_class %}sq-main{% endblock %}
 {% block content %}
 
-{# Hero banner — two images side by side #}
-<div class="sq-hero-pair">
-  <div class="sq-hero-panel" style="background-image:url('/static/squad-treble.jpg')"></div>
-  <div class="sq-hero-panel" style="background-image:url('/static/squad-hero.jpg')"></div>
-</div>
-
-{# Page header #}
-<div class="sq-page-head">
-  <div>
-    <p class="eyebrow">Current squad</p>
-    <h1 class="sq-page-title">Squad &amp; stats</h1>
-  </div>
-  <span class="sq-season-badge">{{ season.label }}</span>
-</div>
-
-{# Leader cards #}
-<div class="sq-leaders">
-  <div class="sq-leader-card">
-    <span class="sq-leader-corner">⚽</span>
-    {% if top_scorer %}
-      {% if top_scorer.player.photo_filename %}
-        <img src="/static/player_photos/{{ top_scorer.player.photo_filename }}" class="sq-leader-photo" alt="">
-      {% else %}
-        <span class="sq-leader-photo sq-leader-photo--ph">{{ top_scorer.player.first_name[0] }}{{ top_scorer.player.last_name[0] }}</span>
-      {% endif %}
-      <span class="sq-leader-stat">{{ top_scorer.goals }}</span>
-      <span class="sq-leader-name">{{ top_scorer.player.name }}</span>
-    {% else %}
-      <span class="sq-leader-photo sq-leader-photo--ph">—</span>
-      <span class="sq-leader-stat">0</span>
-      <span class="sq-leader-name">No data yet</span>
-    {% endif %}
-    <span class="sq-leader-label">Top Goalscorer</span>
-  </div>
-
-  <div class="sq-leader-card">
-    <span class="sq-leader-corner">🤝</span>
-    {% if top_assister %}
-      {% if top_assister.player.photo_filename %}
-        <img src="/static/player_photos/{{ top_assister.player.photo_filename }}" class="sq-leader-photo" alt="">
-      {% else %}
-        <span class="sq-leader-photo sq-leader-photo--ph">{{ top_assister.player.first_name[0] }}{{ top_assister.player.last_name[0] }}</span>
-      {% endif %}
-      <span class="sq-leader-stat">{{ top_assister.assists }}</span>
-      <span class="sq-leader-name">{{ top_assister.player.name }}</span>
-    {% else %}
-      <span class="sq-leader-photo sq-leader-photo--ph">—</span>
-      <span class="sq-leader-stat">0</span>
-      <span class="sq-leader-name">No data yet</span>
-    {% endif %}
-    <span class="sq-leader-label">Top Assists</span>
-  </div>
-
-  <div class="sq-leader-card">
-    <span class="sq-leader-corner">🏆</span>
-    {% if top_motm_player %}
-      {% if top_motm_player.player.photo_filename %}
-        <img src="/static/player_photos/{{ top_motm_player.player.photo_filename }}" class="sq-leader-photo" alt="">
-      {% else %}
-        <span class="sq-leader-photo sq-leader-photo--ph">{{ top_motm_player.player.first_name[0] }}{{ top_motm_player.player.last_name[0] }}</span>
-      {% endif %}
-      <span class="sq-leader-stat">{{ top_motm_player.motm }}</span>
-      <span class="sq-leader-name">{{ top_motm_player.player.name }}</span>
-    {% else %}
-      <span class="sq-leader-photo sq-leader-photo--ph">—</span>
-      <span class="sq-leader-stat">0</span>
-      <span class="sq-leader-name">No data yet</span>
-    {% endif %}
-    <span class="sq-leader-label">Most POTM</span>
-  </div>
-</div>
-
-{# Stat strip #}
-<div class="stat-row" style="margin-bottom:24px">
-  <div class="card">
-    <div class="sq-stat-icon">👕</div>
-    <div class="label">Squad size</div>
-    <div class="figure">{{ squad_size }}</div>
-  </div>
-  <div class="card">
-    <div class="sq-stat-icon">⚽</div>
-    <div class="label">Team goals</div>
-    <div class="figure">{{ team_goals }}</div>
-  </div>
-  <div class="card">
-    <div class="sq-stat-icon">✅</div>
-    <div class="label">Assigned</div>
-    <div class="figure">{{ goals_assigned }}</div>
-  </div>
-  <div class="card">
-    <div class="sq-stat-icon">❓</div>
-    <div class="label">Unassigned</div>
-    <div class="figure">{{ team_goals - goals_assigned }}</div>
-  </div>
-</div>
-
-{% if team_goals > goals_assigned %}
-<p class="empty">{{ team_goals - goals_assigned }} goal(s) have no scorer recorded. Open the match centre for each result to attribute them.</p>
-{% endif %}
-
-{# Controls row #}
-<div class="sq-controls">
-  {% if is_gaffer %}
-  <details class="adder sq-add-player">
-    <summary>+ Add player</summary>
-    <div style="padding:12px 0 4px">
-      <form class="stack" method="post" action="/squad">
-        <div class="field-row">
-          <label class="field">First name<input name="first_name" required autocomplete="off"></label>
-          <label class="field">Last name<input name="last_name" required autocomplete="off"></label>
-          <label class="field">Squad number<input name="squad_number" inputmode="numeric" autocomplete="off"></label>
-          <label class="field">Position
-            <select name="position">
-              <option value="">—</option>
-              <option>Goalkeeper</option>
-              <option>Defender</option>
-              <option>Midfielder</option>
-              <option>Forward</option>
-            </select>
-          </label>
-        </div>
-        <button type="submit">Add player</button>
-      </form>
-    </div>
-  </details>
-  {% endif %}
-  <div class="sq-search-wrap">
-    <input type="search" class="sq-search" id="sq-search" placeholder="Search players…" autocomplete="off">
-    <select class="sq-pos-filter" id="sq-pos-filter">
-      <option value="">All positions</option>
-      <option value="goalkeeper">Goalkeeper</option>
-      <option value="defender">Defender</option>
-      <option value="midfielder">Midfielder</option>
-      <option value="forward">Forward</option>
-    </select>
-  </div>
-</div>
-
-{# Player card grid — pre-grouped by position in the route #}
-{% macro player_cards(group_lines) %}
-<div class="sq-grid">
-  {% for line in group_lines %}
-  {% set pl = line.player %}
-  <div>
-    {% if is_gaffer %}
-    <a href="/squad/{{ pl.id }}" class="sq-card" title="{{ pl.name }}" data-name="{{ pl.name | lower }}" data-pos="{{ (pl.position or '') | lower }}">
-    {% else %}
-    <div class="sq-card" title="{{ pl.name }}" data-name="{{ pl.name | lower }}" data-pos="{{ (pl.position or '') | lower }}">
-    {% endif %}
-      {% if pl.photo_filename %}
-        <img src="/static/player_photos/{{ pl.photo_filename }}" class="sq-card-img" alt="{{ pl.name }}">
-      {% else %}
-        <div class="sq-card-img sq-card-img--ph">{{ pl.first_name[:1] }}{{ (pl.last_name or '')[:1] }}</div>
-      {% endif %}
-      <div class="sq-card-fade"></div>
-      <div class="sq-card-meta">
-        {% if pl.squad_number %}<span class="sq-card-num">{{ pl.squad_number }}</span>{% endif %}
-        <span class="sq-card-first">{{ pl.first_name or '' }}</span>
-        <span class="sq-card-last">{{ pl.last_name or '' }}</span>
+{# ── TOP AREA (warm cream) ── #}
+<div class="sq2-top">
+  <div class="sq2-top-inner">
+    <div class="sq2-top-hdr">
+      <div>
+        <p class="sq2-eyebrow">CURRENT SEASON</p>
+        <h1 class="sq2-title">SQUAD &amp; STATS</h1>
       </div>
-    {% if is_gaffer %}</a>{% else %}</div>{% endif %}
+      <span class="sq2-season-badge">{{ season.label }}</span>
+    </div>
+
+    <div class="sq2-stat-row">
+      <div class="sq2-stat-card">
+        <span class="sq2-stat-icon">👕</span>
+        <div>
+          <p class="sq2-sc-label">SQUAD SIZE</p>
+          <p class="sq2-sc-num">{{ squad_size }}</p>
+          <p class="sq2-sc-sub">Registered players</p>
+        </div>
+      </div>
+      <div class="sq2-stat-card">
+        <span class="sq2-stat-icon">⚽</span>
+        <div>
+          <p class="sq2-sc-label">TEAM GOALS</p>
+          <p class="sq2-sc-num">{{ team_goals }}</p>
+          <p class="sq2-sc-sub">Goals scored</p>
+        </div>
+      </div>
+      <div class="sq2-stat-card">
+        <span class="sq2-stat-icon sq2-stat-icon--lg">👥</span>
+        <div>
+          <p class="sq2-sc-label">UNASSIGNED</p>
+          <p class="sq2-sc-num">{{ unassigned_count }}</p>
+          <p class="sq2-sc-sub">Players</p>
+        </div>
+      </div>
+      <div class="sq2-gaffer-card">
+        <p class="sq2-gaffer-label">GAFFER</p>
+        <div class="sq2-gaffer-photo-ph">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#9a8e78" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6"/></svg>
+        </div>
+        <div>
+          <p class="sq2-gaffer-name">MANAGER PHOTO</p>
+          <p class="sq2-gaffer-desc">Add your photo to personalise your club dashboard.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ── DARK SECTION ── #}
+<div class="sq2-dark">
+  <div class="sq2-dark-inner">
+    <p class="sq2-dark-label">CURRENT SQUAD</p>
+
+    {# Add player (gaffer only) #}
     {% if is_gaffer %}
-    <div class="sq-card-actions">
-      <form method="post" action="/squad/{{ pl.id }}/remove">
-        <button class="link" type="submit">Remove</button>
-      </form>
+    <details class="sq2-add-player">
+      <summary class="sq2-add-summary">+ Add player</summary>
+      <div class="sq2-add-body">
+        <form class="sq2-add-form" method="post" action="/squad">
+          <div class="sq2-add-fields">
+            <label class="sq2-field">First name<input name="first_name" required autocomplete="off"></label>
+            <label class="sq2-field">Last name<input name="last_name" required autocomplete="off"></label>
+            <label class="sq2-field">Squad #<input name="squad_number" inputmode="numeric" autocomplete="off"></label>
+            <label class="sq2-field">Position
+              <select name="position">
+                <option value="">—</option>
+                <option>Goalkeeper</option>
+                <option>Defender</option>
+                <option>Midfielder</option>
+                <option>Forward</option>
+              </select>
+            </label>
+          </div>
+          <button class="sq2-add-btn" type="submit">Add player</button>
+        </form>
+      </div>
+    </details>
+    {% endif %}
+
+    {# Leader cards #}
+    <div class="sq2-leaders">
+
+      <div class="sq2-leader-card">
+        <span class="sq2-leader-icon">⚽</span>
+        {% if top_scorer %}
+          {% if top_scorer.player.photo_filename %}
+          <img src="/static/player_photos/{{ top_scorer.player.photo_filename }}" class="sq2-leader-photo" alt="">
+          {% else %}
+          <div class="sq2-leader-ph">{{ top_scorer.player.first_name[0] }}{{ top_scorer.player.last_name[0] }}</div>
+          {% endif %}
+          <div class="sq2-leader-body">
+            <p class="sq2-leader-num">{{ top_scorer.goals }}</p>
+            <p class="sq2-leader-name">{{ top_scorer.player.name | upper }}</p>
+            <p class="sq2-leader-label">TOP GOALSCORER</p>
+          </div>
+        {% else %}
+          <div class="sq2-leader-ph">—</div>
+          <div class="sq2-leader-body">
+            <p class="sq2-leader-num">0</p>
+            <p class="sq2-leader-name">NO DATA YET</p>
+            <p class="sq2-leader-label">TOP GOALSCORER</p>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="sq2-leader-card">
+        <span class="sq2-leader-icon">👟</span>
+        {% if top_assister %}
+          {% if top_assister.player.photo_filename %}
+          <img src="/static/player_photos/{{ top_assister.player.photo_filename }}" class="sq2-leader-photo" alt="">
+          {% else %}
+          <div class="sq2-leader-ph">{{ top_assister.player.first_name[0] }}{{ top_assister.player.last_name[0] }}</div>
+          {% endif %}
+          <div class="sq2-leader-body">
+            <p class="sq2-leader-num">{{ top_assister.assists }}</p>
+            <p class="sq2-leader-name">{{ top_assister.player.name | upper }}</p>
+            <p class="sq2-leader-label">TOP ASSISTS</p>
+          </div>
+        {% else %}
+          <div class="sq2-leader-ph">—</div>
+          <div class="sq2-leader-body">
+            <p class="sq2-leader-num">0</p>
+            <p class="sq2-leader-name">NO DATA YET</p>
+            <p class="sq2-leader-label">TOP ASSISTS</p>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="sq2-leader-card">
+        <span class="sq2-leader-icon">🏆</span>
+        {% if top_motm_player %}
+          {% if top_motm_player.player.photo_filename %}
+          <img src="/static/player_photos/{{ top_motm_player.player.photo_filename }}" class="sq2-leader-photo" alt="">
+          {% else %}
+          <div class="sq2-leader-ph">{{ top_motm_player.player.first_name[0] }}{{ top_motm_player.player.last_name[0] }}</div>
+          {% endif %}
+          <div class="sq2-leader-body">
+            <p class="sq2-leader-num">{{ top_motm_player.motm }}</p>
+            <p class="sq2-leader-name">{{ top_motm_player.player.name | upper }}</p>
+            <p class="sq2-leader-label">MOST MOTM</p>
+          </div>
+        {% else %}
+          <div class="sq2-leader-ph">—</div>
+          <div class="sq2-leader-body">
+            <p class="sq2-leader-num">0</p>
+            <p class="sq2-leader-name">NO DATA YET</p>
+            <p class="sq2-leader-label">MOST MOTM</p>
+          </div>
+        {% endif %}
+      </div>
+
+    </div>{# /leaders #}
+
+    {# Search bar #}
+    <div class="sq2-search-bar">
+      <div class="sq2-search-wrap">
+        <span class="sq2-search-icon">🔍</span>
+        <input type="search" class="sq2-search-input" id="sq2-search" placeholder="Search players…" autocomplete="off">
+      </div>
+    </div>
+
+    {# ── Player card macro ── #}
+    {% macro render_card(line) %}
+    {% set pl = line.player %}
+    <div class="sq2-card" data-name="{{ pl.name | lower }}" data-pos="{{ (pl.position or '') | lower }}">
+
+      {# Circular photo / initials #}
+      {% if pl.photo_filename %}
+      <img src="/static/player_photos/{{ pl.photo_filename }}" class="sq2-card-photo" alt="{{ pl.name }}">
+      {% else %}
+      <div class="sq2-card-initials">{{ pl.first_name[:1] }}{{ (pl.last_name or '')[:1] }}</div>
+      {% endif %}
+
+      {# Right body #}
+      <div class="sq2-card-body">
+
+        <div class="sq2-card-top">
+          <div class="sq2-card-info">
+            <div class="sq2-card-name-row">
+              <svg class="sq2-person-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="5.5" r="2.5"/><path d="M2 14c0-3 2.7-5.5 6-5.5s6 2.5 6 5.5"/></svg>
+              {% if is_gaffer %}
+              <a href="/squad/{{ pl.id }}" class="sq2-card-name">{{ pl.name | upper }}</a>
+              {% else %}
+              <span class="sq2-card-name">{{ pl.name | upper }}</span>
+              {% endif %}
+            </div>
+
+            {# Position — dropdown for gaffer, text for squad #}
+            {% if is_gaffer %}
+            <form method="post" action="/squad/{{ pl.id }}/position" class="sq2-pos-form">
+              <select name="position" class="sq2-pos-select" onchange="this.form.submit()">
+                <option value=""{% if not pl.position %} selected{% endif %}>Unassigned</option>
+                <option value="Goalkeeper"{% if pl.position == 'Goalkeeper' %} selected{% endif %}>GK</option>
+                <option value="Defender"{% if pl.position == 'Defender' %} selected{% endif %}>DEF</option>
+                <option value="Midfielder"{% if pl.position == 'Midfielder' %} selected{% endif %}>MID</option>
+                <option value="Forward"{% if pl.position == 'Forward' %} selected{% endif %}>FWD</option>
+              </select>
+            </form>
+            {% else %}
+            <span class="sq2-pos-text">{{ pl.position or 'Unassigned' }}</span>
+            {% endif %}
+          </div>
+
+          {# Gaffer context menu #}
+          {% if is_gaffer %}
+          <details class="sq2-menu">
+            <summary class="sq2-dots-btn" title="Actions">⋯</summary>
+            <div class="sq2-menu-drop">
+              <a href="/squad/{{ pl.id }}" class="sq2-menu-item">Edit player</a>
+              <form method="post" action="/squad/{{ pl.id }}/remove">
+                <button type="submit" class="sq2-menu-item sq2-menu-danger" onclick="return confirm('Remove {{ pl.name }} from squad?')">Remove</button>
+              </form>
+            </div>
+          </details>
+          {% endif %}
+        </div>
+
+        {# Stats row #}
+        <div class="sq2-card-stats">
+          <div class="sq2-s-col">
+            <span class="sq2-s-lbl">APPS</span>
+            <span class="sq2-s-val">{{ line.appearances }}</span>
+          </div>
+          <div class="sq2-s-col">
+            <span class="sq2-s-lbl">GOALS</span>
+            <span class="sq2-s-val">{{ line.goals }}</span>
+          </div>
+          <div class="sq2-s-col">
+            <span class="sq2-s-lbl">ASSISTS</span>
+            <span class="sq2-s-val">{{ line.assists }}</span>
+          </div>
+          <div class="sq2-s-col">
+            <span class="sq2-s-lbl">MOTM</span>
+            <span class="sq2-s-val">{{ line.motm }}</span>
+          </div>
+          <div class="sq2-s-col">
+            <span class="sq2-s-lbl">YELLOW CARDS</span>
+            <span class="sq2-s-val">{{ line.yellow_cards }}</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    {% endmacro %}
+
+    {# ── Position-grouped sections ── #}
+    {% if lines %}
+
+    {% for pos, grp in position_groups %}
+    {% if grp %}
+    <div class="sq2-pos-section" data-section="{{ pos | lower }}">
+      <div class="sq2-section-hdr">
+        <span class="sq2-section-title">{{ pos }}s</span>
+        <span class="sq2-section-badge">{{ grp | length }}</span>
+      </div>
+      <div class="sq2-grid">
+        {% for line in grp %}{{ render_card(line) }}{% endfor %}
+      </div>
     </div>
     {% endif %}
-  </div>
-  {% endfor %}
-</div>
-{% endmacro %}
+    {% endfor %}
 
-{% if lines %}
-
-{% for pos, grp in position_groups %}
-<div class="sq-pos-section" data-section="{{ pos | lower }}">
-  <p class="sq-pos-label">{{ pos }}s</p>
-  {{ player_cards(grp) }}
-</div>
-{% endfor %}
-
-{% if ungrouped_lines %}
-<div class="sq-pos-section" data-section="">
-  <p class="sq-pos-label">Unassigned</p>
-  {{ player_cards(ungrouped_lines) }}
-</div>
-{% endif %}
-
-{% else %}
-<p class="empty">No players in the current squad. Add one above.</p>
-{% endif %}
-
-{# Awards #}
-{% set all_award_lines = lines | selectattr("motm", ">", 0) | list %}
-{% set mgr_award_lines = lines | selectattr("managers_motm", ">", 0) | list %}
-{% if all_award_lines or mgr_award_lines %}
-<p class="eyebrow" style="margin-top:32px">Awards</p>
-<h2 class="section">Man of the match</h2>
-<div class="scroll-x">
-<table>
-  <thead>
-    <tr>
-      <th>Player</th>
-      <th class="num">MOTM</th>
-      <th class="num">Managers MOTM</th>
-    </tr>
-  </thead>
-  <tbody>
-  {% for line in lines %}
-    {% if line.motm or line.managers_motm %}
-    <tr>
-      <td>{{ line.player.name }}</td>
-      <td class="num">{{ line.motm if line.motm else "—" }}</td>
-      <td class="num">{{ line.managers_motm if line.managers_motm else "—" }}</td>
-    </tr>
+    {% if ungrouped_lines %}
+    <div class="sq2-pos-section" data-section="">
+      <div class="sq2-section-hdr">
+        <span class="sq2-section-title">UNASSIGNED PLAYERS</span>
+        <span class="sq2-section-badge">{{ ungrouped_lines | length }}</span>
+      </div>
+      <div class="sq2-grid">
+        {% for line in ungrouped_lines %}{{ render_card(line) }}{% endfor %}
+      </div>
+    </div>
     {% endif %}
-  {% endfor %}
-  </tbody>
-</table>
-</div>
-{% endif %}
 
+    {% else %}
+    <p class="sq2-empty">No players in the current squad.{% if is_gaffer %} Add one above.{% endif %}</p>
+    {% endif %}
+
+  </div>
+</div>
 
 <script>
 (function () {
-  var search = document.getElementById('sq-search');
-  var posFilter = document.getElementById('sq-pos-filter');
-
-  function filter() {
-    var q = search ? search.value.toLowerCase() : '';
-    var pos = posFilter ? posFilter.value.toLowerCase() : '';
-
-    document.querySelectorAll('.sq-card').forEach(function (card) {
-      var nameMatch = !q || (card.dataset.name || '').includes(q);
-      var posMatch = !pos || (card.dataset.pos || '') === pos;
-      card.parentElement.style.display = (nameMatch && posMatch) ? '' : 'none';
+  var search = document.getElementById('sq2-search');
+  if (!search) return;
+  search.addEventListener('input', function () {
+    var q = this.value.toLowerCase();
+    document.querySelectorAll('.sq2-card').forEach(function (card) {
+      card.style.display = (!q || (card.dataset.name || '').includes(q)) ? '' : 'none';
     });
-
-    document.querySelectorAll('.sq-pos-section').forEach(function (section) {
-      var hasVisible = Array.from(section.querySelectorAll('.sq-card')).some(function (c) {
-        return c.parentElement.style.display !== 'none';
+    document.querySelectorAll('.sq2-pos-section').forEach(function (sec) {
+      var any = Array.from(sec.querySelectorAll('.sq2-card')).some(function (c) {
+        return c.style.display !== 'none';
       });
-      section.style.display = hasVisible ? '' : 'none';
+      sec.style.display = any ? '' : 'none';
     });
-  }
-
-  if (search) search.addEventListener('input', filter);
-  if (posFilter) posFilter.addEventListener('change', filter);
+  });
 })();
 </script>
 

@@ -408,6 +408,7 @@ def squad(request: Request, session: SessionDep):
         squad_size=len(lines),
         team_goals=record.scored,
         goals_assigned=stats.goals_assigned(session, season.id),
+        unassigned_count=len(ungrouped),
         top_scorer=scorers[0] if scorers else None,
         top_assister=assisters[0] if assisters else None,
         top_motm_player=motm_leaders[0] if motm_leaders else None,
@@ -489,6 +490,24 @@ def update_player(
     player.squad_number = int(squad_number) if squad_number.strip().isdigit() else None
     player.position = position.strip() or None
     player.status = PlayerStatus(status)
+    session.commit()
+    return RedirectResponse("/squad", status_code=303)
+
+
+@app.post("/squad/{player_id}/position")
+def update_player_position(
+    session: SessionDep,
+    player_id: int,
+    position: Annotated[str, Form()] = "",
+):
+    player = session.get(Player, player_id)
+    if player is None:
+        raise HTTPException(status_code=404, detail="Player not found")
+    pos = position.strip()
+    valid = {"Goalkeeper", "Defender", "Midfielder", "Forward", ""}
+    if pos not in valid:
+        raise HTTPException(status_code=400, detail="Invalid position")
+    player.position = pos or None
     session.commit()
     return RedirectResponse("/squad", status_code=303)
 
