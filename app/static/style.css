@@ -1872,7 +1872,7 @@ main.sq-main {
   height: 340px;
   border-radius: 16px;
   background-size: cover;
-  background-position: center top;
+  background-position: center 65%;
   position: relative;
   overflow: hidden;
   display: flex;
