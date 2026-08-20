@@ -125,92 +125,143 @@
     <input type="search" class="sq-search" id="sq-search" placeholder="Search players…" autocomplete="off">
     <select class="sq-pos-filter" id="sq-pos-filter">
       <option value="">All positions</option>
-      <option value="Goalkeeper">Goalkeeper</option>
-      <option value="Defender">Defender</option>
-      <option value="Midfielder">Midfielder</option>
-      <option value="Forward">Forward</option>
+      <option value="goalkeeper">Goalkeeper</option>
+      <option value="defender">Defender</option>
+      <option value="midfielder">Midfielder</option>
+      <option value="forward">Forward</option>
     </select>
   </div>
 </div>
 
-{# Player table #}
+{# Player card grid — grouped by position #}
 {% if lines %}
-<div class="scroll-x">
-<table id="sq-table">
-  <thead>
-    <tr>
-      <th>Player</th>
-      <th class="num">No.</th>
-      <th>Position</th>
-      <th class="num">Apps</th>
-      <th class="num">Starts</th>
-      <th class="num">Mins</th>
-      <th class="num">Goals</th>
-      <th class="num">Assists</th>
-      <th class="num">POTM</th>
-      <th class="num">🟨</th>
-      <th class="num">🟥</th>
-      {% if is_gaffer %}<th></th>{% endif %}
-    </tr>
-  </thead>
-  <tbody>
-  {% for line in lines %}
-    <tr data-name="{{ line.player.name | lower }}" data-pos="{{ line.player.position or '' | lower }}">
-      <td>
-        <div class="sq-player-cell">
-          {% if is_gaffer %}
-          <form method="post" action="/squad/{{ line.player.id }}/photo" enctype="multipart/form-data">
-            <label class="player-photo-label" title="Click to upload photo">
-              {% if line.player.photo_filename %}
-                <img src="/static/player_photos/{{ line.player.photo_filename }}" class="player-thumb" alt="{{ line.player.name }}">
-              {% else %}
-                <div class="player-thumb player-thumb--placeholder">{{ line.player.first_name[0] }}{{ line.player.last_name[0] }}</div>
-              {% endif %}
-              <input type="file" name="photo" accept="image/*" style="display:none" onchange="this.form.submit()">
-            </label>
-          </form>
+
+{% set position_groups = [
+  ('Goalkeeper', 'Goalkeepers'),
+  ('Defender', 'Defenders'),
+  ('Midfielder', 'Midfielders'),
+  ('Forward', 'Forwards')
+] %}
+
+{% for pos_val, pos_label in position_groups %}
+  {% set grp = lines | selectattr("player.position", "equalto", pos_val) | list %}
+  {% if grp %}
+  <div class="sq-pos-section" data-section="{{ pos_val | lower }}">
+    <p class="sq-pos-label">{{ pos_label }}</p>
+    <div class="sq-grid">
+      {% for line in grp %}
+      {% set pl = line.player %}
+      <div>
+        {% if is_gaffer %}
+        <a href="/squad/{{ pl.id }}" class="sq-card" title="{{ pl.name }}" data-name="{{ pl.name | lower }}" data-pos="{{ pl.position | lower }}">
+        {% else %}
+        <div class="sq-card" title="{{ pl.name }}" data-name="{{ pl.name | lower }}" data-pos="{{ (pl.position or '') | lower }}">
+        {% endif %}
+          {% if pl.photo_filename %}
+            <img src="/static/player_photos/{{ pl.photo_filename }}" class="sq-card-img" alt="{{ pl.name }}">
           {% else %}
-            {% if line.player.photo_filename %}
-              <img src="/static/player_photos/{{ line.player.photo_filename }}" class="player-thumb" alt="{{ line.player.name }}">
-            {% else %}
-              <div class="player-thumb player-thumb--placeholder">{{ line.player.first_name[0] }}{{ line.player.last_name[0] }}</div>
-            {% endif %}
+            <div class="sq-card-img sq-card-img--ph">{{ pl.first_name[:1] }}{{ (pl.last_name or '')[:1] }}</div>
           {% endif %}
-          <div>
-            {% if is_gaffer %}
-            <a href="/squad/{{ line.player.id }}" class="sq-player-name">{{ line.player.name }}</a>
-            {% else %}
-            <span class="sq-player-name">{{ line.player.name }}</span>
-            {% endif %}
-            {% if line.player.status.value != "active" %}<span class="when">{{ line.player.status.value }}</span>{% endif %}
+          <div class="sq-card-fade"></div>
+          <div class="sq-card-meta">
+            {% if pl.squad_number %}<span class="sq-card-num">{{ pl.squad_number }}</span>{% endif %}
+            <span class="sq-card-first">{{ pl.first_name or '' }}</span>
+            <span class="sq-card-last">{{ pl.last_name or '' }}</span>
           </div>
+        {% if is_gaffer %}</a>{% else %}</div>{% endif %}
+        {% if is_gaffer %}
+        <div class="sq-card-actions">
+          <form method="post" action="/squad/{{ pl.id }}/remove">
+            <button class="link" type="submit">Remove</button>
+          </form>
         </div>
-      </td>
-      <td class="num">{{ line.player.squad_number or "—" }}</td>
-      <td>{{ line.player.position or "—" }}</td>
-      <td class="num">{{ line.appearances }}</td>
-      <td class="num">{{ line.starts }}</td>
-      <td class="num">{{ line.minutes }}</td>
-      <td class="num">{{ line.goals }}</td>
-      <td class="num">{{ line.assists }}</td>
-      <td class="num">{{ line.motm }}</td>
-      <td class="num">{{ line.yellow_cards }}</td>
-      <td class="num">{{ line.red_cards }}</td>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+{% endfor %}
+
+{# Players with no position set #}
+{% set known_pos = ['Goalkeeper', 'Defender', 'Midfielder', 'Forward'] %}
+{% set ungrouped = lines | rejectattr("player.position", "in", known_pos) | list %}
+{% if ungrouped %}
+<div class="sq-pos-section" data-section="">
+  <p class="sq-pos-label">Unassigned</p>
+  <div class="sq-grid">
+    {% for line in ungrouped %}
+    {% set pl = line.player %}
+    <div>
       {% if is_gaffer %}
-      <td class="row-actions">
-        <a class="tab" href="/squad/{{ line.player.id }}">Edit</a>
-        <form method="post" action="/squad/{{ line.player.id }}/remove">
+      <a href="/squad/{{ pl.id }}" class="sq-card" title="{{ pl.name }}" data-name="{{ pl.name | lower }}" data-pos="">
+      {% else %}
+      <div class="sq-card" title="{{ pl.name }}" data-name="{{ pl.name | lower }}" data-pos="">
+      {% endif %}
+        {% if pl.photo_filename %}
+          <img src="/static/player_photos/{{ pl.photo_filename }}" class="sq-card-img" alt="{{ pl.name }}">
+        {% else %}
+          <div class="sq-card-img sq-card-img--ph">{{ pl.first_name[:1] }}{{ (pl.last_name or '')[:1] }}</div>
+        {% endif %}
+        <div class="sq-card-fade"></div>
+        <div class="sq-card-meta">
+          {% if pl.squad_number %}<span class="sq-card-num">{{ pl.squad_number }}</span>{% endif %}
+          <span class="sq-card-first">{{ pl.first_name or '' }}</span>
+          <span class="sq-card-last">{{ pl.last_name or '' }}</span>
+        </div>
+      {% if is_gaffer %}</a>{% else %}</div>{% endif %}
+      {% if is_gaffer %}
+      <div class="sq-card-actions">
+        <form method="post" action="/squad/{{ pl.id }}/remove">
           <button class="link" type="submit">Remove</button>
         </form>
-      </td>
+      </div>
       {% endif %}
-    </tr>
-  {% endfor %}
-  </tbody>
-</table>
+    </div>
+    {% endfor %}
+  </div>
 </div>
+{% endif %}
+
 {% else %}
 <p class="empty">No players in the current squad. Add one above.</p>
+{% endif %}
+
+{# Left the club #}
+{% if left_players %}
+<div class="sq-pos-section" style="margin-top:36px">
+  <p class="sq-pos-label" style="color:rgba(0,0,0,.4);font-size:16px">Left the club</p>
+  <div class="sq-grid">
+    {% for pl in left_players %}
+    <div>
+      {% if is_gaffer %}
+      <a href="/squad/{{ pl.id }}" class="sq-card" title="{{ pl.name }}" data-name="{{ pl.name | lower }}" data-pos="" style="opacity:.5">
+      {% else %}
+      <div class="sq-card" title="{{ pl.name }}" data-name="{{ pl.name | lower }}" data-pos="" style="opacity:.5">
+      {% endif %}
+        {% if pl.photo_filename %}
+          <img src="/static/player_photos/{{ pl.photo_filename }}" class="sq-card-img" alt="{{ pl.name }}">
+        {% else %}
+          <div class="sq-card-img sq-card-img--ph">{{ pl.first_name[:1] }}{{ (pl.last_name or '')[:1] }}</div>
+        {% endif %}
+        <div class="sq-card-fade"></div>
+        <div class="sq-card-meta">
+          {% if pl.squad_number %}<span class="sq-card-num">{{ pl.squad_number }}</span>{% endif %}
+          <span class="sq-card-first">{{ pl.first_name or '' }}</span>
+          <span class="sq-card-last">{{ pl.last_name or '' }}</span>
+        </div>
+      {% if is_gaffer %}</a>{% else %}</div>{% endif %}
+      {% if is_gaffer %}
+      <div class="sq-card-actions">
+        <form method="post" action="/squad/{{ pl.id }}/restore">
+          <button class="link" type="submit">Restore</button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
 {% endif %}
 
 {# Awards #}
@@ -248,16 +299,25 @@
 (function () {
   var search = document.getElementById('sq-search');
   var posFilter = document.getElementById('sq-pos-filter');
-  var rows = document.querySelectorAll('#sq-table tbody tr');
+
   function filter() {
-    var q = (search ? search.value : '').toLowerCase();
-    var pos = (posFilter ? posFilter.value : '').toLowerCase();
-    rows.forEach(function (row) {
-      var nameMatch = (row.dataset.name || '').includes(q);
-      var posMatch = !pos || (row.dataset.pos || '').includes(pos);
-      row.style.display = (nameMatch && posMatch) ? '' : 'none';
+    var q = search ? search.value.toLowerCase() : '';
+    var pos = posFilter ? posFilter.value.toLowerCase() : '';
+
+    document.querySelectorAll('.sq-card').forEach(function (card) {
+      var nameMatch = !q || (card.dataset.name || '').includes(q);
+      var posMatch = !pos || (card.dataset.pos || '') === pos;
+      card.parentElement.style.display = (nameMatch && posMatch) ? '' : 'none';
+    });
+
+    document.querySelectorAll('.sq-pos-section').forEach(function (section) {
+      var hasVisible = Array.from(section.querySelectorAll('.sq-card')).some(function (c) {
+        return c.parentElement.style.display !== 'none';
+      });
+      section.style.display = hasVisible ? '' : 'none';
     });
   }
+
   if (search) search.addEventListener('input', filter);
   if (posFilter) posFilter.addEventListener('change', filter);
 })();

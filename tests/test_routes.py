@@ -84,7 +84,7 @@ def _player_id(first: str, last: str) -> int:
 
 def test_squad_can_add_edit_and_remove_a_player(client: TestClient) -> None:
     page = client.get("/squad").text
-    assert "Add a player" in page
+    assert "Add player" in page
     assert 'action="/squad"' in page
 
     client.post(
