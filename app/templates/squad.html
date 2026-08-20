@@ -221,16 +221,24 @@
           {% endif %}
         </div>
 
-        {# Stats row #}
+        {# Stats row — varies by position #}
+        {%- set pos = pl.position or '' -%}
         <div class="sq2-card-stats">
           <div class="sq2-s-col">
             <span class="sq2-s-lbl">APPS</span>
             <span class="sq2-s-val">{{ line.appearances }}</span>
           </div>
+          {% if pos == 'Goalkeeper' %}
+          <div class="sq2-s-col">
+            <span class="sq2-s-lbl">CLEAN SHEETS</span>
+            <span class="sq2-s-val">{{ line.clean_sheets }}</span>
+          </div>
+          {% else %}
           <div class="sq2-s-col">
             <span class="sq2-s-lbl">GOALS</span>
             <span class="sq2-s-val">{{ line.goals }}</span>
           </div>
+          {% endif %}
           <div class="sq2-s-col">
             <span class="sq2-s-lbl">ASSISTS</span>
             <span class="sq2-s-val">{{ line.assists }}</span>
@@ -243,6 +251,12 @@
             <span class="sq2-s-lbl">YELLOW CARDS</span>
             <span class="sq2-s-val">{{ line.yellow_cards }}</span>
           </div>
+          {% if pos == 'Defender' %}
+          <div class="sq2-s-col">
+            <span class="sq2-s-lbl">CLEAN SHEETS</span>
+            <span class="sq2-s-val">{{ line.clean_sheets }}</span>
+          </div>
+          {% endif %}
         </div>
 
       </div>

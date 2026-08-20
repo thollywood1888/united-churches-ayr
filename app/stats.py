@@ -63,6 +63,7 @@ class PlayerLine:
     red_cards: int = 0
     motm: int = 0
     managers_motm: int = 0
+    clean_sheets: int = 0
 
     @property
     def goals_per_start(self) -> float:
@@ -152,6 +153,18 @@ def player_lines(session: Session, season_id: int, include_left: bool = False) -
     ):
         appearances.setdefault(appearance.player_id, []).append(appearance)
 
+    # fixture_id set where team kept a clean sheet
+    clean_sheet_fixture_ids: set[int] = {
+        f.id
+        for f in session.scalars(
+            select(Fixture).where(
+                Fixture.season_id == season_id,
+                Fixture.status == FixtureStatus.played,
+                Fixture.goals_against == 0,
+            )
+        )
+    }
+
     events = _event_counts(session, season_id)
     assists = _assist_counts(session, season_id)
 
@@ -159,6 +172,7 @@ def player_lines(session: Session, season_id: int, include_left: bool = False) -
     for player in players:
         played = [a for a in appearances.get(player.id, []) if a.role is not AppearanceRole.unused]
         goals = sum(events.get((player.id, e.value), 0) for e in GOAL_EVENTS)
+        cs = sum(1 for a in played if a.fixture_id in clean_sheet_fixture_ids)
         lines.append(
             PlayerLine(
                 player=player,
@@ -171,6 +185,7 @@ def player_lines(session: Session, season_id: int, include_left: bool = False) -
                 red_cards=events.get((player.id, EventType.red_card.value), 0),
                 motm=events.get((player.id, EventType.motm.value), 0),
                 managers_motm=events.get((player.id, EventType.managers_motm.value), 0),
+                clean_sheets=cs,
             )
         )
     return lines
