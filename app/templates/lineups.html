@@ -31,9 +31,9 @@
     </div>
     {% if fixture %}
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <a class="md-btn md-btn-ghost" href="{{ next_url }}{{ '&' if '?' in next_url else '?' }}saved=1">
-        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M6 4h11l3 3v13H6V4zm2 2v12h10V8.8L15.2 6H8zm2 3h6v2H10V9zm0 4h6v2H10v-2z"/></svg>
-        Save draft
+      <a class="md-btn md-btn-dark" href="{{ next_url }}{{ '&' if '?' in next_url else '?' }}saved=1">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+        Save lineup
       </a>
       {% if starters_on_pitch > 0 %}
       <a class="md-btn md-btn-ghost" href="/fixtures/{{ fixture.id }}/lineup-card" target="_blank">
@@ -58,19 +58,24 @@
   {% endif %}
 
   {% if fixtures %}
-  <form class="md-week" method="get" action="/lineups">
-    <label class="md-label" for="fixture_id">Game week</label>
-    <select id="fixture_id" name="fixture_id" onchange="this.form.submit()">
-      {% for item in fixtures %}
-      <option value="{{ item.id }}" {{ "selected" if fixture and item.id == fixture.id }}>
-        {{ item.kickoff_at.strftime("%-d %b") }} · {{ item.opponent }}
-        {% set picked = item.appearances | length %}
-        {{ "· " ~ picked ~ " named" if picked else "" }}
-      </option>
-      {% endfor %}
-    </select>
-    <noscript><button type="submit">Open</button></noscript>
-  </form>
+  <div class="md-week-card">
+    <form class="md-week" method="get" action="/lineups">
+      <label class="md-label" for="fixture_id">Game week</label>
+      <div class="md-week-sel">
+        <svg class="md-week-cal" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM7 11h5v5H7z"/></svg>
+        <select id="fixture_id" name="fixture_id" onchange="this.form.submit()">
+          {% for item in fixtures %}
+          <option value="{{ item.id }}" {{ "selected" if fixture and item.id == fixture.id }}>
+            {{ item.kickoff_at.strftime("%-d %b") }} · {{ item.opponent }}
+            {% set picked = item.appearances | length %}
+            {{ "· " ~ picked ~ " named" if picked else "" }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <noscript><button type="submit">Open</button></noscript>
+    </form>
+  </div>
   {% endif %}
 
   {% if not fixture %}
@@ -201,7 +206,10 @@
 
   <div class="md-controls">
     <form method="post" action="/fixtures/{{ fixture.id }}/formation" class="md-control">
-      <label class="md-label" for="formation">Formation</label>
+      <div class="md-ctrl-head">
+        <svg class="md-ctrl-ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M19 3H5C3.9 3 3 3.9 3 5v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5-7H10v-2h4v2zm-4 4h4v-2h-4v2z"/></svg>
+        <label class="md-label" for="formation">Formation</label>
+      </div>
       <select id="formation" name="formation" onchange="this.form.submit()">
         {% for f in formations %}
         <option value="{{ f }}" {{ "selected" if f == formation_key }}>{{ f }}</option>
@@ -210,8 +218,12 @@
       <input type="hidden" name="next" value="{{ next_url }}">
       <noscript><button type="submit">Set</button></noscript>
     </form>
+    <div class="md-ctrl-divider"></div>
     <form method="post" action="/fixtures/{{ fixture.id }}/captain" class="md-control">
-      <label class="md-label" for="captain">Captain</label>
+      <div class="md-ctrl-head">
+        <svg class="md-ctrl-ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm2.7-2h8.6l.9-4.4-3 2.9L12 8.1l-2.2 4.4-3-2.9.9 4.4z"/></svg>
+        <label class="md-label" for="captain">Captain</label>
+      </div>
       <select id="captain" name="player_id" onchange="this.form.submit()">
         <option value="">Select captain</option>
         {% for player in xi_players %}
@@ -295,8 +307,13 @@
 
     <aside class="md-side" id="squad">
       <section class="md-panel">
-        <h3 class="md-panel-title">Starting XI</h3>
-        <p class="md-help">Pick a name, or tap a face below. Their photo lands on the pitch.</p>
+        <div class="md-panel-hd">
+          <span class="md-panel-ico"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></span>
+          <div>
+            <h3 class="md-panel-title">Starting XI</h3>
+            <p class="md-help">Pick a name, or tap a face below. Their photo lands on the pitch.</p>
+          </div>
+        </div>
         <div class="md-sheet">
           {% for slot in pitch_slots %}
             {% set fill = slot_fill.get(slot.key) %}
@@ -319,9 +336,12 @@
       </section>
 
       <section class="md-panel">
-        <div class="md-subs-head">
-          <h3 class="md-panel-title">Substitutes</h3>
-          <span class="md-subs-count">{{ bench | length }} / 7 selected</span>
+        <div class="md-panel-hd">
+          <span class="md-panel-ico"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></span>
+          <div class="md-subs-head">
+            <h3 class="md-panel-title">Substitutes</h3>
+            <span class="md-subs-count">{{ bench | length }} / 7 selected</span>
+          </div>
         </div>
         {% if bench %}
         <ul class="md-subs">
@@ -354,15 +374,20 @@
     </aside>
   </div>
 
-  <section class="md-panel md-faces-panel">
-    <h3 class="md-panel-title">Squad</h3>
-    <p class="md-help">
-      {% if first_empty_slot %}
-      Tap a face to put them on the next empty spot ({{ first_empty_slot | upper }}).
-      {% else %}
-      The XI is full. Tap a face to add them to the bench.
-      {% endif %}
-    </p>
+  <section class="md-faces-dark md-faces-panel">
+    <div class="md-panel-hd">
+      <span class="md-panel-ico"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></span>
+      <div>
+        <h3 class="md-panel-title">Squad</h3>
+        <p class="md-help">
+          {% if first_empty_slot %}
+          Tap a face to put them on the next empty spot ({{ first_empty_slot | upper }}).
+          {% else %}
+          The XI is full. Tap a face to add them to the bench.
+          {% endif %}
+        </p>
+      </div>
+    </div>
     <div class="md-face-grid">
       {% for player in all_players %}
         {% set on_pitch = slot_fill.values() | selectattr("player_id", "equalto", player.id) | list %}
@@ -413,7 +438,7 @@
       </div>
     </div>
     <div class="md-footer-actions">
-      <a class="md-btn md-btn-ghost" href="{{ next_url }}{{ '&' if '?' in next_url else '?' }}saved=1">Save draft</a>
+      <a class="md-btn md-btn-dark" href="{{ next_url }}{{ '&' if '?' in next_url else '?' }}saved=1">Save draft</a>
       <a class="md-btn md-btn-gold" href="{{ next_url }}{{ '&' if '?' in next_url else '?' }}saved=1">
         Publish lineup
         <span aria-hidden="true">›</span>
