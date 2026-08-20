@@ -1718,19 +1718,20 @@ main.sq-main {
 .sq-hero-pair {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0;
+  gap: 4px;
   border-radius: 14px;
   overflow: hidden;
   margin-bottom: 28px;
-  height: 260px;
+  height: 220px;
 }
-.sq-hero-img {
+.sq-hero-panel {
   background-size: cover;
   background-position: center;
+  min-height: 0;
 }
 @media (max-width: 600px) {
   .sq-hero-pair { grid-template-columns: 1fr; height: auto; }
-  .sq-hero-img { height: 200px; }
+  .sq-hero-panel { height: 180px; }
 }
 
 /* page header */
