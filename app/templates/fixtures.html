@@ -1,99 +1,176 @@
 {% extends "base.html" %}
 {% block content %}
+<div class="fx2-wrap">
 
-<div class="panel-row">
-  <div class="panel">
-    <p>Upcoming</p>
-    {% if next_fixture %}
-      <h2>{{ next_fixture.opponent }}</h2>
-      <p>{{ next_fixture.kickoff_at.strftime("%a %-d %b, %H:%M") }} ·
-         {{ next_fixture.venue.value | capitalize }}</p>
-      <a class="tab" href="/fixtures/{{ next_fixture.id }}">Open match centre</a>
-    {% else %}
-      <h2>Next fixture</h2>
-      <p>Add an opponent, date, venue and kick-off below.</p>
-    {% endif %}
+  {# ── Hero row — Upcoming + Record ── #}
+  <div class="fx2-hero-row">
+
+    {# Upcoming fixture #}
+    <div class="fx2-hero-card">
+      <div class="fx2-icon-box">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <path d="M16 2v4M8 2v4M3 10h18"/>
+        </svg>
+      </div>
+      <p class="fx2-eyebrow">UPCOMING FIXTURE</p>
+      {% if next_fixture %}
+      <h2 class="fx2-hero-title">{{ next_fixture.opponent }}</h2>
+      <p class="fx2-hero-meta">
+        <svg class="fx2-meta-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="13" height="13"><rect x="2" y="2" width="12" height="12" rx="1.5"/><path d="M11 1v2M5 1v2M2 6h12"/></svg>
+        {{ next_fixture.kickoff_at.strftime("%a %-d %b, %H:%M") }}&nbsp;&nbsp;·&nbsp;&nbsp;
+        <svg class="fx2-meta-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="13" height="13"><path d="M8 2a4 4 0 0 1 4 4c0 3-4 8-4 8S4 9 4 6a4 4 0 0 1 4-4z"/><circle cx="8" cy="6" r="1.5"/></svg>
+        {{ next_fixture.venue.value | capitalize }}
+      </p>
+      <a href="/fixtures/{{ next_fixture.id }}" class="fx2-match-btn">Open match centre &rsaquo;</a>
+      {% else %}
+      <h2 class="fx2-hero-title">No fixture scheduled</h2>
+      <p class="fx2-hero-meta">Add a fixture below.</p>
+      {% endif %}
+    </div>
+
+    {# League record #}
+    <div class="fx2-hero-card fx2-record-card">
+      <div class="fx2-icon-box">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 21h8M12 17v4M17 3H7l1 9c0 2.2 1.8 4 4 4s4-1.8 4-4l1-9z"/>
+          <path d="M17 5h2a2 2 0 0 1 2 2v1a4 4 0 0 1-4 4M7 5H5a2 2 0 0 0-2 2v1a4 4 0 0 0 4 4"/>
+        </svg>
+      </div>
+      <p class="fx2-eyebrow">LATEST LEAGUE RECORD</p>
+      <h2 class="fx2-record-title">{{ record.played }} MATCH{{ "" if record.played == 1 else "ES" }} &middot; {{ record.won }}W {{ record.drawn }}D {{ record.lost }}L</h2>
+      <div class="fx2-record-stats">
+        <div class="fx2-stat-box">
+          <span class="fx2-stat-num">{{ record.scored }}</span>
+          <span class="fx2-stat-lbl">Scored</span>
+        </div>
+        <div class="fx2-stat-box">
+          <span class="fx2-stat-num">{{ record.conceded }}</span>
+          <span class="fx2-stat-lbl">Conceded</span>
+        </div>
+        <div class="fx2-stat-box">
+          <span class="fx2-stat-num fx2-stat-num--gold">{{ record.points }}</span>
+          <span class="fx2-stat-lbl">Point{{ "" if record.points == 1 else "s" }}</span>
+        </div>
+      </div>
+      <p class="fx2-record-sub">{{ record.scored }} scored · {{ record.conceded }} conceded · {{ record.points }} point{{ "" if record.points == 1 else "s" }}.</p>
+      {%- set uca_slug = badge_map.get("United Churches of Ayr AFC") -%}
+      {% if uca_slug %}<img src="/static/badges/{{ uca_slug }}.png" class="fx2-badge-watermark" alt="">{% endif %}
+    </div>
+
   </div>
-  <div class="panel">
-    <p>Latest league record</p>
-    <h2>{{ record.played }} match{{ "" if record.played == 1 else "es" }} ·
-        {{ record.won }}W {{ record.drawn }}D {{ record.lost }}L</h2>
-    <p>{{ record.scored }} scored · {{ record.conceded }} conceded ·
-       {{ record.points }} point{{ "" if record.points == 1 else "s" }}.</p>
+
+  {# ── Split row — Results | Fixtures ── #}
+  <div class="fx2-split-row">
+
+    {# Results #}
+    <div class="fx2-split-col">
+      <div class="fx2-section-head">
+        <h3 class="fx2-section-title">RESULTS</h3>
+      </div>
+      {% if results %}
+      <div class="fx2-list">
+        {% for fixture in results %}
+        <a href="/fixtures/{{ fixture.id }}" class="fx2-row">
+          <div class="fx2-row-left">
+            <span class="fx2-venue-badge {% if fixture.venue.value == 'home' %}fx2-vh{% else %}fx2-va{% endif %}">
+              {{ "H" if fixture.venue.value == "home" else "A" }}
+            </span>
+            {%- set slug = badge_map.get(fixture.opponent) -%}
+            {% if slug %}
+            <img src="/static/badges/{{ slug }}.png" class="fx2-club-badge" alt="">
+            {% else %}
+            <div class="fx2-club-badge fx2-club-badge--ph">{{ fixture.opponent[:2] | upper }}</div>
+            {% endif %}
+            <div class="fx2-row-info">
+              <span class="fx2-row-name">{{ fixture.opponent }}</span>
+              <span class="fx2-row-date">{{ fixture.kickoff_at.strftime("%a %-d %b") }}</span>
+            </div>
+          </div>
+          <span class="fx2-score-pill">{{ fixture.scoreline }}</span>
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="fx2-empty">No results yet. Open a fixture after the match to log the score.</p>
+      {% endif %}
+    </div>
+
+    {# Fixtures #}
+    <div class="fx2-split-col">
+      <div class="fx2-section-head">
+        <h3 class="fx2-section-title">FIXTURES</h3>
+      </div>
+      {% if upcoming %}
+      <div class="fx2-list">
+        {% for fixture in upcoming %}
+        <a href="/fixtures/{{ fixture.id }}" class="fx2-row">
+          <div class="fx2-row-left">
+            <span class="fx2-venue-badge {% if fixture.venue.value == 'home' %}fx2-vh{% else %}fx2-va{% endif %}">
+              {{ "H" if fixture.venue.value == "home" else "A" }}
+            </span>
+            {%- set slug = badge_map.get(fixture.opponent) -%}
+            {% if slug %}
+            <img src="/static/badges/{{ slug }}.png" class="fx2-club-badge" alt="">
+            {% else %}
+            <div class="fx2-club-badge fx2-club-badge--ph">{{ fixture.opponent[:2] | upper }}</div>
+            {% endif %}
+            <div class="fx2-row-info">
+              <span class="fx2-row-name">{{ fixture.opponent }}</span>
+              <span class="fx2-row-date">{{ fixture.kickoff_at.strftime("%a %-d %b · %H:%M") }}{% if fixture.competition.value != "league" %} · {{ fixture.competition.value | capitalize }}{% endif %}</span>
+            </div>
+          </div>
+          <span class="fx2-chevron">›</span>
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="fx2-empty">No fixtures scheduled.</p>
+      {% endif %}
+    </div>
+
   </div>
+
+  {# ── Add fixture (gaffer only) ── #}
+  {% if is_gaffer %}
+  <div class="fx2-add-section">
+    <details class="fx2-adder">
+      <summary class="fx2-adder-summary">+ Add a fixture</summary>
+      <div class="fx2-adder-body">
+        <form class="fx2-adder-form" method="post" action="/fixtures">
+          <div class="fx2-field-row">
+            <label class="fx2-field">Opponent
+              <input name="opponent" required autocomplete="off">
+            </label>
+            <label class="fx2-field">Kick-off
+              <input type="datetime-local" name="kickoff" required>
+            </label>
+          </div>
+          <div class="fx2-field-row">
+            <label class="fx2-field">Venue
+              <select name="venue">
+                <option value="home">Home</option>
+                <option value="away">Away</option>
+                <option value="neutral">Neutral</option>
+              </select>
+            </label>
+            <label class="fx2-field">Competition
+              <select name="competition">
+                <option value="league">League</option>
+                <option value="cup">Cup</option>
+                <option value="friendly">Friendly</option>
+              </select>
+            </label>
+            <label class="fx2-field">Ground
+              <input name="ground" autocomplete="off">
+            </label>
+          </div>
+          <button class="fx2-submit-btn" type="submit">Add fixture</button>
+        </form>
+      </div>
+    </details>
+  </div>
+  {% endif %}
+
 </div>
-
-<p class="eyebrow">Results</p>
-{% if results %}
-<ul class="fixture-list">
-  {% for fixture in results %}
-  <li>
-    <span class="venue-mark {{ fixture.venue.value }}">{{ "H" if fixture.venue.value == "home" else "A" }}</span>
-    {% set slug = badge_map.get(fixture.opponent) %}{% if slug %}<img src="/static/badges/{{ slug }}.png" class="badge-thumb" alt="">{% endif %}
-    <a href="/fixtures/{{ fixture.id }}">
-      {{ fixture.opponent }}
-      <span class="when">{{ fixture.kickoff_at.strftime("%a %-d %b") }}</span>
-    </a>
-    <span class="result-mark {{ fixture.outcome }}">{{ fixture.scoreline }}</span>
-  </li>
-  {% endfor %}
-</ul>
-{% else %}
-<p class="empty">No results yet. Open a fixture after the match to log the score and scorers.</p>
-{% endif %}
-
-<p class="eyebrow">Fixtures</p>
-{% if upcoming %}
-<ul class="fixture-list">
-  {% for fixture in upcoming %}
-  <li>
-    <span class="venue-mark {{ fixture.venue.value }}">{{ "H" if fixture.venue.value == "home" else "A" }}</span>
-    {% set slug = badge_map.get(fixture.opponent) %}{% if slug %}<img src="/static/badges/{{ slug }}.png" class="badge-thumb" alt="">{% endif %}
-    <a href="/fixtures/{{ fixture.id }}">
-      {{ fixture.opponent }}
-      <span class="when">{{ fixture.kickoff_at.strftime("%a %-d %b · %H:%M") }}{% if fixture.competition.value != "league" %} · {{ fixture.competition.value | capitalize }}{% endif %}</span>
-    </a>
-  </li>
-  {% endfor %}
-</ul>
-{% else %}
-<p class="empty">No fixtures scheduled.</p>
-{% endif %}
-
-{% if is_gaffer %}
-<details class="adder">
-  <summary>Add a fixture</summary>
-  <form class="stack" method="post" action="/fixtures">
-    <div class="field-row">
-      <label class="field">Opponent
-        <input name="opponent" required autocomplete="off">
-      </label>
-      <label class="field">Kick-off
-        <input type="datetime-local" name="kickoff" required>
-      </label>
-    </div>
-    <div class="field-row">
-      <label class="field">Venue
-        <select name="venue">
-          <option value="home">Home</option>
-          <option value="away">Away</option>
-          <option value="neutral">Neutral</option>
-        </select>
-      </label>
-      <label class="field">Competition
-        <select name="competition">
-          <option value="league">League</option>
-          <option value="cup">Cup</option>
-          <option value="friendly">Friendly</option>
-        </select>
-      </label>
-      <label class="field">Ground
-        <input name="ground" autocomplete="off">
-      </label>
-    </div>
-    <button type="submit">Add fixture</button>
-  </form>
-</details>
-{% endif %}
-
 {% endblock %}
