@@ -45,6 +45,7 @@ def create_schema() -> None:
     _ensure_appearance_pos()
     _ensure_fixture_captain()
     _ensure_fixture_lineup_confirmed()
+    _ensure_club_settings_gaffer()
 
 
 def _ensure_appearance_pitch_slot() -> None:
@@ -103,6 +104,18 @@ def _ensure_fixture_lineup_confirmed() -> None:
         return
     with engine.begin() as conn:
         conn.execute(text("ALTER TABLE fixture ADD COLUMN lineup_confirmed BOOLEAN DEFAULT FALSE"))
+
+
+def _ensure_club_settings_gaffer() -> None:
+    inspector = inspect(engine)
+    if "club_settings" not in inspector.get_table_names():
+        return
+    columns = {col["name"] for col in inspector.get_columns("club_settings")}
+    with engine.begin() as conn:
+        if "gaffer_name" not in columns:
+            conn.execute(text("ALTER TABLE club_settings ADD COLUMN gaffer_name VARCHAR(200)"))
+        if "gaffer_photo" not in columns:
+            conn.execute(text("ALTER TABLE club_settings ADD COLUMN gaffer_photo VARCHAR(200)"))
 
 
 def get_session() -> Iterator[Session]:

@@ -1842,6 +1842,16 @@ main.sq-main {
   justify-content: center;
   flex: none;
 }
+.sq2-gaffer-img {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center top;
+  border: 2px solid #d5cabb;
+  flex: none;
+  display: block;
+}
 .sq2-gaffer-name {
   font-size: 12px;
   font-weight: 700;
@@ -1854,6 +1864,50 @@ main.sq-main {
   margin: 0;
   line-height: 1.4;
 }
+.sq2-gaffer-name-form { margin: 0; }
+.sq2-gaffer-name-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed #c9a84c;
+  border-radius: 0;
+  padding: 0 0 1px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #222;
+  width: 100%;
+  max-width: 160px;
+  outline: none;
+}
+.sq2-gaffer-name-input:focus { border-bottom-color: #8a7d65; }
+.sq2-gaffer-name-input::placeholder { color: #9a8e78; font-weight: 400; }
+
+/* ── Click-to-upload photo overlay ── */
+.sq2-photo-form { flex: none; margin: 0; }
+.sq2-photo-label {
+  position: relative;
+  display: block;
+  cursor: pointer;
+  line-height: 0;
+}
+.sq2-photo-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.sq2-photo-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+.sq2-photo-label:hover .sq2-photo-overlay { opacity: 1; }
 
 /* ── Dark section ── */
 .sq2-dark {

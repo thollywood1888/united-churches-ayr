@@ -329,6 +329,8 @@ class ClubSettings(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     season_id: Mapped[int] = mapped_column(ForeignKey("season.id"), unique=True)
     monthly_fee_pence: Mapped[int] = mapped_column(default=2000)
+    gaffer_name: Mapped[str | None] = mapped_column(String(200), default=None)
+    gaffer_photo: Mapped[str | None] = mapped_column(String(200), default=None)
 
 
 class FeePayment(Base):

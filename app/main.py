@@ -396,6 +396,7 @@ def squad(request: Request, session: SessionDep):
             grouped[pos].append(line)
         else:
             ungrouped.append(line)
+    settings = _get_or_create_settings(session, season.id)
     return _render(
         request,
         "squad.html",
@@ -412,6 +413,8 @@ def squad(request: Request, session: SessionDep):
         top_scorer=scorers[0] if scorers else None,
         top_assister=assisters[0] if assisters else None,
         top_motm_player=motm_leaders[0] if motm_leaders else None,
+        gaffer_name=settings.gaffer_name,
+        gaffer_photo=settings.gaffer_photo,
     )
 
 
@@ -563,6 +566,28 @@ async def upload_player_photo(session: SessionDep, player_id: int, photo: Upload
     dest = _PHOTOS_DIR / filename
     dest.write_bytes(await photo.read())
     player.photo_filename = filename
+    session.commit()
+    return RedirectResponse("/squad", status_code=303)
+
+
+@app.post("/club/gaffer-photo")
+async def upload_gaffer_photo(
+    session: SessionDep,
+    photo: UploadFile = File(None),
+    gaffer_name: Annotated[str, Form()] = "",
+):
+    season = _season_or_404(session)
+    settings = _get_or_create_settings(session, season.id)
+    if gaffer_name.strip():
+        settings.gaffer_name = gaffer_name.strip()
+    if photo and photo.filename:
+        suffix = Path(photo.filename).suffix.lower()
+        if suffix in _ALLOWED_IMAGE_SUFFIXES:
+            _PHOTOS_DIR.mkdir(parents=True, exist_ok=True)
+            filename = f"gaffer{suffix}"
+            dest = _PHOTOS_DIR / filename
+            dest.write_bytes(await photo.read())
+            settings.gaffer_photo = filename
     session.commit()
     return RedirectResponse("/squad", status_code=303)
 
