@@ -1699,6 +1699,17 @@ button.md-player:hover { background: var(--page); }
   .ov2-three-col { grid-template-columns: 1fr; }
   .ov2-page-title { font-size: 22px; }
   .ov2-season-pill { font-size: 11px; padding: 6px 12px; }
+  .ov2-hero-matchup {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 36px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+  .ov2-hero-team { min-width: 0; width: 100%; }
+  .ov2-hero-team-name { white-space: normal; overflow-wrap: break-word; word-break: normal; line-height: 1.15; max-width: 100%; }
+  .ov2-hero-badge { flex-shrink: 0; }
+  .ov2-hero-vs { width: 36px; flex-shrink: 0; text-align: center; padding: 0; }
 }
 
 /* --------------------------------------------------------- match centre -- */
